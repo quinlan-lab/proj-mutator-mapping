@@ -10,7 +10,7 @@ from line_profiler import LineProfiler
 import numba
 import re
 from collections import Counter
-import json 
+import json
 import sys
 
 @numba.njit()
@@ -19,6 +19,17 @@ def permutation_test(
     genotype_matrix: np.ndarray,
     n_permutations: int = 1_000,
 ) -> List[np.float64]:
+    """conduct a permutation test to assess
+    significance of observed psuedo-qtl.
+
+    Args:
+        spectra (np.ndarray): _description_
+        genotype_matrix (np.ndarray): _description_
+        n_permutations (int, optional): _description_. Defaults to 1_000.
+
+    Returns:
+        List[np.float64]: _description_
+    """
 
     # then do permutations
     max_scores: List[np.float64] = [] # store max cosdists encountered in each permutation
@@ -44,8 +55,7 @@ def permutation_test(
             )
 
             null_dist = compute_haplotype_distance(a_spectra, b_spectra)
-            # if null_dist > 0.01:
-            #     print (ni)
+            
             if null_dist > max_score: max_score = null_dist
 
         max_scores.append(max_score)
@@ -53,7 +63,20 @@ def permutation_test(
     return max_scores
 
 @numba.njit
-def manual_cosine_distance(a: np.ndarray, b: np.ndarray) -> np.float64:
+def manual_cosine_distance(
+    a: np.ndarray,
+    b: np.ndarray,
+) -> np.float64:
+    """function that computes cosine distance between
+    two 1d arrays. much faster, since it can be jitted. 
+
+    Args:
+        a (np.ndarray): _description_
+        b (np.ndarray): _description_
+
+    Returns:
+        np.float64: _description_
+    """
     dot = a.dot(b)
     a_sumsq, b_sumsq = np.sum(np.square(a)), np.sum(np.square(b))
     a_norm, b_norm = np.sqrt(a_sumsq), np.sqrt(b_sumsq)
@@ -62,6 +85,18 @@ def manual_cosine_distance(a: np.ndarray, b: np.ndarray) -> np.float64:
 
 @numba.njit
 def compute_mean(a: np.ndarray):
+    """homebrew function to compute the mean
+    on a per-column basis. need to piece this
+    out into its own function so that it can be 
+    jitted, as numba does not support axis kwargs
+    in np.mean
+
+    Args:
+        a (np.ndarray): _description_
+
+    Returns:
+        _type_: _description_
+    """
     empty_a = np.zeros(a.shape[1])
     for i in range(a.shape[1]):
         empty_a[i] = np.mean(a[:, i])
@@ -72,6 +107,19 @@ def compute_haplotype_distance(
     a_haps: np.ndarray,
     b_haps: np.ndarray,
 ) -> np.float64:
+    """compute the cosine distance between
+    two 1d numpy arrays. each array should summarize
+    the mutation spectrum in a single group of haplotypes,
+    such that the arrays are of shape (M, 1), where M
+    is the number of mutations being used to define the spectrum.
+
+    Args:
+        a_haps (np.ndarray): _description_
+        b_haps (np.ndarray): _description_
+
+    Returns:
+        np.float64: cosine distance measure
+    """
     a_hap_sums = np.sum(a_haps, axis=0)
     b_hap_sums = np.sum(b_haps, axis=0)
 
@@ -79,36 +127,11 @@ def compute_haplotype_distance(
 
     return dist
 
-def generate_null_dist(hap_a, hap_b, n_trials: int = 1_000):
-    # concatenate haplotypes
-    haps = np.concatenate((hap_a, hap_b))
 
-    dists = []
-    for _ in range(n_trials):
-        random_mut_hap_idxs = np.random.randint(
-            low=0,
-            high=haps.shape[0],
-            size=hap_a.shape[0],
-        )
-        random_wt_hap_idxs = np.random.randint(
-            low=0,
-            high=haps.shape[0],
-            size=hap_b.shape[0],
-        )
-
-        random_mut_haps = haps[random_mut_hap_idxs]
-        random_wt_haps = haps[random_wt_hap_idxs]
-
-        dist = compute_haplotype_distance(
-            random_mut_haps,
-            random_wt_haps,
-        )
-
-        dists.append(dist)
-
-    return dists
-
-def compute_spectra(singletons: pd.DataFrame, k: int = 1):
+def compute_spectra(
+    singletons: pd.DataFrame,
+    k: int = 1,
+):
 
     # compute 3-mer spectra
     hap_spectra_agg = singletons.groupby(['Strain', 'kmer']).agg({'count': sum}).reset_index()#.rename(columns={0: 'count'})
@@ -134,12 +157,12 @@ def main(args):
     geno_raw = pd.read_csv(config_dict['geno'])
     marker_info = pd.read_csv(config_dict['markers'])
 
-    # merge genotype and marker information 
+    # merge genotype and marker information
     geno = geno_raw.merge(marker_info, on="marker")
     geno = geno[geno['chromosome'] != "X"]
 
     singletons = pd.read_csv(args.singletons)
-    singletons['count'] = 1 
+    singletons['count'] = 1
 
     samples = singletons['Strain'].unique()
     # get the overlap between those and the sample names in the genotype data
@@ -151,7 +174,7 @@ def main(args):
     if len(samples_overlap) == 0:
         print ("No samples in common between mutation data and genotype matrix.")
         sys.exit()
-    
+
     # then subset the genotype data to include only those samples
     cols2use = ["marker"]
     cols2use.extend(samples_overlap)
@@ -164,21 +187,21 @@ def main(args):
     samples, mutations, spectra = compute_spectra(singletons, k=args.k)
     smp2idx = dict(zip(samples, range(len(samples))))
 
-    # weight spectra if desired 
+    # weight spectra if desired
     weight_dict = None
     if args.adj_column:
         # figure out the samples with highest and lowest values of the column
         sorted_by_col = singletons.sort_values(args.adj_column).drop_duplicates("Strain")
-        # get each sample's percentage of the max value 
+        # get each sample's percentage of the max value
         max_colval = np.max(sorted_by_col[args.adj_column].values)
         sorted_by_col['adj_pct'] = sorted_by_col[args.adj_column] / max_colval
         weight_dict = dict(zip(sorted_by_col['Strain'], sorted_by_col['adj_pct']))
-    
+
     # reweight spectra if desired
     if weight_dict is not None:
         for sample, sample_i in smp2idx.items():
             sample_weight = weight_dict[sample]
-            spectra[sample_i] *= sample_weight 
+            spectra[sample_i] *= sample_weight
 
     replace_dict = config_dict['genotypes']
     geno_asint = geno.replace(replace_dict).replace({-1: np.nan})
@@ -227,7 +250,7 @@ def main(args):
 
     f, ax = plt.subplots()
     ax.hist(max_scores, bins=20, ec='k', lw=1)
-    
+
 
     # genome-wide significant and suggestive alphas
     res_df = pd.DataFrame(res)
