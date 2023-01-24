@@ -1,0 +1,9 @@
+{
+  "genotypes": {
+    "A": 0,
+    "B": 1,
+    "-": -1
+  },
+  "geno": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-bxd/data/genotypes/CC.geno",
+  "markers": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-bxd/data/genotypes/CC.markers"
+}

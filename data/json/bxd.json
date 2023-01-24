@@ -1,0 +1,10 @@
+{
+    "genotypes": {
+      "B": 0,
+      "D": 1,
+      "H": -1
+    },
+    "geno": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-bxd/data/genotypes/BXD.geno",
+    "markers": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-bxd/data/genotypes/BXD.markers"
+  }
+  
