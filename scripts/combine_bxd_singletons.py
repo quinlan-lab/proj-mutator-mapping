@@ -54,7 +54,7 @@ def main(args):
     metadata = metadata[metadata['n_generations'] != "NA"].astype({'n_generations': int})
 
     #metadata = metadata.query('n_generations >= 20')
-    metadata = metadata[metadata['true_epoch'].isin([3, 5])]
+    #metadata = metadata[metadata['true_epoch'].isin([1,2,4])]
     #gn2bam = dict(zip(metadata['GeneNetwork name'], metadata['bam_name']))
     #bam2gn = {v:k for k,v in gn2bam.items()}
 
