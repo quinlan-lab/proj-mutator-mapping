@@ -1,12 +1,11 @@
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-bxd"
+PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
 
 rule all:
     input:
-        PROJDIR + "/data/genotypes/CC.geno",
-        PROJDIR + "/data/singletons/bxd/annotated_filtered_singletons.csv",
+        expand(PROJDIR + "/csv/bxd.k{k}.significant_markers.csv", k=[1,3])
 
 rule download_singletons:
     input:
@@ -26,7 +25,10 @@ rule combine_singletons:
         PROJDIR + "/data/singletons/bxd/annotated_filtered_singletons.csv"
     shell:
         """
-        python {input.py_script} --metadata {input.metadata} --singletons {input.singletons} --out {output}
+        python {input.py_script} \
+                        --metadata {input.metadata} \
+                        --singletons {input.singletons} \
+                        --out {output}
         """
 
 rule download_cc_geno:
@@ -52,15 +54,29 @@ rule combine_cc_geno:
 rule run_manhattan:
     input:
         singletons = PROJDIR + "/data/singletons/bxd/annotated_filtered_singletons.csv",
-        geno = PROJDIR + "/data/genotypes/BXD.geno",
+        config = PROJDIR + "/data/json/bxd.json",
         py_script = PROJDIR + "/scripts/compute_distance.py"
     output:
-        PROJDIR + "/csv/{chrom}.{k}.results.csv"
+        PROJDIR + "/csv/bxd.k{k}.results.csv"
     shell:
         """
         python {input.py_script} --singletons {input.singletons} \
-                                 --geno {input.geno} \
+                                 --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
+        """
+
+rule plot_manhattan:
+    input:
+        results = PROJDIR + "/csv/bxd.k{k}.results.csv",
+        markers = PROJDIR + "/data/genotypes/BXD.markers",
+        py_script = PROJDIR + "/scripts/manhattan.py"
+    output:
+        PROJDIR + "/csv/bxd.k{k}.significant_markers.csv"
+    shell:
+        """
+        python {input.py_script} --markers {input.markers} \
+                                 --results {input.results} \
+                                 --outpref /scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/csv/bxd.k{wildcards.k} \
         """
 

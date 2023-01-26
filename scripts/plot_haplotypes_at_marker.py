@@ -6,7 +6,7 @@ from compare_mutation_spectra import mutation_comparison
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-bxd"
+PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
 geno = pd.read_csv(f"{PROJDIR}/data/genotypes/BXD.geno")
 markers = pd.read_csv(f"{PROJDIR}/data/genotypes/BXD.markers")
@@ -15,7 +15,7 @@ geno_merged = geno.merge(markers, on="marker")
 singletons = pd.read_csv(f"{PROJDIR}/data/singletons/bxd/annotated_filtered_singletons.csv")
 singletons['count'] = 1 
 
-print (singletons.groupby('Strain').size().shape)
+#singletons = singletons.query('true_epoch == 5')
 
 samples, mutations, spectra = compute_spectra(singletons, k=1)
 #smp2idx = dict(zip(samples, range(len(samples))))
@@ -26,7 +26,8 @@ cols2use = ["marker", "chromosome", "Mb"]
 cols2use.extend(samples_shared)
 geno_merged = geno_merged[cols2use]
 
-marker = "rs31187020"
+marker = "rs46045549" # chr19
+marker = "rs28272806" # chr4
 
 geno_merged['is_focal_marker'] = geno_merged['marker'].apply(lambda m: 1 if m == marker else 0)
 chrom = geno_merged.query('is_focal_marker == 1')['chromosome'].unique()[0]
@@ -45,9 +46,10 @@ spectra_fracs = spectra / np.sum(spectra, axis=1)[:, np.newaxis]
 sorted_spectra_idxs = np.argsort(spectra_fracs[:, mut_idx])
 
 smp2frac = dict(zip(samples, spectra_fracs[:, mut_idx]))
-print (smp2frac)
+
 geno_to_plot['frac'] = geno_to_plot['Strain'].apply(lambda s: smp2frac[s])
-geno_to_plot_sorted = geno_to_plot.sort_values('frac')
+geno_to_plot_sorted = geno_to_plot.sort_values('frac', ascending=False)
+
 print (geno_to_plot_sorted)
 replace_dict = {'B': 0, 'D': 1, 'H': -1}
 geno_to_plot_sorted.replace(to_replace=replace_dict, inplace=True)
@@ -55,7 +57,7 @@ geno_to_plot_sorted.fillna(-1, inplace=True)
 geno_vals = geno_to_plot_sorted.values[:, 1:-1].astype(np.int8)
 f, ax = plt.subplots()
 sns.heatmap(geno_vals, ax=ax)
-f.savefig('o.png')
+f.savefig('haplotypes.png', dpi=300)
 
 
 

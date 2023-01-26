@@ -5,7 +5,7 @@ PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
 rule all:
     input: 
-        PROJDIR + "/data/vcf/combined/merged.regenotyped.vcf"
+        PROJDIR + "/data/vcf/combined/merged.regenotyped.filtered.vcf.gz"
 
 rule download_c57:
     input:
@@ -42,7 +42,8 @@ rule sample_call:
     input:
         bam = PROJDIR + "/data/bam/{sample}.bam",
         bai = PROJDIR + "/data/bam/{sample}.bam.bai",
-        ref = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mouse-mutators/data/ref/mm39.fa",
+        ref = PROJDIR + "/data/ref/Mus_musculus.GRCm39.dna.primary_plus_nonchromosomal.fa",
+        #include = PROJDIR + "/data/mm39.include.bed"
     output:
         PROJDIR + "/data/vcf/{sample}.vcf"
     threads: 8
@@ -76,7 +77,7 @@ rule re_genotype:
     input:
         bam = PROJDIR + "/data/bam/{sample}.bam",
         bai = PROJDIR + "/data/bam/{sample}.bam.bai",
-        ref = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mouse-mutators/data/ref/mm39.fa",
+        ref = PROJDIR + "/data/ref/Mus_musculus.GRCm39.dna.primary_plus_nonchromosomal.fa",
         sites = PROJDIR + "/data/vcf/combined/merged.vcf"
     output:
         PROJDIR + "/data/vcf/re-genotyped/{sample}.vcf"
@@ -107,4 +108,41 @@ rule re_merge:
         """
         dysgu merge {input.vcfs} > {output}
         """
+
+rule compress_vcf:
+    input:
+        PROJDIR + "/data/vcf/combined/merged.regenotyped.vcf"
+    output:
+        PROJDIR + "/data/vcf/combined/merged.regenotyped.vcf.gz"
+    shell:
+        """
+        bgzip {input}
+        """
+
+rule index_vcf:
+    input:
+        PROJDIR + "/data/vcf/combined/merged.regenotyped.vcf.gz"
+    output:
+        PROJDIR + "/data/vcf/combined/merged.regenotyped.vcf.gz.csi"
+    shell:
+        """
+        bcftools index {input}
+        """
+
+rule filter_vcf:
+    input:
+        vcf = PROJDIR + "/data/vcf/combined/merged.regenotyped.vcf.gz",
+        idx = PROJDIR + "/data/vcf/combined/merged.regenotyped.vcf.gz.csi"
+    output:
+        PROJDIR + "/data/vcf/combined/merged.regenotyped.filtered.vcf.gz"
+    shell:
+        """
+        bcftools view \
+                    -i 'N_PASS(FORMAT/SU > 0) == 1 && FILTER == "PASS" && INFO/SU >= 5 && SVLEN >= 250' \
+                    -Oz \
+                    -r 19:25000000-35000000 \
+                    -o {output} \
+                    {input.vcf}
+        """
+    
 

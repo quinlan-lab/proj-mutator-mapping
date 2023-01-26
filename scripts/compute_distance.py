@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
 import argparse
 import json
 import sys
@@ -10,6 +11,7 @@ from utils import (
     permutation_test,
     compute_kinship_diff,
     compute_kinship_matrix,
+    compute_max_spectra_dist,
 )
 
 def main(args):
@@ -57,21 +59,11 @@ def main(args):
     # weight spectra if desired
     weight_dict = None
     if args.adj_column:
-        # figure out the samples with highest and lowest values of the column
-        sorted_by_col = singletons.sort_values(args.adj_column).drop_duplicates("Strain")
-        # get each sample's percentage of the max value
-        max_colval = np.max(sorted_by_col[args.adj_column].values)
-        sorted_by_col['adj_pct'] = sorted_by_col[args.adj_column] / max_colval
-        weight_dict = dict(zip(sorted_by_col['Strain'], sorted_by_col['adj_pct']))
+        singletons['count'] = singletons['count'] / singletons[args.adj_column]
 
-    # reweight spectra if desired
-    if weight_dict is not None:
-        for sample, sample_i in smp2idx.items():
-            sample_weight = weight_dict[sample]
-            spectra[sample_i] *= sample_weight
-
+    # convert string genotypes to integers based on config definitino
     replace_dict = config_dict['genotypes']
-    geno_asint = geno.replace(replace_dict).replace({1: np.nan})
+    geno_asint = geno.replace(replace_dict)
     
     # calculate allele frequencies at each site
     ac = np.nansum(geno_asint[samples], axis=1)
@@ -79,44 +71,27 @@ def main(args):
     afs = ac / an
 
     # only consider sites where allele frequency is between thresholds
-    idxs2keep = np.where((afs > 0.05) & (afs < 0.95))[0]
+    idxs2keep = np.where((afs > 0) & (afs < 1))[0]
     print ("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
     markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values    
 
-    res = []
+    #kinship_matrix = compute_kinship_matrix(geno_filtered)
 
-    kinship_matrix = compute_kinship_matrix(geno_filtered)
+    # compute the maximum cosine distance between groups of
+    # haplotypes at each site in the genotype matrix
+    focal_dists = compute_max_spectra_dist(spectra, geno_filtered)
 
-    # loop over every site in the genotype matrix
-    for ni in np.arange(geno_filtered.shape[0]):
-
-        # then get the indices of the samples with either
-        # genotype at the site
-        a_hap_idxs = np.where(geno_filtered[ni] == 0)[0]
-        b_hap_idxs = np.where(geno_filtered[ni] == 2)[0]
-
-        a_spectra, b_spectra = (
-            spectra[a_hap_idxs],
-            spectra[b_hap_idxs],
-        )
-
-        focal_dist = compute_haplotype_distance(a_spectra, b_spectra)
-
-        sim_diff = compute_kinship_diff(kinship_matrix, a_hap_idxs, b_hap_idxs)
-
-        res.append({
-            'marker': markers_filtered[ni],
-            'k': args.k,
-            'distance': focal_dist,
-            'genetic_difference': sim_diff,
-        })
+    res_df = pd.DataFrame({
+        'marker': markers_filtered,
+        'distance': focal_dists,
+    })
+    res_df['k'] = args.k
 
     # then do permutations
     max_distances = permutation_test(
         spectra,
         geno_filtered,
-        kinship_matrix,
         n_permutations=args.permutations,
     )
 
@@ -126,7 +101,6 @@ def main(args):
     # compute the 95th percentile of the maximum distance
     # distribution to figure out the distance corresponding to an alpha
     # of 0.05
-    res_df = pd.DataFrame(res)
     for pctile, label in zip((63, 5), ('suggestive', 'significant')):
         score_pctile = np.percentile(max_distances, 100 - pctile)
         res_df[f'{label}_percentile'] = score_pctile
