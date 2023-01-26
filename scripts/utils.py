@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from typing import List, Tuple
 import numba
+from sklearn.linear_model import LinearRegression
+
 
 @numba.njit
 def manual_cosine_distance(
@@ -61,7 +63,7 @@ def compute_haplotype_distance(
     Returns:
         np.float64: cosine distance measure
     """
-    # first, sum the spectrum arrays such that we add up the 
+    # first, sum the spectrum arrays such that we add up the
     # total number of C>T, C>A, etc. across all samples.
     a_hap_sums = np.sum(a_haps, axis=0)
     b_hap_sums = np.sum(b_haps, axis=0)
@@ -71,7 +73,7 @@ def compute_haplotype_distance(
     return dist
 
 @numba.njit
-def shuffle_spectra(spectra: np.ndarray, seed: int = 42) -> np.ndarray:
+def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
     """shuffle a 2d array of mutation spectrum data so 
     that individual spectra no longer correspond to the
     appropriate sample indices into the rows of that array
@@ -80,17 +82,14 @@ def shuffle_spectra(spectra: np.ndarray, seed: int = 42) -> np.ndarray:
         spectra (np.ndarray): 2d array of mutation spectrum data
         of shape (S, M), where S is the number of samples and M is the
         number of mutations
-        seed (int): random seed
 
     Returns:
         np.ndarray: shuffled version of the input array
     """
-    rng = np.random.default_rng(seed = seed)
-    
     idxs = np.arange(spectra.shape[0])
     # shuffle the spectra so that sample idxs no longer
     # correspond to the appropriate spectrum
-    rng.shuffle(idxs)
+    np.random.shuffle(idxs)
     shuffled_spectra = spectra[idxs, :]
     return shuffled_spectra
 
@@ -98,6 +97,7 @@ def shuffle_spectra(spectra: np.ndarray, seed: int = 42) -> np.ndarray:
 def permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
+    kinship_matrix: np.ndarray,
     n_permutations: int = 1_000,
 ) -> List[np.float64]:
     """conduct a permutation test to assess
@@ -119,13 +119,23 @@ def permutation_test(
     """
 
     # store max cosdist encountered in each permutation
-    max_scores: List[np.float64] = []
+    max_distances: List[np.float16] = []
     for pi in range(n_permutations):
         if pi > 0 and pi % 100 == 0: print (pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)
 
-        max_score = 0
+        # store null distances in each permutation.
+        # since this list is as long as the number of markers,
+        # this might be excessive when we have hundreds of thousands
+        # of markers. much more efficient to just store the maximum
+        # distance encountered in each permutation, but if we want
+        # to regress distances against genetic similarities, we have
+        # to store the full list.
+        #null_distances: List[np.float16] = [] 
+        #genetic_dists: List[np.float16] = []
+        max_distance = 0
+
         # loop over every site/marker in the genotype matrix
         for ni in range(genotype_matrix.shape[0]):
 
@@ -133,7 +143,7 @@ def permutation_test(
             # genotype at the site. NOTE: we assume that genotypes
             # are coded as 0 or 1.
             a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
-            b_hap_idxs = np.where(genotype_matrix[ni] == 1)[0]
+            b_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
 
             a_spectra, b_spectra = (
                 shuffled_spectra[a_hap_idxs],
@@ -141,14 +151,19 @@ def permutation_test(
             )
 
             null_dist = compute_haplotype_distance(a_spectra, b_spectra)
-            
+
+            # compute difference in mean pairwise genetic similarity
+            # between haplotype groups
+            #genetic_dist = compute_kinship_diff(kinship_matrix, a_hap_idxs, b_hap_idxs)
+            #genetic_dists.append(genetic_dist)
+
             # if the distance between haplotype spectra is greater than
             # any we've seen so far in this permutation, store the value
-            if null_dist > max_score: max_score = null_dist
+            if null_dist > max_distance: max_distance = null_dist
 
-        max_scores.append(max_score)
+        max_distances.append(max_distance)
 
-    return max_scores
+    return max_distances
 
 def compute_spectra(
     singletons: pd.DataFrame,
@@ -194,3 +209,43 @@ def compute_spectra(
     samples, mutations, spectra = spectra['Strain'].to_list(), [el[1] for el in spectra.columns[1:]], spectra.values[:, 1:]
 
     return samples, mutations, spectra.astype(np.float32)
+
+
+@numba.njit
+def compute_kinship_matrix(
+    genotype_matrix: np.ndarray,
+    #hap_idxs: np.ndarray,
+) -> np.ndarray:
+
+    #genotype_matrix_sub = genotype_matrix[:, hap_idxs]
+    n_sites, n_samples = genotype_matrix.shape
+
+    kinship = np.zeros((n_samples, n_samples), dtype=np.float32)
+    for ai in range(n_samples):
+        ag = genotype_matrix[:, ai]
+        for bi in range(n_samples):
+            bg = genotype_matrix[:, bi]
+            n_shared_alleles = np.sum(ag == bg)
+            n_total_alleles = n_sites
+            similarity = n_shared_alleles / n_total_alleles
+            if ai == bi: similarity = 1.
+            kinship[ai, bi] = similarity
+    return kinship.astype(np.float32)
+
+
+@numba.njit
+def compute_kinship_diff(kinship_matrix: np.ndarray, a_hap_idxs: np.ndarray, b_hap_idxs: np.ndarray,):
+    
+    a_kinship_matrix = kinship_matrix[a_hap_idxs, :]
+    a_kinship_matrix = a_kinship_matrix[:, a_hap_idxs]
+    b_kinship_matrix = kinship_matrix[b_hap_idxs, :]
+    b_kinship_matrix = b_kinship_matrix[:, b_hap_idxs]
+
+    # get the upper triangle indices of each matrix and get
+    # the mean genetic similarity within it
+    mean_similarities = []
+    for m in (a_kinship_matrix, b_kinship_matrix):
+        mean_similarity = np.mean(np.triu(m, 1))
+        mean_similarities.append(mean_similarity)
+
+    return np.abs(np.diff(np.array(mean_similarities)))[0]

@@ -1,151 +1,16 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
-from typing import List, Any
-import tqdm
 import argparse
-from line_profiler import LineProfiler
-import numba
-import re
-from collections import Counter
 import json
 import sys
-
-@numba.njit()
-def permutation_test(
-    spectra: np.ndarray,
-    genotype_matrix: np.ndarray,
-    n_permutations: int = 1_000,
-) -> List[np.float64]:
-    """conduct a permutation test to assess
-    significance of observed psuedo-qtl.
-
-    Args:
-        spectra (np.ndarray): _description_
-        genotype_matrix (np.ndarray): _description_
-        n_permutations (int, optional): _description_. Defaults to 1_000.
-
-    Returns:
-        List[np.float64]: _description_
-    """
-
-    # then do permutations
-    max_scores: List[np.float64] = [] # store max cosdists encountered in each permutation
-    for pi in range(n_permutations):
-        if pi > 0 and pi % 100 == 0: print (pi)
-        idxs = np.arange(spectra.shape[0])
-        # shuffle the spectra so that sample idxs no longer
-        # correspond to the appropriate spectrum
-        np.random.shuffle(idxs)
-        shuffled_spectra = spectra[idxs, :]
-        max_score = 0
-        # loop over every site in the genotype matrix
-        for ni in range(genotype_matrix.shape[0]):
-
-            # then get the indices of the samples with either
-            # genotype at the site
-            a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
-            b_hap_idxs = np.where(genotype_matrix[ni] == 1)[0]
-
-            a_spectra, b_spectra = (
-                shuffled_spectra[a_hap_idxs],
-                shuffled_spectra[b_hap_idxs],
-            )
-
-            null_dist = compute_haplotype_distance(a_spectra, b_spectra)
-            
-            if null_dist > max_score: max_score = null_dist
-
-        max_scores.append(max_score)
-
-    return max_scores
-
-@numba.njit
-def manual_cosine_distance(
-    a: np.ndarray,
-    b: np.ndarray,
-) -> np.float64:
-    """function that computes cosine distance between
-    two 1d arrays. much faster, since it can be jitted. 
-
-    Args:
-        a (np.ndarray): _description_
-        b (np.ndarray): _description_
-
-    Returns:
-        np.float64: _description_
-    """
-    dot = a.dot(b)
-    a_sumsq, b_sumsq = np.sum(np.square(a)), np.sum(np.square(b))
-    a_norm, b_norm = np.sqrt(a_sumsq), np.sqrt(b_sumsq)
-    cossim = dot / (a_norm * b_norm)
-    return 1 - cossim
-
-@numba.njit
-def compute_mean(a: np.ndarray):
-    """homebrew function to compute the mean
-    on a per-column basis. need to piece this
-    out into its own function so that it can be 
-    jitted, as numba does not support axis kwargs
-    in np.mean
-
-    Args:
-        a (np.ndarray): _description_
-
-    Returns:
-        _type_: _description_
-    """
-    empty_a = np.zeros(a.shape[1])
-    for i in range(a.shape[1]):
-        empty_a[i] = np.mean(a[:, i])
-    return empty_a
-
-@numba.njit
-def compute_haplotype_distance(
-    a_haps: np.ndarray,
-    b_haps: np.ndarray,
-) -> np.float64:
-    """compute the cosine distance between
-    two 1d numpy arrays. each array should summarize
-    the mutation spectrum in a single group of haplotypes,
-    such that the arrays are of shape (M, 1), where M
-    is the number of mutations being used to define the spectrum.
-
-    Args:
-        a_haps (np.ndarray): _description_
-        b_haps (np.ndarray): _description_
-
-    Returns:
-        np.float64: cosine distance measure
-    """
-    a_hap_sums = np.sum(a_haps, axis=0)
-    b_hap_sums = np.sum(b_haps, axis=0)
-
-    dist = manual_cosine_distance(a_hap_sums, b_hap_sums)
-
-    return dist
-
-
-def compute_spectra(
-    singletons: pd.DataFrame,
-    k: int = 1,
-):
-
-    # compute 3-mer spectra
-    hap_spectra_agg = singletons.groupby(['Strain', 'kmer']).agg({'count': sum}).reset_index()#.rename(columns={0: 'count'})
-    # if 1-mer spectra are desired, compute that
-    if k == 1:
-        # add base mutation type
-        hap_spectra_agg['base_mut'] = hap_spectra_agg['kmer'].apply(lambda k: ">".join([k[1], k[5]]))
-        hap_spectra_agg = hap_spectra_agg.groupby(['Strain', 'base_mut']).agg({'count': sum}).reset_index()
-    # get spectra as per-haplotype vectors of mutation counts
-    mut_col = "base_mut" if k == 1 else "kmer"
-    spectra = hap_spectra_agg.pivot(index="Strain", columns=mut_col).reset_index().fillna(value=0)
-    samples, mutations, spectra = spectra['Strain'].to_list(), [el[1] for el in spectra.columns[1:]], spectra.values[:, 1:]
-
-    return samples, mutations, spectra.astype(np.float32)
+from utils import (
+    compute_spectra,
+    compute_haplotype_distance,
+    permutation_test,
+    compute_kinship_diff,
+    compute_kinship_matrix,
+)
 
 def main(args):
 
@@ -187,6 +52,8 @@ def main(args):
     samples, mutations, spectra = compute_spectra(singletons, k=args.k)
     smp2idx = dict(zip(samples, range(len(samples))))
 
+    print (f"Using {len(samples)} samples and {int(np.sum(spectra))} total mutations.")
+
     # weight spectra if desired
     weight_dict = None
     if args.adj_column:
@@ -204,20 +71,22 @@ def main(args):
             spectra[sample_i] *= sample_weight
 
     replace_dict = config_dict['genotypes']
-    geno_asint = geno.replace(replace_dict).replace({-1: np.nan})
-
+    geno_asint = geno.replace(replace_dict).replace({1: np.nan})
+    
     # calculate allele frequencies at each site
     ac = np.nansum(geno_asint[samples], axis=1)
-    an = np.sum(~np.isnan(geno_asint[samples]), axis=1)
+    an = np.sum(~np.isnan(geno_asint[samples]), axis=1) * 2
     afs = ac / an
 
     # only consider sites where allele frequency is between thresholds
     idxs2keep = np.where((afs > 0.05) & (afs < 0.95))[0]
     print ("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
-    markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
+    markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values    
 
     res = []
+
+    kinship_matrix = compute_kinship_matrix(geno_filtered)
 
     # loop over every site in the genotype matrix
     for ni in np.arange(geno_filtered.shape[0]):
@@ -225,9 +94,8 @@ def main(args):
         # then get the indices of the samples with either
         # genotype at the site
         a_hap_idxs = np.where(geno_filtered[ni] == 0)[0]
-        b_hap_idxs = np.where(geno_filtered[ni] == 1)[0]
+        b_hap_idxs = np.where(geno_filtered[ni] == 2)[0]
 
-        #print (ni, geno_filtered[ni], np.nansum(geno_filtered[ni]), np.sum(~np.isnan(geno_filtered[ni])))
         a_spectra, b_spectra = (
             spectra[a_hap_idxs],
             spectra[b_hap_idxs],
@@ -235,35 +103,45 @@ def main(args):
 
         focal_dist = compute_haplotype_distance(a_spectra, b_spectra)
 
+        sim_diff = compute_kinship_diff(kinship_matrix, a_hap_idxs, b_hap_idxs)
+
         res.append({
             'marker': markers_filtered[ni],
             'k': args.k,
             'distance': focal_dist,
+            'genetic_difference': sim_diff,
         })
 
     # then do permutations
-    max_scores = permutation_test(
+    max_distances = permutation_test(
         spectra,
         geno_filtered,
+        kinship_matrix,
         n_permutations=args.permutations,
     )
 
     f, ax = plt.subplots()
-    ax.hist(max_scores, bins=20, ec='k', lw=1)
+    ax.hist(max_distances, bins=20, ec='k', lw=1)
 
-
-    # genome-wide significant and suggestive alphas
+    # compute the 95th percentile of the maximum distance
+    # distribution to figure out the distance corresponding to an alpha
+    # of 0.05
     res_df = pd.DataFrame(res)
     for pctile, label in zip((63, 5), ('suggestive', 'significant')):
-        score_pctile = np.percentile(max_scores, 100 - pctile)
+        score_pctile = np.percentile(max_distances, 100 - pctile)
         res_df[f'{label}_percentile'] = score_pctile
         ax.axvline(x=score_pctile, label=label)
 
     f.savefig('max_dist.png', dpi=300)
 
+    # compute the median of the maximum distance distribution so
+    # that we can compute approximate "odds ratios" for our
+    # observed distances 
+    res_df['null_mean'] = np.mean(max_distances)
+
     # compute genome-scan adjusted p-values at each marker
     # https://rqtl.org/book/rqtlbook_ch04.pdf, pp113-14
-    res_df['pval'] = res_df['distance'].apply(lambda d: np.sum([p >= d for p in max_scores]) / args.permutations)
+    res_df['pval'] = res_df['distance'].apply(lambda d: np.sum([p >= d for p in max_distances]) / args.permutations)
     res_df.to_csv(args.out, index=False)
 
 if __name__ == "__main__":
