@@ -5,21 +5,23 @@ import numpy as np
 from compare_mutation_spectra import mutation_comparison
 import matplotlib.pyplot as plt 
 import seaborn as sns 
+from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 
 PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
-geno = pd.read_csv(f"{PROJDIR}/data/genotypes/BXD.geno").set_index("marker")
+geno = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.geno").set_index("marker")
 
-marker = "rs46045549" # chr19
-#marker = "rs28272806" # chr4 
+marker = "rs46183100" 
 
-k = 3
+chrom = "chr17"
+
+k = 1
 
 geno_at_marker = geno.loc[marker]
 
 singletons = pd.read_csv(f"{PROJDIR}/data/singletons/bxd/annotated_filtered_singletons.csv")
 singletons['count'] = 1
-#singletons = singletons.query('true_epoch == 5')
+#singletons = singletons[singletons['chrom'] == chrom]
 
 samples, mutations, spectra = compute_spectra(singletons, k=k)
 smp2idx = dict(zip(samples, range(len(samples))))
@@ -28,6 +30,10 @@ samples_shared = list(set(samples).intersection(set(geno.columns[1:])))
 
 a_smp_i = np.array([smp2idx[k] for k,v in geno_at_marker.to_dict().items() if k in samples_shared and v == "B"])
 b_smp_i = np.array([smp2idx[k] for k,v in geno_at_marker.to_dict().items() if k in samples_shared and v == "D"])
+
+a_spectra, b_spectra = spectra[a_smp_i], spectra[b_smp_i]
+all_spectra = np.concatenate((a_spectra, b_spectra))
+all_spectra_fracs = all_spectra / np.sum(all_spectra, axis=1)[:, np.newaxis]
 
 a_spectra_sum = np.sum(spectra[a_smp_i], axis=0)
 b_spectra_sum = np.sum(spectra[b_smp_i], axis=0)

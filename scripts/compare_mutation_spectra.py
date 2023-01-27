@@ -250,8 +250,8 @@ def mutation_comparison(
             out_array,
             cmap="coolwarm",
             edgecolor='w',
-            vmin=vmin,
-            vmax=vmax,
+            #vmin=vmin,
+            #vmax=vmax,
         )
 
         # plot "dots" in heatmap where the ratio is significant

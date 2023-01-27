@@ -8,8 +8,8 @@ import seaborn as sns
 
 PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
-geno = pd.read_csv(f"{PROJDIR}/data/genotypes/BXD.geno")
-markers = pd.read_csv(f"{PROJDIR}/data/genotypes/BXD.markers")
+geno = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.geno")
+markers = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.markers")
 geno_merged = geno.merge(markers, on="marker")
 
 singletons = pd.read_csv(f"{PROJDIR}/data/singletons/bxd/annotated_filtered_singletons.csv")
@@ -26,8 +26,8 @@ cols2use = ["marker", "chromosome", "Mb"]
 cols2use.extend(samples_shared)
 geno_merged = geno_merged[cols2use]
 
-marker = "rs46045549" # chr19
-marker = "rs28272806" # chr4
+
+marker = "rs46183100" 
 
 geno_merged['is_focal_marker'] = geno_merged['marker'].apply(lambda m: 1 if m == marker else 0)
 chrom = geno_merged.query('is_focal_marker == 1')['chromosome'].unique()[0]
