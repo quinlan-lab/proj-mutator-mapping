@@ -5,7 +5,9 @@ chroms = ['chr' + c for c in chroms_]
 
 rule all:
     input:
-        expand(PROJDIR + "/csv/bxd.k{k}.significant_markers.csv", k=[1,3])
+        expand(PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv", k=[1,3], cross=["cc"]),
+        expand(PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv", k=[1,3], chrom=chroms, cross=["cc"]),
+
 
 rule download_singletons:
     input:
@@ -16,7 +18,7 @@ rule download_singletons:
         wget -O {output} https://raw.githubusercontent.com/tomsasani/bxd_mutator_manuscript/main/data/singleton_vars/{wildcards.chrom}_singleton_vars.exclude.csv
         """
 
-rule combine_singletons:
+rule combine_bxd_singletons:
     input:
         singletons = expand(PROJDIR + "/data/singletons/{chrom}.singletons.csv", chrom=chroms),
         py_script = PROJDIR + "/scripts/combine_bxd_singletons.py",
@@ -51,13 +53,23 @@ rule combine_cc_geno:
         python {input.py_script} --genotypes {input.genotypes} --out {output}
         """
 
+rule filter_cc_singletons:
+    input:
+        PROJDIR + "/data/singletons/cc/annotated_filtered_singletons.raw.csv"
+    output:
+        PROJDIR + "/data/singletons/cc/annotated_filtered_singletons.csv"
+    shell:
+        """
+        grep -v "CC038\|CC062\|CC072" {input} > {output} 
+        """
+
 rule run_manhattan:
     input:
-        singletons = PROJDIR + "/data/singletons/bxd/annotated_filtered_singletons.csv",
-        config = PROJDIR + "/data/json/bxd.json",
+        singletons = PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv",
+        config = PROJDIR + "/data/json/{cross}.json",
         py_script = PROJDIR + "/scripts/compute_distance.py"
     output:
-        PROJDIR + "/csv/bxd.k{k}.results.csv"
+        PROJDIR + "/csv/{cross}.k{k}.genome.results.csv"
     shell:
         """
         python {input.py_script} --singletons {input.singletons} \
@@ -68,15 +80,44 @@ rule run_manhattan:
 
 rule plot_manhattan:
     input:
-        results = PROJDIR + "/csv/bxd.k{k}.results.csv",
-        markers = PROJDIR + "/data/genotypes/BXD.markers",
+        results = PROJDIR + "/csv/{cross}.k{k}.genome.results.csv",
+        markers = PROJDIR + "/data/genotypes/{cross}.markers",
         py_script = PROJDIR + "/scripts/manhattan.py"
     output:
-        PROJDIR + "/csv/bxd.k{k}.significant_markers.csv"
+        PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv"
     shell:
         """
         python {input.py_script} --markers {input.markers} \
                                  --results {input.results} \
-                                 --outpref /scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/csv/bxd.k{wildcards.k} \
+                                 --outpref /scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome \
         """
 
+rule run_manhattan_chrom:
+    input:
+        singletons = PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv",
+        config = PROJDIR + "/data/json/{cross}.json",
+        py_script = PROJDIR + "/scripts/compute_distance.py"
+    output:
+        PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.results.csv"
+    shell:
+        """
+        python {input.py_script} --singletons {input.singletons} \
+                                 --config {input.config} \
+                                 --out {output} \
+                                 -k {wildcards.k} \
+                                 -chrom {wildcards.chrom}
+        """
+
+rule plot_manhattan_chrom:
+    input:
+        results = PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.results.csv",
+        markers = PROJDIR + "/data/genotypes/{cross}.markers",
+        py_script = PROJDIR + "/scripts/manhattan.py"
+    output:
+        PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv"
+    shell:
+        """
+        python {input.py_script} --markers {input.markers} \
+                                 --results {input.results} \
+                                 --outpref /scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/csv/per-chrom/{wildcards.cross}/k{wildcards.k}.{wildcards.chrom} 
+        """
