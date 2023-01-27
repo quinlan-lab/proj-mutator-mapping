@@ -54,7 +54,7 @@ def main(args):
     )
     axes = g.axes[0]
     for label, level, color in zip(
-        ('Significant distance threshold', 'Suggestive distance threshold'),
+        ('Suggestive distance threshold', 'Significant distance threshold'),
         ('suggestive', 'significant'),
         ("dodgerblue", "firebrick"),
     ):
