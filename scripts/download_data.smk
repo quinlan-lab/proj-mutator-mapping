@@ -5,8 +5,8 @@ chroms = ['chr' + c for c in chroms_]
 
 rule all:
     input:
-        expand(PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv", k=[1,3], cross=["cc"]),
-        expand(PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv", k=[1,3], chrom=chroms, cross=["cc"]),
+        expand(PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv", k=[1,3], cross=["bxd", "cc"]),
+        expand(PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv", k=[1,3], chrom=chroms, cross=["bxd", "cc"]),
 
 
 rule download_singletons:
@@ -105,7 +105,8 @@ rule run_manhattan_chrom:
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
-                                 -chrom {wildcards.chrom}
+                                 -chrom {wildcards.chrom} \
+                                 -permutations 10000
         """
 
 rule plot_manhattan_chrom:
