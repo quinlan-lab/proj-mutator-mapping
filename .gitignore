@@ -1,0 +1,10 @@
+*.png
+*.vcf.gz*
+*.html
+*.bed
+vcf/
+data/genotypes/cemee/
+.snakemake/
+csv/
+data/bam/
+data/vcf/
