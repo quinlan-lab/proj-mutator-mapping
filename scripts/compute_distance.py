@@ -27,16 +27,22 @@ def main(args):
     # merge genotype and marker information
     geno = geno_raw.merge(marker_info, on="marker")
     geno = geno[geno['chromosome'] != "X"]
+    
 
     singletons = pd.read_csv(args.singletons)
     singletons['count'] = 1
 
+    if args.chrom:
+        base_chrom = args.chrom
+        if 'chr' in args.chrom:
+            base_chrom = args.chrom[3:]
+
+        geno = geno[(geno['chromosome'] == base_chrom) | (geno['chromosome'] == f"chr{base_chrom}") ]
+        singletons = singletons[(singletons['chrom'] == base_chrom) | (singletons['chrom'] == f"chr{base_chrom}")]
+
     samples = singletons['Strain'].unique()
     # get the overlap between those and the sample names in the genotype data
     samples_overlap = list(set(samples).intersection(set(geno.columns)))
-
-    # remove known outlier
-    samples_overlap = [s for s in samples_overlap if s != "BXD68"]
 
     if len(samples_overlap) == 0:
         print ("No samples in common between mutation data and genotype matrix.")
@@ -54,6 +60,11 @@ def main(args):
     samples, mutations, spectra = compute_spectra(singletons, k=args.k)
     smp2idx = dict(zip(samples, range(len(samples))))
 
+    # get sums of mutation counts in each strain 
+    spectra_sums = np.sum(spectra, axis=1)
+    spectra2keep = np.where(spectra_sums >= 0)[0]
+    samples, spectra = list(np.array(samples)[spectra2keep]), spectra[spectra2keep]
+
     print (f"Using {len(samples)} samples and {int(np.sum(spectra))} total mutations.")
 
     # weight spectra if desired
@@ -63,7 +74,7 @@ def main(args):
 
     # convert string genotypes to integers based on config definitino
     replace_dict = config_dict['genotypes']
-    geno_asint = geno.replace(replace_dict)
+    geno_asint = geno.replace(replace_dict).replace({1: np.nan})
     
     # calculate allele frequencies at each site
     ac = np.nansum(geno_asint[samples], axis=1)
@@ -71,7 +82,7 @@ def main(args):
     afs = ac / an
 
     # only consider sites where allele frequency is between thresholds
-    idxs2keep = np.where((afs > 0) & (afs < 1))[0]
+    idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
     print ("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
     markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values    
@@ -126,6 +137,7 @@ if __name__ == "__main__":
     p.add_argument("-k", type=int, default=1)
     p.add_argument("-permutations", type=int, default=1_000)
     p.add_argument("-adj_column", default=None)
+    p.add_argument("-chrom", default=None)
     args = p.parse_args()
 
     #numba.set_num_threads(4)
