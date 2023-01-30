@@ -3,10 +3,12 @@ PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
 
+crosses = ["bxd"]
+
 rule all:
     input:
-        expand(PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv", k=[1,3], cross=["bxd", "cc"]),
-        expand(PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv", k=[1,3], chrom=chroms, cross=["bxd", "cc"]),
+        expand(PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv", k=[1,3], cross=crosses),
+        #expand(PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv", k=[1,3], chrom=chroms, cross=["bxd", "cc"]),
 
 
 rule download_singletons:
@@ -23,13 +25,15 @@ rule combine_bxd_singletons:
         singletons = expand(PROJDIR + "/data/singletons/{chrom}.singletons.csv", chrom=chroms),
         py_script = PROJDIR + "/scripts/combine_bxd_singletons.py",
         metadata = PROJDIR + "/data/bam_names_to_metadata.xlsx",
+        config = PROJDIR + "/data/json/{cross}.json",
     output:
-        PROJDIR + "/data/singletons/bxd/annotated_filtered_singletons.csv"
+        PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv"
     shell:
         """
         python {input.py_script} \
                         --metadata {input.metadata} \
                         --singletons {input.singletons} \
+                        --config {input.config} \
                         --out {output}
         """
 
@@ -106,7 +110,7 @@ rule run_manhattan_chrom:
                                  --out {output} \
                                  -k {wildcards.k} \
                                  -chrom {wildcards.chrom} \
-                                 -permutations 10000
+                                 -permutations 1000
         """
 
 rule plot_manhattan_chrom:
