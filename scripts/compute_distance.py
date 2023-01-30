@@ -27,7 +27,7 @@ def main(args):
     # merge genotype and marker information
     geno = geno_raw.merge(marker_info, on="marker")
     geno = geno[geno['chromosome'] != "X"]
-    
+
 
     singletons = pd.read_csv(args.singletons)
     singletons['count'] = 1
@@ -60,7 +60,7 @@ def main(args):
     samples, mutations, spectra = compute_spectra(singletons, k=args.k)
     smp2idx = dict(zip(samples, range(len(samples))))
 
-    # get sums of mutation counts in each strain 
+    # get sums of mutation counts in each strain
     spectra_sums = np.sum(spectra, axis=1)
     spectra2keep = np.where(spectra_sums >= 0)[0]
     samples, spectra = list(np.array(samples)[spectra2keep]), spectra[spectra2keep]
@@ -75,7 +75,7 @@ def main(args):
     # convert string genotypes to integers based on config definitino
     replace_dict = config_dict['genotypes']
     geno_asint = geno.replace(replace_dict).replace({1: np.nan})
-    
+
     # calculate allele frequencies at each site
     ac = np.nansum(geno_asint[samples], axis=1)
     an = np.sum(~np.isnan(geno_asint[samples]), axis=1) * 2
@@ -85,17 +85,21 @@ def main(args):
     idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
     print ("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
-    markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values    
+    markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
 
     #kinship_matrix = compute_kinship_matrix(geno_filtered)
 
     # compute the maximum cosine distance between groups of
     # haplotypes at each site in the genotype matrix
-    focal_dists = compute_max_spectra_dist(spectra, geno_filtered)
+    focal_dists = compute_max_spectra_dist(
+        spectra,
+        geno_filtered,
+    )
 
     res_df = pd.DataFrame({
         'marker': markers_filtered,
         'distance': focal_dists,
+        #'genetic_difference': focal_diffs,
     })
     res_df['k'] = args.k
 
@@ -121,7 +125,7 @@ def main(args):
 
     # compute the median of the maximum distance distribution so
     # that we can compute approximate "odds ratios" for our
-    # observed distances 
+    # observed distances
     res_df['null_mean'] = np.mean(max_distances)
 
     # compute genome-scan adjusted p-values at each marker
