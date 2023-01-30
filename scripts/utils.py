@@ -94,10 +94,14 @@ def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
     return shuffled_spectra
 
 @numba.njit()
-def compute_max_spectra_dist(spectra: np.ndarray, genotype_matrix: np.ndarray,) -> List[np.float32]:
+def compute_max_spectra_dist(
+    spectra: np.ndarray,
+    #kinship_matrix: np.ndarray,
+    genotype_matrix: np.ndarray,
+) -> List[np.float32]:
     """enumerate every possible pairwise comparison between
     groups of sample genotypes, and compute the cosine distance
-    between the pair. then, store the maximum distance between haplotypes
+    between the pair. then, store the inter-haplotype distance at each marker
 
     Args:
         spectra (np.ndarray): _description_
@@ -109,6 +113,8 @@ def compute_max_spectra_dist(spectra: np.ndarray, genotype_matrix: np.ndarray,) 
 
     # store distances at each marker
     focal_dist: List[np.float32] = []
+    # and the difference in mean kinship
+    #kinship_diffs: List[np.float32] = []
     # loop over every site in the genotype matrix
     for ni in np.arange(genotype_matrix.shape[0]):
         a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
@@ -120,10 +126,16 @@ def compute_max_spectra_dist(spectra: np.ndarray, genotype_matrix: np.ndarray,) 
         )
 
         cur_dist = compute_haplotype_distance(a_spectra, b_spectra)
-        
-        focal_dist.append(cur_dist)
+        # kinship_diff = compute_kinship_diff(
+        #     kinship_matrix,
+        #     a_hap_idxs,
+        #     b_hap_idxs,
+        # )
 
-    return focal_dist
+        focal_dist.append(cur_dist)
+        #kinship_diffs.append(kinship_diff)
+
+    return focal_dist#, kinship_diffs
 
 @numba.njit()
 def permutation_test(
@@ -160,6 +172,7 @@ def permutation_test(
         # compute the cosine distances at each marker
         perm_distances = compute_max_spectra_dist(
             shuffled_spectra,
+            #kinship_matrix,
             genotype_matrix,
         )
         max_distances.append(max(perm_distances))
