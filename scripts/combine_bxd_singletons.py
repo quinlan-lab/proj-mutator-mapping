@@ -1,6 +1,25 @@
 import pandas as pd
 import argparse
 import re
+from collections import Counter
+import json
+
+def find_haplotype(genos: pd.DataFrame, sample: str) -> str:
+    """
+    figure out whether each strain has a B or D haplotype,
+    or is heterozygous, at the genotype marker at the peak
+    of the QTL on chromosome 4
+    """
+
+    genos_in_smp = genos[sample].values
+    geno_freq = Counter(genos_in_smp)
+    total = sum([i[1] for i in geno_freq.items()])
+    most_freq_geno = "H"
+    for g in ["B", "D"]:
+        if geno_freq[g] > (total * 0.5): most_freq_geno = g[0]
+        else: continue
+
+    return most_freq_geno
 
 def get_generation(gen: str) -> int:
     """
@@ -43,6 +62,21 @@ def main(args):
 
     combined = pd.concat(combined)
 
+    # read in JSON file with file paths
+    config_dict = None
+    with open(args.config, "rb") as config:
+        config_dict = json.load(config)
+
+    geno_raw = pd.read_csv(config_dict['geno'])
+    marker_info = pd.read_csv(config_dict['markers'])
+
+    # merge genotype and marker information
+    geno = geno_raw.merge(marker_info, on="marker")
+
+    # get genotypes at top marker at chr4 eQTL
+    rsids = ["rs52263933"]
+    genos_at_markers = geno[geno['marker'].isin(rsids)]
+
     metadata = pd.read_excel(args.metadata)
     metadata['n_generations'] = metadata['Generation at sequencing'].apply(lambda g: get_generation(g))
     metadata = metadata[[
@@ -53,17 +87,18 @@ def main(args):
     ]].dropna()
     metadata = metadata[metadata['n_generations'] != "NA"].astype({'n_generations': int})
 
-
-    #metadata = metadata.query('n_generations >= 40')
-    #metadata = metadata[metadata['true_epoch'].isin([1,2,4,6])]
-    #gn2bam = dict(zip(metadata['GeneNetwork name'], metadata['bam_name']))
-    #bam2gn = {v:k for k,v in gn2bam.items()}
+    #metadata = metadata.query('n_generations >= 20')
+    #metadata = metadata[metadata['true_epoch'].isin([4])]
 
     combined_merged = combined.merge(metadata, left_on="bxd_strain", right_on="bam_name")
-
-    #combined['Strain'] = combined['bxd_strain'].apply(lambda s: bam2gn[s] if s in bam2gn else "NA")
-    #combined = combined[combined['Strain'] != "NA"]
     combined_merged['Strain'] = combined_merged['GeneNetwork name']
+
+    combined_merged['haplotype_at_qtl'] = combined_merged['Strain'].apply(
+    lambda s: find_haplotype(genos_at_markers, s)
+    if s in genos_at_markers.columns else "NA")
+
+    combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "D"]
+
     combined_merged = combined_merged[combined_merged['Strain'] != "BXD68"]
     combined_merged.to_csv(args.out, index=False)
 
@@ -71,6 +106,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--singletons", nargs="+")
     p.add_argument("--metadata")
+    p.add_argument("--config")
     p.add_argument("--out")
     args = p.parse_args()
     main(args)
