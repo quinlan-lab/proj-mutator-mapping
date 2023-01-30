@@ -1,7 +1,7 @@
 from cyvcf2 import VCF 
 import numpy as np
 
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-bxd"
+PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
 vcf = VCF(f"{PROJDIR}/data/vcf/bxd.regions.snpeff.vcf.gz", gts012=True)
 smp2idx = dict(zip(vcf.samples, range(len(vcf.samples))))
@@ -10,9 +10,10 @@ DBA = "sample_4512-JFI-0334_DBA_2J_three_lanes_phased_possorted_bam"
 C57 = "sample_4512-JFI-0333_C57BL_6J_two_lanes_phased_possorted_bam"
 
 for v in vcf:
+    if len(v.ALT) > 1: continue
     annotations = v.INFO.get("ANN").split(';')
     rel_ann = [a for a in annotations if a.split('|')[7] == "protein_coding"]
-    if not any([a.split('|')[2] in ("MODIFIER", "MODERATE", "HIGH") for a in rel_ann]): continue 
+    if not any([a.split('|')[2] in ("MODERATE", "HIGH") for a in rel_ann]): continue 
     
     gts = v.gt_types 
     gqs = v.gt_quals 
@@ -41,6 +42,7 @@ for v in vcf:
     an = good_idxs.shape[0] * 2
     for a in rel_ann:
         alt, cons, impact, gene = a.split('|')[:4]
-        print ('\t'.join(list(map(str, [v.CHROM, v.start, v.end, ac, an, cons, impact, gene]))))
+        change = a.split('|')[10]
+        print ('\t'.join(list(map(str, [v.CHROM, v.start, v.end, ac, an, cons, impact, gene, change]))))
 
     
