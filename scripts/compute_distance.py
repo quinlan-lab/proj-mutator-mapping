@@ -8,10 +8,8 @@ import sys
 from utils import (
     compute_spectra,
     compute_haplotype_distance,
-    permutation_test,
-    compute_kinship_diff,
-    compute_kinship_matrix,
-    compute_max_spectra_dist,
+    perform_permutation_test,
+    perform_ihd_scan,
 )
 
 def main(args):
@@ -91,7 +89,7 @@ def main(args):
 
     # compute the maximum cosine distance between groups of
     # haplotypes at each site in the genotype matrix
-    focal_dists = compute_max_spectra_dist(
+    focal_dists = perform_ihd_scan(
         spectra,
         geno_filtered,
     )
@@ -99,12 +97,11 @@ def main(args):
     res_df = pd.DataFrame({
         'marker': markers_filtered,
         'distance': focal_dists,
-        #'genetic_difference': focal_diffs,
     })
     res_df['k'] = args.k
 
     # then do permutations
-    max_distances = permutation_test(
+    max_distances = perform_permutation_test(
         spectra,
         geno_filtered,
         n_permutations=args.permutations,
