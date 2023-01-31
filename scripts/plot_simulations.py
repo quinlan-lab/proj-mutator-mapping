@@ -6,16 +6,19 @@ import numpy as np
 PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
 df = pd.read_csv(f"{PROJDIR}/results.csv")
-df['pass'] = df['pval'].apply(lambda p: p <= 0.05)
+df['Power'] = df['pval'].apply(lambda p: p <= 0.05)
 
-group_cols = """n_haplotypes,frac_with_eQTL,augment_factor,mutation_count,mutation,n_markers""".split(",")
-grouped_df = df.groupby(group_cols).agg({'pass': [np.mean, np.std]}).reset_index()
+group_cols = [
+    "# of haplotypes",
+    "% with mutator",
+    "Mutator effect size",
+    "# of mutations",
+    "Mutation type",
+    "# of genotyped markers",
+]
 
-rename_cols = group_cols + ["mean_pass", "std_pass"]
-grouped_df.columns = rename_cols
-
-g = sns.FacetGrid(df, row="mutation", col="n_haplotypes")
-g.map(sns.lineplot, "augment_factor", "pass", "mutation_count")
+g = sns.FacetGrid(df, row="Mutation type", col="# of haplotypes", aspect=1.5)
+g.map(sns.lineplot, "Mutator effect size", "Power", "# of mutations")
 g.add_legend()
 g.tight_layout()
 
