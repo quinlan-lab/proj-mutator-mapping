@@ -1,17 +1,8 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 import tqdm
 import itertools
 import pandas as pd
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import AgglomerativeClustering, KMeans
-import hdbscan
-from sklearn.metrics import silhouette_score
 from scipy.spatial.distance import cosine as cosdist
-from line_profiler import LineProfiler
 import numba
 
 class Haplotypes(object):
@@ -23,7 +14,7 @@ class Haplotypes(object):
         frac: float,
         augment: float,
         count: int,
-        idx: int,
+        idx: np.ndarray,
         lambdas: np.ndarray,
     ):
         self.n_haplotypes = n_haplotypes
@@ -132,7 +123,7 @@ def run_permutations(
 
         max_dist = 0
 
-        for mi in range(n_markers):
+        for _ in range(n_markers):
 
             # at each marker, choose a random number of samples to make
             # the wt and mut haps, poisson distributed around 0.5
@@ -165,19 +156,52 @@ def run_permutations(
 def main():
     rng = np.random.default_rng(42)
 
-    mutations = ["C>T", "C>A", "C>G", "A>T", "A>C", "A>G"]
+    base_mutations = ["C>T", "C>A", "C>G", "A>T", "A>C", "A>G"]
+    base_lambdas = [0.4, 0.1, 0.075, 0.075, 0.075, 0.275]
+    nucs = ["A", "T", "C", "G"]
+
+    kmer_size = 1
+
+    if kmer_size == 1:
+        mutations, lambdas = base_mutations.copy(), base_lambdas.copy()
+    else:
+        # if we want to do the 3-mer spectrum, we'll just parcel out
+        # mutation probabilities equally to every 3-mer associated with
+        # a particular "base" mutation type
+        mutations, lambdas = [], []
+        for m, l in zip(base_mutations, base_lambdas):
+            per_k_l = l / 16
+            orig, new = m.split('>')
+            for fp in nucs:
+                for tp in nucs:
+                    kmer = f"{fp}{orig}{tp}>{fp}{new}{tp}"
+                    mutations.append(kmer)
+                    lambdas.append(per_k_l)
+
+    lambdas = np.array(lambdas)
     idx2mut = dict(zip(range(len(mutations)), mutations))
-    lambdas = np.array([0.4, 0.1, 0.075, 0.075, 0.075, 0.275])
+    mut2idx = {v:k for k,v in idx2mut.items()}
 
     res = []
 
-    n = [20, 50, 100] # number of haplotypes to simulate
+    n = [50, 100] # number of haplotypes to simulate
     f = [0.5] # fraction of samples to add a mutator to
-    m = [1.01, 1.05, 1.1, 1.5] # amount to augment the mutation probability (lambda) by
-    i = [0, 1, 2] # mutation to augment
-    c = [50, 100, 200, 500] # number of mutations to simulate per haplotypes
+    m = [1.01, 1.05, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0] # amount to augment the mutation probability (lambda) by
+    if kmer_size == 3:
+        i = [[21, 24, 28, 29, 44]] # mutation(s) to augment
+        i = [
+            list(range(0, 4)),
+            list(range(0, 8)),
+            list(range(0, 16)),
+            list(range(16, 20)),
+            list(range(16, 24)),
+            list(range(16, 32)),
+        ]
+    else:
+        i = [0, 1, 2]
+    c = [50, 100, 200] # number of mutations to simulate per haplotypes
     p = [1.] # fraction of mutations subject to effects of mutator
-    k = [100] # number of markers used
+    k = [1] # number of markers used
 
     for (
             n_haplotypes,
@@ -207,12 +231,11 @@ def main():
                 frac=frac,
                 augment=augment,
                 count=count,
-                idx=idx,
+                idx=np.array(idx),
                 lambdas=lambdas,
             )
 
             haplotypes.generate_haplotypes(pct_to_augment=pct_to_augment)
-            #haplotypes.generate_focal_dist()
 
             # in the GWAS scenario, we are using markers that are approximately
             # 50% AF. so, when trying to detect our mutator, the best case scenario
@@ -224,12 +247,11 @@ def main():
 
             # generate a 50/50 split of mut and wt haplotypes, with the expectation
             # that all of the mut haplotypes are in the same group at this marker
-            n_mut_haps = int(haps.shape[0] / 2)
+            n_mut_haps = haplotypes.hap_mut.shape[0]
             n_wt_haps = haps.shape[0] - n_mut_haps
             mut_hap_idxs = np.arange(n_mut_haps)
             wt_hap_idxs = np.arange(n_wt_haps) + 1
             wt_hap_idxs += np.max(mut_hap_idxs)
-
 
             focal_dist = manual_cosine_distance(
                 np.sum(haps[mut_hap_idxs], axis=0),
@@ -243,16 +265,24 @@ def main():
                 frac=0.5,
             )
 
-            # what fraction of randomly shuffled "marker haplotypes" produce
-            # a cosine distance >= the focal distance
+            mutation_type = None
+            if kmer_size == 1:
+                mutation_type = idx2mut[idx]
+            else:
+                mutation_types = [idx2mut[i] for i in idx]
+                base_muts = [">".join([m[1], m[5]]) for m in mutation_types]
+                assert len(set(base_muts)) == 1
+                base_mut = base_muts[0]
+                pct_augmented = int((len(mutation_types) / 16) * 100)
+                mutation_type = f"{pct_augmented}% of {base_mut}"
+
             res.append({
-                    'n_haplotypes': n_haplotypes,
-                    'frac_with_eQTL': frac,
-                    'augment_factor': augment,
-                    'mutation_count': count,
-                    'mutation': idx2mut[idx],
-                    #'pct_to_augment': pct_to_augment,
-                    'n_markers': n_markers,
+                    '# of haplotypes': n_haplotypes,
+                    '% with mutator': frac,
+                    'Mutator effect size': augment,
+                    '# of mutations': count,
+                    'Mutation type': mutation_type,
+                    '# genotyped markers': n_markers,
                     'pval': sum([d >= focal_dist for d in all_dists]) / n_permutations,
                     'replicate': rep,
                 })
