@@ -13,7 +13,7 @@ small number of input files.
 
 ### Description of input files 
 
-1. *De novo* germline mutation data
+1. ***De novo* germline mutation data**
 
     Mutation data should be in a CSV file with **three required columns** as follows:
 
@@ -30,7 +30,7 @@ small number of input files.
     The dataframe can have any number of additional columns, but only the three 
     defined above will be used.
 
-2. Marker genotypes 
+2. **Marker genotypes**
 
     Genotype data should be formatted in a similar fashion as in [R/qtl2](https://kbroman.org/qtl2/). Genotypes should be in a CSV file with N rows, where N is the number of genotyped markers. There should be a single column denoting the marker name, and as many columns as there are samples. See below:
 
@@ -41,7 +41,7 @@ small number of input files.
     rs0003,D,D,D
     ```
 
-3. Marker information (optional)
+3. **Marker information (optional)**
 
     If you wish to generate Manhattan-esque plots that summarize the results
     of an IHD scan, you'll need to provide a final CSV that links marker IDs with
@@ -55,7 +55,7 @@ small number of input files.
     ```
 
 
-4. Configuration file
+4. **Configuration file**
 
     The final required file specifies the *absolute* paths to the marker genotypes and associated metadata, and defines the genotypes that are present in the marker genotype file. This configuration file should be JSON-formatted and look something like this:
 
@@ -78,7 +78,7 @@ small number of input files.
 Once you have assembled the input files above, a scan can be performed as follows:
 
 ```
-python scripts/compute_distance.py \
+python scripts/run_ihd_scan.py \
         --singletons /path/to/mutation/csv \
         --config /path/to/config/json \
         --out /name/of/output/csv \
@@ -89,6 +89,25 @@ There are a small number of optional arguments:
 * `-k` sets the kmer size to use for the mutation types (k = 1 will compute distances between aggregate 1-mer mutation spectra, k = 3 will compute distances between aggregate 3-mer mutation spectra). Default value is 1. 
 
 * `-permutations` sets the number of permutations to use when calculating significance thresholds for the IHD scan. Default value is 1,000.
+
+### Plotting the results of an IHD scan
+
+```
+python scripts/plot_ihd_results.py \
+        --results /path/to/output/csv \
+        --markers /path/to/marker/metadata/csv \
+        --outpref output_prefix
+```
+
+There is one optional argument, `-colname`, that can be used to specify the name of the column in the marker metadata CSV that indicates the physical/genetic map position you wish to plot in the Manhattan plot. The argument defaults to "Mb."
+
+## Running tests
+
+Tests can be run using `pytest` from the root level of the project directory as:
+
+```
+pytest .
+```
 
 ## Project layout
 
