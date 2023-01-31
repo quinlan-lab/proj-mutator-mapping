@@ -1,0 +1,7 @@
+site_name: Mapping mutators with inter-haplotype distance
+
+theme:
+  name: "material"
+
+plugins:
+  - mkdocstrings
