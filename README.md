@@ -112,8 +112,8 @@ pytest .
 ## Project layout
 
     scripts/
-        compute_distance.py  # wrapper that calls utilities for computing inter-haplotype distances (IHD)
-        plot_manhattan.py    # code used to plot results of IHD scans
+        run_ihd_scan.py  # wrapper that calls utilities for computing inter-haplotype distances (IHD)
+        plot_ihd_scan.py    # code used to plot results of IHD scans
         utils.py             # bulk of the actual methods used for IHD
     tests/
         fixtures.py          # fixtures used by `pytest`
