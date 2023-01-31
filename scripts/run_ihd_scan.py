@@ -125,28 +125,40 @@ def main(args):
     # observed distances
     res_df['null_mean'] = np.mean(max_distances)
 
-    # compute genome-scan adjusted p-values at each marker
-    # https://rqtl.org/book/rqtlbook_ch04.pdf, pp113-14
     res_df['pval'] = res_df['distance'].apply(lambda d: np.sum([p >= d for p in max_distances]) / args.permutations)
     res_df.to_csv(args.out, index=False)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--singletons")
-    p.add_argument("--config")
-    p.add_argument("--out")
-    p.add_argument("-k", type=int, default=1)
-    p.add_argument("-permutations", type=int, default=1_000)
+    p.add_argument(
+        "--singletons",
+        type=str,
+        help="Path to mutation data in CSV format.",
+    )
+    p.add_argument(
+        "--config",
+        type=str,
+        help="Path to config file in JSON format.",
+    )
+    p.add_argument(
+        "--out",
+        help="Path in which to store the results of the IHD scan.",
+    )
+    p.add_argument(
+        "-k",
+        type=int,
+        default=1,
+        help="kmer size used for grouping mutations",
+    )
+    p.add_argument(
+        "-permutations",
+        type=int,
+        default=1_000,
+        help=
+        "Number of permutations to perform when calculating significance thresholds.",
+    )
     p.add_argument("-adj_column", default=None)
     p.add_argument("-chrom", default=None)
     args = p.parse_args()
 
-    #numba.set_num_threads(4)
-
-
-    # lp = LineProfiler()
-    # lp.add_function(compute_haplotype_distance)
-    # lp_wrapper = lp(main)
-    # lp_wrapper(args)
-    # lp.print_stats()
     main(args)

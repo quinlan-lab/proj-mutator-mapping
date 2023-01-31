@@ -87,7 +87,7 @@ def main(args):
     ]].dropna()
     metadata = metadata[metadata['n_generations'] != "NA"].astype({'n_generations': int})
 
-    #metadata = metadata.query('n_generations >= 20')
+    metadata = metadata.query('n_generations >= 20')
     #metadata = metadata[metadata['true_epoch'].isin([4])]
 
     combined_merged = combined.merge(metadata, left_on="bxd_strain", right_on="bam_name")
@@ -97,7 +97,7 @@ def main(args):
     lambda s: find_haplotype(genos_at_markers, s)
     if s in genos_at_markers.columns else "NA")
 
-    combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "D"]
+    #combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "D"]
 
     combined_merged = combined_merged[combined_merged['Strain'] != "BXD68"]
     combined_merged.to_csv(args.out, index=False)

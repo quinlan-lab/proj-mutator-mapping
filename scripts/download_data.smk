@@ -71,7 +71,7 @@ rule run_manhattan:
     input:
         singletons = PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv",
         config = PROJDIR + "/data/json/{cross}.json",
-        py_script = PROJDIR + "/scripts/compute_distance.py"
+        py_script = PROJDIR + "/scripts/run_ihd_scan.py"
     output:
         PROJDIR + "/csv/{cross}.k{k}.genome.results.csv"
     shell:
@@ -86,7 +86,7 @@ rule plot_manhattan:
     input:
         results = PROJDIR + "/csv/{cross}.k{k}.genome.results.csv",
         markers = PROJDIR + "/data/genotypes/{cross}.markers",
-        py_script = PROJDIR + "/scripts/manhattan.py"
+        py_script = PROJDIR + "/scripts/plot_ihd_results.py"
     output:
         PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv"
     shell:
@@ -100,7 +100,7 @@ rule run_manhattan_chrom:
     input:
         singletons = PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv",
         config = PROJDIR + "/data/json/{cross}.json",
-        py_script = PROJDIR + "/scripts/compute_distance.py"
+        py_script = PROJDIR + "/scripts/run_ihd_scan.py"
     output:
         PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.results.csv"
     shell:
@@ -117,7 +117,7 @@ rule plot_manhattan_chrom:
     input:
         results = PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.results.csv",
         markers = PROJDIR + "/data/genotypes/{cross}.markers",
-        py_script = PROJDIR + "/scripts/manhattan.py"
+        py_script = PROJDIR + "/scripts/plot_ihd_results.py"
     output:
         PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv"
     shell:
