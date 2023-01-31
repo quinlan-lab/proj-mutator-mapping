@@ -10,15 +10,17 @@ def manual_cosine_distance(
     a: np.ndarray,
     b: np.ndarray,
 ) -> np.float64:
-    """function that computes cosine distance between
-    two 1d arrays. much faster, since it can be jitted. 
+    """Compute the cosine distance between
+    two 1D numpy arrays. Although methods to compute
+    cosine similarity and distance exist in `scipy` and
+    `sklearn`, 
 
     Args:
-        a (np.ndarray): _description_
-        b (np.ndarray): _description_
+        a (np.ndarray): A 1D numpy array of size (N, ).
+        b (np.ndarray): A 1D numpy array of size (N, ).
 
     Returns:
-        np.float64: _description_
+        np.float64: Cosine distance between a and b.
     """
     dot = a.dot(b)
     a_sumsq, b_sumsq = np.sum(np.square(a)), np.sum(np.square(b))
@@ -27,18 +29,18 @@ def manual_cosine_distance(
     return 1 - cossim
 
 @numba.njit
-def compute_mean(a: np.ndarray):
-    """homebrew function to compute the mean
-    on a per-column basis. need to piece this
-    out into its own function so that it can be 
-    jitted, as numba does not support axis kwargs
-    in np.mean
+def compute_colmean(a: np.ndarray) -> np.ndarray:
+    """Compute the mean of a 2D numpy array
+    on a per-column basis. Since `numba` does not
+    support kwargs in the `np.mean` function, it's 
+    necessary to piece this out into its own function 
+    so that it can be decorated with `numba.njit`'.
 
     Args:
-        a (np.ndarray): _description_
+        a (np.ndarray): A 2D numpy array of size (N, M).
 
     Returns:
-        _type_: _description_
+        np.ndarray: A 1D numpy array of size (M, ).
     """
     empty_a = np.zeros(a.shape[1])
     for i in range(a.shape[1]):
@@ -50,18 +52,25 @@ def compute_haplotype_distance(
     a_haps: np.ndarray,
     b_haps: np.ndarray,
 ) -> np.float64:
-    """compute the cosine distance between
-    two 1d numpy arrays. each array should summarize
-    the mutation spectrum in a single group of haplotypes,
-    such that the arrays are of shape (M, 1), where M
-    is the number of mutations being used to define the spectrum.
+    """Compute the cosine distance between the aggregate
+    mutation spectrum of two collections of haplotype mutation data.
+    The input arrays should both be 2D numpy arrays of size (N, M), 
+    with rows and columns corresponding to samples and mutation types, 
+    respectively. This method will first aggregate the mutation spectra across 
+    samples to create two new 1D arrays, each of size (M, ). Then, it 
+    will compute the cosine distance between  those two 1D arrays. 
 
     Args:
-        a_haps (np.ndarray): _description_
-        b_haps (np.ndarray): _description_
+        a_haps (np.ndarray): 2D array of size (N, M) containing the mutation 
+        spectrum of each sample, where N is the number of samples and 
+        M is the number of mutation types.
+        b_haps (np.ndarray): 2D array of size (N, M) containing the mutation 
+        spectrum of each sample, where N is the number of samples and 
+        M is the number of mutation types.
 
     Returns:
-        np.float64: cosine distance measure
+        np.float64: Cosine distance between the aggregate mutation spectra
+        of the two haplotypes.
     """
     # first, sum the spectrum arrays such that we add up the
     # total number of C>T, C>A, etc. across all samples.
@@ -74,17 +83,19 @@ def compute_haplotype_distance(
 
 @numba.njit
 def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
-    """shuffle a 2d array of mutation spectrum data so 
-    that individual spectra no longer correspond to the
-    appropriate sample indices into the rows of that array
+    """Randomly shuffle the rows of a 2D numpy array of 
+    mutation spectrum data of size (N, M), where N is the number
+    of samples and M is the number of mutation types. Shuffled array
+    is returned such that sample mutation spectra no longer correspond to the
+    appropriate sample indices into the rows of the array.
 
     Args:
-        spectra (np.ndarray): 2d array of mutation spectrum data
-        of shape (S, M), where S is the number of samples and M is the
-        number of mutations
+        spectra (np.ndarray): 2D numpy array of mutation spectrum data
+        of shape (N, M), where N is the number of samples and M is the
+        number of mutation types.
 
     Returns:
-        np.ndarray: shuffled version of the input array
+        np.ndarray: The input array, but with shuffled rows.
     """
     idxs = np.arange(spectra.shape[0])
     # shuffle the spectra so that sample idxs no longer
@@ -94,27 +105,30 @@ def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
     return shuffled_spectra
 
 @numba.njit()
-def compute_max_spectra_dist(
+def perform_ihd_scan(
     spectra: np.ndarray,
-    #kinship_matrix: np.ndarray,
     genotype_matrix: np.ndarray,
-) -> List[np.float32]:
-    """enumerate every possible pairwise comparison between
-    groups of sample genotypes, and compute the cosine distance
-    between the pair. then, store the inter-haplotype distance at each marker
+) -> List[np.float64]:
+    """Iterate over every genotyped marker in the `genotype_matrix`, 
+    divide the haplotypes into two groups based on sample genotypes at the 
+    marker, and compute the distance between the aggregate mutation spectra
+    of each group. Return a list of cosine distances of length (G, ), where
+    G is the number of genotyped sites.
 
     Args:
-        spectra (np.ndarray): _description_
-        genotype_matrix (np.ndarray): _description_
+        spectra (np.ndarray): A 2D numpy array of mutation spectra in all genotyped
+        samples, of size (N, M) where N is the number of samples and M is the number of
+        mutation types.
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every genotyped
+        marker, of size (G, N), where G is the number of genotyped sites and N is the number
+        of samples.
 
     Returns:
-        np.ndarray: _description_
+        List[np.float64]: List of inter-haplotype cosine distances at every marker.
     """
 
     # store distances at each marker
     focal_dist: List[np.float32] = []
-    # and the difference in mean kinship
-    #kinship_diffs: List[np.float32] = []
     # loop over every site in the genotype matrix
     for ni in np.arange(genotype_matrix.shape[0]):
         a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
@@ -126,39 +140,43 @@ def compute_max_spectra_dist(
         )
 
         cur_dist = compute_haplotype_distance(a_spectra, b_spectra)
-        # kinship_diff = compute_kinship_diff(
-        #     kinship_matrix,
-        #     a_hap_idxs,
-        #     b_hap_idxs,
-        # )
-
+    
         focal_dist.append(cur_dist)
-        #kinship_diffs.append(kinship_diff)
 
-    return focal_dist#, kinship_diffs
+    return focal_dist
 
 @numba.njit()
-def permutation_test(
+def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
-    #kinship_matrix: np.ndarray,
     n_permutations: int = 1_000,
 ) -> List[np.float64]:
-    """conduct a permutation test to assess
-    significance of observed psuedo-qtl.
+    """Conduct a permutation test to assess the significance of 
+    any observed IHD peaks. In each of the `n_permutations` trials, 
+    do the following:
+    1. create a shuffled version of the input mutation `spectra`, so that
+    sample names/indices no longer correspond to the appropriate mutation
+    spectrum.
+    2. run an IHD scan by computing the cosine distance between
+    the aggregate mutation spectrum of samples with either genotype
+    at every marker in the `genotype_matrix`.
+    3. store the maximum cosine distance encountered at any marker.
+    Then, return a list of the maximum cosine distances encountered in each of
+    the trials.
 
     Args:
-        spectra (np.ndarray): 2d array of mutation spectrum data
-        of shape (S, M), where S is the number of samples and M is the
-        number of mutations
-        genotype_matrix (np.ndarray): 2d array of shape (N, S), where
-        N is the number of genotyped sites and S is the number of samples.
-        n_permutations (int, optional): number of permutations to perform
-        (i.e., number of times to shuffle the spectra data and compute cosine
-        distances at each marker). Defaults to 1_000.
+        spectra (np.ndarray): A 2D numpy array of mutation spectra in all genotyped
+        samples, of size (N, M) where N is the number of samples and M is the number of
+        mutation types.
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every genotyped
+        marker, of size (G, N), where G is the number of genotyped sites and N is the number
+        of samples.
+        n_permutations (int, optional): Number of permutations to perform
+        (i.e., number of times to shuffle the spectra and compute IHDs
+        at each marker). Defaults to 1_000.
 
     Returns:
-        List[np.float64]: list of length `n_permutations`, containing the
+        List[np.float64]: List of length `n_permutations`, containing the
         maximum cosine distance encountered in each permutation.
     """
 
@@ -168,11 +186,9 @@ def permutation_test(
         if pi > 0 and pi % 100 == 0: print (pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)
-
         # compute the cosine distances at each marker
-        perm_distances = compute_max_spectra_dist(
+        perm_distances = perform_ihd_scan(
             shuffled_spectra,
-            #kinship_matrix,
             genotype_matrix,
         )
         max_distances.append(max(perm_distances))
@@ -183,31 +199,36 @@ def compute_spectra(
     singletons: pd.DataFrame,
     k: int = 1,
 ) -> Tuple[List[str], List[str], np.ndarray,]:
-    """compute the mutation spectrum of every sample in 
-    the input dataframe of mutation data. we assume the input
-    dataframe either contains a single entry for every mutation observed
-    in every sample, or contains the aggregate count of each mutation type
-    observed in each sample. the input dataframe must have at least three columns:
-    one called 'Strain' (denoting the sample), one called 'kmer' (denoting)
-    the 3-mer context of the mutation), and 'count' (denoting the number of times
-    a mutation of type `kmer` was observed in `Strain`). 
+    """Compute the mutation spectrum of every sample in 
+    the input pd.DataFrame of mutation data. The input
+    dataframe should either contain a single entry for every mutation observed
+    in every sample, or the aggregate count of each mutation type
+    observed in each sample. The input dataframe must have at least three columns:
+    'Strain' (denoting the sample), 'kmer' (denoting the 3-mer context of the 
+    mutation -- e.g, CCT>CAT), and 'count' (denoting the number of times
+    a mutation of type `kmer` was observed in `Strain`). If the dataframe contains
+    a single entry for every mutation observed in every sample, then the 'count'
+    column should contain a value of 1 in every row.
 
     Args:
-        singletons (pd.DataFrame): dataframe containing information about 
-        the mutations observed in each sample. the dataframe must have at 
-        least three columns: one called 'Strain' (denoting the sample), one 
-        called 'kmer' (denoting the 3-mer context of the mutation), and one 
-        called 'count' (denoting the number of times a mutation of type `kmer` 
-        was observed in `Strain`). 
+        singletons (pd.DataFrame): Pandas dataframe containing information about 
+        the mutations observed in each sample. The dataframe must have at 
+        least three columns: 'Strain' (denoting the sample), 'kmer' (denoting 
+        the 3-mer context of the mutation), and 'count' (denoting the number 
+        of times a mutation of type `kmer` was observed in `Strain`). 
         k (int, optional): k-mer size of mutations (e.g., k=3 means that 
         we will treat mutations as NXN>NYN, where Ns represent the nucleotide contexts
         on either side of the mutation, whereas k=1 means we will treat
         them as X>Y). Defaults to 1.
 
     Returns:
-        Tuple[List[str], List[str], np.ndarray,]: list of samples in the dataframe 
-        (which are indexed in the same order as the rows of the spectra 2d array), 
-        list of mutations observed, and a 2d array of mutation spectrum.
+        Tuple[List[str], List[str], np.ndarray,]: A tuple of three objects:
+        1. A list of samples in the dataframe (which are indexed in the same 
+        order as the rows of the 2D `spectra` array).
+        2. A list of the unique mutation types observed in the dataframe.
+        3. A 2D numpy array of mutation spectra in all genotyped
+        samples, of size (N, M) where N is the number of samples and M is the number of
+        mutation types.
     """
 
     # compute 3-mer spectra
@@ -223,43 +244,3 @@ def compute_spectra(
     samples, mutations, spectra = spectra['Strain'].to_list(), [el[1] for el in spectra.columns[1:]], spectra.values[:, 1:]
 
     return samples, mutations, spectra.astype(np.float32)
-
-
-@numba.njit
-def compute_kinship_matrix(
-    genotype_matrix: np.ndarray,
-    #hap_idxs: np.ndarray,
-) -> np.ndarray:
-
-    #genotype_matrix_sub = genotype_matrix[:, hap_idxs]
-    n_sites, n_samples = genotype_matrix.shape
-
-    kinship = np.zeros((n_samples, n_samples), dtype=np.float32)
-    for ai in range(n_samples):
-        ag = genotype_matrix[:, ai]
-        for bi in range(n_samples):
-            bg = genotype_matrix[:, bi]
-            n_shared_alleles = np.sum(ag == bg)
-            n_total_alleles = n_sites
-            similarity = n_shared_alleles / n_total_alleles
-            if ai == bi: similarity = 1.
-            kinship[ai, bi] = similarity
-    return kinship.astype(np.float32)
-
-
-@numba.njit
-def compute_kinship_diff(kinship_matrix: np.ndarray, a_hap_idxs: np.ndarray, b_hap_idxs: np.ndarray,):
-
-    a_kinship_matrix = kinship_matrix[a_hap_idxs, :]
-    a_kinship_matrix = a_kinship_matrix[:, a_hap_idxs]
-    b_kinship_matrix = kinship_matrix[b_hap_idxs, :]
-    b_kinship_matrix = b_kinship_matrix[:, b_hap_idxs]
-
-    # get the upper triangle indices of each matrix and get
-    # the mean genetic similarity within it
-    mean_similarities = []
-    for m in (a_kinship_matrix, b_kinship_matrix):
-        mean_similarity = np.mean(np.triu(m, 1))
-        mean_similarities.append(mean_similarity)
-
-    return np.abs(np.diff(np.array(mean_similarities)))[0]
