@@ -3,13 +3,9 @@ PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
 
-crosses = ["bxd"]
-
 rule all:
     input:
-        expand(PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv", k=[1,3], cross=crosses),
-        #expand(PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv", k=[1,3], chrom=chroms, cross=["bxd", "cc"]),
-
+        expand(PROJDIR + "/csv/bxd/k{k}.genome.significant_markers.csv", k=[1,3]),
 
 rule download_singletons:
     input:
@@ -37,36 +33,6 @@ rule combine_bxd_singletons:
                         --out {output}
         """
 
-rule download_cc_geno:
-    input:
-    output:
-        temp(PROJDIR + "/data/genotypes/cc/{chrom}.geno")
-    shell:
-        """
-        wget -O {output} https://raw.githubusercontent.com/rqtl/qtl2data/main/CC/cc_geno{wildcards.chrom}.csv
-        """
-
-rule combine_cc_geno:
-    input:
-        genotypes = expand(PROJDIR + "/data/genotypes/cc/{chrom}.geno", chrom=chroms_),
-        py_script = PROJDIR + "/scripts/combine_cc_genotypes.py"
-    output:
-        PROJDIR + "/data/genotypes/CC.geno"
-    shell:
-        """
-        python {input.py_script} --genotypes {input.genotypes} --out {output}
-        """
-
-rule filter_cc_singletons:
-    input:
-        PROJDIR + "/data/singletons/cc/annotated_filtered_singletons.raw.csv"
-    output:
-        PROJDIR + "/data/singletons/cc/annotated_filtered_singletons.csv"
-    shell:
-        """
-        grep -v "CC038\|CC062\|CC072" {input} > {output} 
-        """
-
 rule run_manhattan:
     input:
         singletons = PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv",
@@ -80,6 +46,7 @@ rule run_manhattan:
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
+                                 -permutations 100
         """
 
 rule plot_manhattan:
@@ -94,35 +61,4 @@ rule plot_manhattan:
         python {input.py_script} --markers {input.markers} \
                                  --results {input.results} \
                                  --outpref /scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome \
-        """
-
-rule run_manhattan_chrom:
-    input:
-        singletons = PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv",
-        config = PROJDIR + "/data/json/{cross}.json",
-        py_script = PROJDIR + "/scripts/run_ihd_scan.py"
-    output:
-        PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.results.csv"
-    shell:
-        """
-        python {input.py_script} --singletons {input.singletons} \
-                                 --config {input.config} \
-                                 --out {output} \
-                                 -k {wildcards.k} \
-                                 -chrom {wildcards.chrom} \
-                                 -permutations 1000
-        """
-
-rule plot_manhattan_chrom:
-    input:
-        results = PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.results.csv",
-        markers = PROJDIR + "/data/genotypes/{cross}.markers",
-        py_script = PROJDIR + "/scripts/plot_ihd_results.py"
-    output:
-        PROJDIR + "/csv/per-chrom/{cross}/k{k}.{chrom}.significant_markers.csv"
-    shell:
-        """
-        python {input.py_script} --markers {input.markers} \
-                                 --results {input.results} \
-                                 --outpref /scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/csv/per-chrom/{wildcards.cross}/k{wildcards.k}.{wildcards.chrom} 
         """
