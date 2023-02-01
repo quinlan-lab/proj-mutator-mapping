@@ -193,7 +193,7 @@ def perform_permutation_test(
     # store max cosdist encountered in each permutation
     max_distances: List[np.float16] = []
     for pi in range(n_permutations):
-        if pi > 0 and pi % 2 == 0: print(pi)
+        if pi > 0 and pi % 100 == 0: print(pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)
         # compute the cosine distances at each marker
@@ -201,7 +201,6 @@ def perform_permutation_test(
             shuffled_spectra,
             genotype_matrix,
         )
-        #print (perm_distances)
         max_distances.append(max(perm_distances))
 
     return max_distances
@@ -234,7 +233,7 @@ def compute_spectra(
         treat them as X Y). Defaults to 1.
 
     Returns:
-        Tuple[List[str], List[str], np.ndarray,]: A tuple of three objects:
+        Tuple[List[str], List[str], np.ndarray]: A tuple of three objects:
         1. A list of samples in the dataframe (which are indexed in the same
         order as the rows of the 2D `spectra` array).
         2. A list of the unique mutation types observed in the dataframe.
@@ -244,24 +243,24 @@ def compute_spectra(
     """
 
     # compute 3-mer spectra
-    hap_spectra_agg = singletons.groupby(['Strain', 'kmer']).agg({
+    hap_spectra_agg = singletons.groupby(['sample', 'kmer']).agg({
         'count': sum
-    }).reset_index()  #.rename(columns={0: 'count'})
+    }).reset_index()  
     # if 1-mer spectra are desired, compute that
     if k == 1:
         # add base mutation type
         hap_spectra_agg['base_mut'] = hap_spectra_agg['kmer'].apply(
             lambda k: ">".join([k[1], k[5]]))
-        hap_spectra_agg = hap_spectra_agg.groupby(['Strain', 'base_mut']).agg({
+        hap_spectra_agg = hap_spectra_agg.groupby(['sample', 'base_mut']).agg({
             'count':
             sum
         }).reset_index()
     # get spectra as per-haplotype vectors of mutation counts
     mut_col = "base_mut" if k == 1 else "kmer"
     spectra = hap_spectra_agg.pivot(
-        index="Strain", columns=mut_col).reset_index().fillna(value=0)
-    samples, mutations, spectra = spectra['Strain'].to_list(), [
+        index="sample", columns=mut_col).reset_index().fillna(value=0)
+    samples, mutations, spectra = spectra['sample'].to_list(), [
         el[1] for el in spectra.columns[1:]
     ], spectra.values[:, 1:]
 
-    return samples, mutations, spectra.astype(np.float32)
+    return samples, mutations, spectra.astype(np.float64)
