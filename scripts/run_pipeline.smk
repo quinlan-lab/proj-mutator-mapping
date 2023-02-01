@@ -42,7 +42,7 @@ rule run_manhattan:
         PROJDIR + "/csv/{cross}.k{k}.genome.results.csv"
     shell:
         """
-        python {input.py_script} --singletons {input.singletons} \
+        python {input.py_script} --mutations {input.singletons} \
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
