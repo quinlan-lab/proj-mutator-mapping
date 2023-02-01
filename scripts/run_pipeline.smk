@@ -46,7 +46,7 @@ rule run_manhattan:
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
-                                 -permutations 100
+                                 -permutations 1000
         """
 
 rule plot_manhattan:
