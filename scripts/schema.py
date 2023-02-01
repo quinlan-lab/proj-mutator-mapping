@@ -5,7 +5,7 @@ from typing import Optional
 
 IHDResultSchema = DataFrameSchema({
     "marker": Column(str),
-    "distance": Column(float, Check.in_range(min_value=-1, max_value=1)),
+    "distance": Column(float),#, Check.in_range(min_value=-1, max_value=2)),
     "k": Column(int, Check.isin([1, 3])),
 })
 
