@@ -21,8 +21,7 @@ def main(args):
     signif_thresh = -1 * np.log10(0.05 / results_merged.shape[0])
 
     # get significant markers
-    #signif = results_merged[results_merged["distance"] >= results_merged["significant_percentile"]]
-    signif = results_merged[results_merged["distance"] >= signif_thresh]
+    signif = results_merged[results_merged["distance"] >= results_merged["suggestive_percentile"]]
 
     signif.to_csv(f"{args.outpref}.significant_markers.csv", index=False)
 
@@ -32,14 +31,13 @@ def main(args):
         args.colname,
         "distance",
     )
-    g.map(plt.axhline, y=signif_thresh, ls=":", c='red')
-    # for label, level, color in zip(
-    #     ('Suggestive distance threshold', 'Significant distance threshold'),
-    #     ('suggestive', 'significant'),
-    #     ("dodgerblue", "firebrick"),
-    # ):
-    #     max_dist = results_merged[f'{level}_percentile'].unique()[0]
-    #     g.map(plt.axhline, y=max_dist, ls=":", c=color, label=label)
+    for label, level, color in zip(
+        ('Suggestive distance threshold', 'Significant distance threshold'),
+        ('suggestive', 'significant'),
+        ("dodgerblue", "firebrick"),
+    ):
+        max_dist = results_merged[f'{level}_percentile'].unique()[0]
+        g.map(plt.axhline, y=max_dist, ls=":", c=color, label=label)
         
     g.add_legend()
     g.tight_layout()
