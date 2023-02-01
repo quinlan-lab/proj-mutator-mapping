@@ -9,10 +9,10 @@ def chi2_test(a: np.ndarray, b: np.ndarray) -> np.float64:
     observed = np.vstack((a, b))
     #print (observed)
     stat, p, _, _ = chi2_contingency(observed)
-    return -1 * np.log10(p)
+    return p
 
 
-#@numba.njit
+@numba.njit
 def manual_cosine_distance(
     a: np.ndarray,
     b: np.ndarray,
@@ -36,7 +36,7 @@ def manual_cosine_distance(
     return 1 - cossim
 
 
-#@numba.njit
+@numba.njit
 def compute_colmean(a: np.ndarray) -> np.ndarray:
     """Compute the mean of a 2D numpy array
     on a per-column basis. Since `numba` does not
@@ -56,7 +56,7 @@ def compute_colmean(a: np.ndarray) -> np.ndarray:
     return empty_a
 
 
-#@numba.njit
+@numba.njit
 def compute_haplotype_distance(
     a_haps: np.ndarray,
     b_haps: np.ndarray,
@@ -93,7 +93,7 @@ def compute_haplotype_distance(
     return dist
 
 
-#@numba.njit
+@numba.njit
 def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
     """Randomly shuffle the rows of a 2D numpy array of 
     mutation spectrum data of size (N, M), where N is the number
@@ -117,7 +117,7 @@ def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
     return shuffled_spectra
 
 
-#@numba.njit()
+@numba.njit()
 def perform_ihd_scan(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
@@ -160,7 +160,7 @@ def perform_ihd_scan(
     return focal_dist
 
 
-#@numba.njit()
+@numba.njit()
 def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
