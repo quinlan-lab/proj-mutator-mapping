@@ -63,7 +63,7 @@ def good_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
 
 
     return pd.DataFrame({
-        'Strain': np.repeat(['A', 'B', 'C'], repeats=50),
+        'sample': np.repeat(['A', 'B', 'C'], repeats=50),
         'kmer': rng.choice(kmer_mutations, size=150, replace=True),
         'count': [1] * 150,
     })
