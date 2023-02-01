@@ -8,6 +8,15 @@ Click the badge to see detailed documentation:
 
 Identify alleles that affect the mutation spectrum in bi-parental recombinant inbred crosses. 
 
+### Overview of method
+
+![](img/distance_diagram.png)
+
+> **Overview of inter-haplotype distance method**
+
+![](img/permutation_diagram.png)
+
+> **Overview of permutation test to determine significance thresholds.**
 ## Usage
 
 ## Requirements
