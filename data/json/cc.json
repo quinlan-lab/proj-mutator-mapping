@@ -1,9 +1,0 @@
-{
-  "genotypes": {
-    "A": 0,
-    "B": 2,
-    "-": 1
-  },
-  "geno": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/data/genotypes/cc.geno",
-  "markers": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/data/genotypes/cc.markers"
-}
