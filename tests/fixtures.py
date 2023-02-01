@@ -6,23 +6,32 @@ rng = np.random.default_rng(seed = 42)
 
 @pytest.fixture
 def wt_haplotype_array() -> np.ndarray:
-    """generate a random array of simulated 
-    1-mer mutation counts for 10 haplotypes
+    """1-mer mutation counts 
+    for a toy population of 3 haplotypes
 
     Returns:
         np.ndarray
     """
-    return rng.integers(low=0, high=20, size=(10, 6)).astype(np.float32)
+    return np.array([
+        [1, 2, 2, 4, 2, 2],
+        [3, 6, 4, 5, 2, 1],
+        [2, 1, 3, 0, 2, 0],
+    ]).astype(np.float64)
+    
 
 @pytest.fixture
 def mut_haplotype_array() -> np.ndarray:
-    """generate a random array of simulated 
-    1-mer mutation counts for 10 haplotypes
+    """1-mer mutation counts 
+    for a toy population of 3 haplotypes
 
     Returns:
         np.ndarray
     """
-    return rng.integers(low=0, high=20, size=(10, 6)).astype(np.float32)
+    return np.array([
+        [0, 1, 4, 2, 0, 6],
+        [1, 1, 9, 4, 4, 1],
+        [5, 4, 2, 3, 8, 2],
+    ]).astype(np.float64)
 
 @pytest.fixture
 def bad_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
@@ -51,7 +60,7 @@ def good_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
         fp = rng.choice(nucs, size=1)[0]
         tp = rng.choice(nucs, size=1)[0]
         kmer_mutations.append(f"{fp}{orig}{tp}>{fp}{new}{tp}")
-    
+
 
     return pd.DataFrame({
         'Strain': np.repeat(['A', 'B', 'C'], repeats=50),

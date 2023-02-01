@@ -1,18 +1,28 @@
 import numpy as np
 from scripts.utils import (
     compute_haplotype_distance,
-    compute_mean,
+    compute_colmean,
     compute_spectra,
+    shuffle_spectra,
 )
 import pytest
+
+def test_shuffle_spectra(
+    wt_haplotype_array: np.ndarray,
+    mut_haplotype_array: np.ndarray,
+):
+    combined_spectra = np.concatenate(
+        (wt_haplotype_array, mut_haplotype_array), )
+    shuffled_spectra = shuffle_spectra(combined_spectra)
+    assert np.array_equal(combined_spectra, shuffled_spectra) is False
+
 
 def test_compute_haplotype_distance(
     wt_haplotype_array: np.ndarray,
     mut_haplotype_array: np.ndarray,
 ):
 
-    
-    exp = 0.01872
+    exp = 0.08372917
 
     assert np.isclose(
         compute_haplotype_distance(
@@ -20,7 +30,6 @@ def test_compute_haplotype_distance(
             mut_haplotype_array,
         ),
         exp,
-        rtol=1e-4
     )
 
 
@@ -29,24 +38,18 @@ def test_compute_mean(
     mut_haplotype_array: np.ndarray,
 ):
     assert np.all(np.isclose(
-        compute_mean(wt_haplotype_array),
-        np.array([8.1, 9.7, 11, 7.5, 12.7, 8.4]),
+        compute_colmean(wt_haplotype_array),
+        np.array([2., 3., 3., 3., 2., 1.]),
     ))
     assert np.all(np.isclose(
-        compute_mean(mut_haplotype_array),
-        np.array([8.7, 7.7, 11.3, 11.4, 8, 10.2]),
+        compute_colmean(mut_haplotype_array),
+        np.array([2., 2., 5., 3., 4., 3.]),
     ))
 
 @pytest.mark.xfail
 def test_compute_spectra(bad_mutation_dataframe):
-    assert np.array_equal(
-        compute_spectra(bad_mutation_dataframe, k=1),
-        np.array([
-            [0, 3, 4, 2, 1, 1],
-            [0, 3, 4, 2, 1, 1],
-            [1, 1, 1, 1, 1, 1],
-        ]),
-    )
+    _, _, _ = compute_spectra(bad_mutation_dataframe, k=1)
+
 
 def test_compute_spectra(good_mutation_dataframe):
     samples, mutations, spectra = compute_spectra(good_mutation_dataframe, k=1)
