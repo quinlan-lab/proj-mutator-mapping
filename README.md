@@ -1,5 +1,7 @@
 # Mapping mutator alleles with inter-haplotype distance
 
+Click the badge to see detailed documentation:
+
 [![Documentation Status](https://readthedocs.org/projects/ansicolortags/badge/?version=latest)](https://quinlan-lab.github.io/proj-mutator-mapping/reference/)
 
 ## Summary
@@ -115,10 +117,11 @@ pytest .
         run_ihd_scan.py  # wrapper that calls utilities for computing inter-haplotype distances (IHD)
         plot_ihd_scan.py    # code used to plot results of IHD scans
         utils.py             # bulk of the actual methods used for IHD
+        schema.py            # pandera schema used to validate dataframes
     tests/
         fixtures.py          # fixtures used by `pytest`
         test_utils.py        # testing suite for methods in `utils.py`
     data/
         genotypes/           # directory containing formatted `.geno` files that contain sample genotypes at every tested marker
         json/                # directory containing JSON configuration files for IHD scans
-        singletons/          # directory containing per-sample *de novo* mutation data
+        mutations/          # directory containing per-sample *de novo* mutation data
