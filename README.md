@@ -18,7 +18,7 @@ Identify alleles that affect the mutation spectrum in bi-parental recombinant in
 ![](img/permutation_diagram.png)
 
 > **Overview of permutation test to determine significance thresholds.**
-> To establish a threshold for the distance metric at a particular $p$ value (in this example, $p = 0.05$), we perform $N = 10,000$ permutations. In each permutation, we shuffle the labels associated with each haplotype's mutation data,  re-run the distance scan as outlined above, and store the maximum distance encountered at any genotyped site. Since the haplotype labels no longer correspond to the appropriate mutation data, these trials provide us with an estimate of the maximum inter-haplotype distance we'd expect to see by chance alone. We can then take the $1 - p$ percentile of the distribution of maximum distances as our threshold for determining if any experimental peaks are "significant."
+> To establish a threshold for the distance metric at a particular $p$ value (in this example, $p = 0.05$), we perform $N = 10,000$ permutations. In each permutation, we shuffle the labels associated with each haplotype's mutation data,  re-run the distance scan as outlined above, and store the maximum distance encountered at any genotyped site. Since the haplotype labels no longer correspond to the appropriate mutation data, these trials provide us with an estimate of the maximum inter-haplotype distance we'd expect to see by chance alone. We can then take the $\left(1 - p\right)$ percentile of the distribution of maximum distances as our threshold for determining if any experimental peaks are "significant."
 
 ## Usage
 
