@@ -14,8 +14,9 @@ geno = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.geno").set_index("marker")
 markers = np.array(["rs30499894", "rs52263933"]) # chr6 and chr4
 markers = np.array(["rs6228198"]) # chr5
 markers = np.array(["rs13480950"]) # chr11
+markers = np.array(["rs30374203"]) 
 
-k = 1
+k = 3
 
 geno_at_marker = geno.loc[markers].to_dict()
 
