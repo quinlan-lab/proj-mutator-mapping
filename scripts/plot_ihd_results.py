@@ -1,32 +1,31 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
-import statsmodels.stats.multitest as mt
-import glob
-import scipy.stats as ss
 import argparse
-from sklearn.linear_model import LinearRegression
+from schema import IHDResultSchema, MarkerMetadataSchema
 
 def main(args):
 
+    # read in results of IHD scan and validate with
+    # pandera
     results = pd.read_csv(args.results)
+    IHDResultSchema.validate(results)
+
+    # do the same with the genotype marker metadata
     markers = pd.read_csv(args.markers)
+    MarkerMetadataSchema.validate(markers)
 
     results_merged = results.merge(markers, on="marker")
 
-    results_merged['odds_ratio'] = results_merged['distance'] / results_merged['null_mean']
-    results_merged['suggestive_odds_ratio'] = results_merged['suggestive_percentile'] / results_merged['null_mean']
-    results_merged['significant_odds_ratio'] = results_merged['significant_percentile'] / results_merged['null_mean']
-
+    # get significant markers
     signif = results_merged[results_merged["distance"] >= results_merged["significant_percentile"]]
     signif.to_csv(f"{args.outpref}.significant_markers.csv", index=False)
 
+    # plot manhattan
     g = sns.FacetGrid(results_merged, row="chromosome", sharex=False, aspect=2.5, sharey=True)
     g.map(sns.scatterplot,
         args.colname,
         "distance",
-        palette="colorblind",
     )
     for label, level, color in zip(
         ('Suggestive distance threshold', 'Significant distance threshold'),
