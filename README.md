@@ -10,20 +10,30 @@ Identify alleles that affect the mutation spectrum in bi-parental recombinant in
 
 ## Usage
 
+## Requirements
+
+These methods were written in Python 3.9.6, and the full list of dependencies is provided in `requirements.txt`.
+
+Dependencies can be installed with `pip install -r requirements.txt`.
+
+I recommend using [`pyenv`](https://github.com/pyenv/pyenv) and [`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv) to manage Python environments.
+
+### Description of input files 
+
 Before running an inter-haplotype distance (IHD) scan, you'll need to prepare a
 small number of input files.
 
-### Description of input files 
 
 1. ***De novo* germline mutation data**
 
     Mutation data should be in a CSV file with **three required columns** as follows:
 
-    ```
-    Strain,kmer,count
-    sample_A,CCT>CAT,1
-    sample_B,GCA>GAA,1
-    ```
+    | sample | kmer | count |
+    | - | - | - |
+    | sample_A | CCT>CAT | 1 |
+    | sample_b | GCA>GAA | 1 |
+
+    The `kmer` column *must* contain mutation types in the 3-mer format shown above -- the format will be validated at runtime.
 
     The CSV file can contain either a) one row for every individual mutation observed in each sample, in which case the `count` column should always be 
     set to 1 or b) the aggregate count of every mutation type observed in the sample, in which case the `count` column will reflect the total number of
@@ -36,25 +46,24 @@ small number of input files.
 
     Genotype data should be formatted in a similar fashion as in [R/qtl2](https://kbroman.org/qtl2/). Genotypes should be in a CSV file with N rows, where N is the number of genotyped markers. There should be a single column denoting the marker name, and as many columns as there are samples. See below:
 
-    ```
-    marker,sample_A,sample_B,sample_C
-    rs0001,B,B,D
-    rs0002,H,D,B
-    rs0003,D,D,D
-    ```
+    | marker | sample_A | sample_B | sample_C |
+    | - | - | - | - |
+    | rs001 | B | B | D |
+    | rs002 | H | D | B |
+    | rs003 | D | D | D |
+
 
 3. **Marker information (optional)**
 
     If you wish to generate Manhattan-esque plots that summarize the results
     of an IHD scan, you'll need to provide a final CSV that links marker IDs with
-    either physical or genetic map positions (or both). This file should contain a column called `marker`, and a column specifying one or both of `cM` or `Mb`.
+    either physical or genetic map positions (or both). This file should contain a column called `marker`, a column called `chromosome`, and a column specifying one or both of `cM` or `Mb`.
 
-    ```
-    marker,cM,Mb
-    rs0001,1,4.5230
-    rs0002,2.6,5.1994
-    rs0003,2.8,5.4872
-    ```
+    | marker | chromosome | cM | Mb |
+    | - | - | - | - |
+    | rs001 | 1 | 1 | 4.5230 |
+    | rs002 | 1 | 2.6 | 5.1994 |
+    | rs003 | 1 | 2.8 | 5.4872 |
 
 
 4. **Configuration file**
@@ -102,6 +111,16 @@ python scripts/plot_ihd_results.py \
 ```
 
 There is one optional argument, `-colname`, that can be used to specify the name of the column in the marker metadata CSV that indicates the physical/genetic map position you wish to plot in the Manhattan plot. The argument defaults to "Mb."
+
+### Running the full pipeline on BXD data
+
+The IHD scan and plotting scripts can be run in a single command using `snakemake` as follows:
+
+```
+snakemake -j1 -s scripts/run_pipeline.smk
+```
+
+The `-j` parameter can be used to set the number of jobs that should be used in parallel when executing the pipeline. 
 
 ## Running tests
 
