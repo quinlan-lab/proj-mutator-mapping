@@ -1,4 +1,4 @@
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
+PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
@@ -60,5 +60,5 @@ rule plot_manhattan:
         """
         python {input.py_script} --markers {input.markers} \
                                  --results {input.results} \
-                                 --outpref /scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome \
+                                 --outpref /Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome \
         """
