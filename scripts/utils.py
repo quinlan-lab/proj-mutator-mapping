@@ -1,8 +1,15 @@
 import pandas as pd
 import numpy as np
-from typing import List, Iterable
+from typing import List, Iterable, Sequence, Tuple
 import numba
 from sklearn.linear_model import LinearRegression
+from scipy.stats import chi2_contingency
+
+def chi2_test(a: np.ndarray, b: np.ndarray) -> np.float64:
+    observed = np.vstack((a, b))
+    #print (observed)
+    stat, p, _, _ = chi2_contingency(observed)
+    return -1 * np.log10(p)
 
 
 @numba.njit
@@ -186,7 +193,7 @@ def perform_permutation_test(
     # store max cosdist encountered in each permutation
     max_distances: List[np.float16] = []
     for pi in range(n_permutations):
-        if pi > 0 and pi % 100 == 0: print(pi)
+        if pi > 0 and pi % 2 == 0: print(pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)
         # compute the cosine distances at each marker
@@ -194,6 +201,7 @@ def perform_permutation_test(
             shuffled_spectra,
             genotype_matrix,
         )
+        #print (perm_distances)
         max_distances.append(max(perm_distances))
 
     return max_distances
@@ -202,7 +210,7 @@ def perform_permutation_test(
 def compute_spectra(
     singletons: pd.DataFrame,
     k: int = 1,
-) -> Iterable[tuple[List[str], List[str], np.ndarray]]:
+) -> Tuple[List[str], List[str], np.ndarray]:
     """Compute the mutation spectrum of every sample in 
     the input pd.DataFrame of mutation data. The input
     dataframe should either contain a single entry for every mutation observed
