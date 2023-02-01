@@ -5,9 +5,6 @@ import scipy.stats as ss
 import seaborn as sns
 import math
 from matplotlib.lines import Line2D
-import pandas as pd
-import mutyper
-import itertools
 from statsmodels.stats.multitest import multipletests
 
 def mutation_comparison(

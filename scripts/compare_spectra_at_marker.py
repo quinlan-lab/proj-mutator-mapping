@@ -1,37 +1,36 @@
 import pandas as pd
-import argparse
-from scripts.run_ihd_scan import compute_spectra
+from run_ihd_scan import compute_spectra
 import numpy as np
 from compare_mutation_spectra import mutation_comparison
 import matplotlib.pyplot as plt 
 import seaborn as sns 
-from sklearn.metrics.pairwise import cosine_distances, cosine_similarity
 from statsmodels.formula.api import ols
 import statsmodels.api as sm
 
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
+PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
 geno = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.geno").set_index("marker")
 
-markers = np.array(["rs30499894", "rs52263933"])
+markers = np.array(["rs30499894", "rs52263933"]) # chr6 and chr4
+markers = np.array(["rs6228198"]) # chr5
+markers = np.array(["rs13480950"]) # chr11
+
 k = 1
 
 geno_at_marker = geno.loc[markers].to_dict()
 
-singletons = pd.read_csv(f"{PROJDIR}/data/singletons/bxd/annotated_filtered_singletons.csv")
-singletons['count'] = 1
+mutations = pd.read_csv(f"{PROJDIR}/data/mutations/bxd/annotated_filtered_singletons.csv")
 
-smp2generations = dict(zip(singletons['Strain'], singletons['n_generations']))
+smp2generations = dict(zip(mutations['sample'], mutations['n_generations']))
 
-samples, mutations, spectra = compute_spectra(singletons, k=k)
+samples, mutation_types, spectra = compute_spectra(mutations, k=k)
 smp2idx = dict(zip(samples, range(len(samples))))
-mut2idx = dict(zip(mutations, range(len(mutations))))
+mut2idx = dict(zip(mutation_types, range(len(mutation_types))))
 samples_shared = list(set(samples).intersection(set(geno.columns[1:])))
 
 smp2genotype = {}
 for s in samples_shared:
     sorted_markers = sorted(geno_at_marker[s].items(), key=lambda t: t[0])
-    #print (sorted_markers)
     marker_genos = "-".join([v for k,v in sorted_markers])
     smp2genotype[s] = marker_genos
 
@@ -63,7 +62,6 @@ elif k == 1:
             })
 
     df = pd.DataFrame(df)
-    print (df)
 
     lm = ols('Fraction ~ C(Haplotype)', data=df[df["Mutation type"] == "C>A"]).fit()
     table = sm.stats.anova_lm(lm, typ=2)
