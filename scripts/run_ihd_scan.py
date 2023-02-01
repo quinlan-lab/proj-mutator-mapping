@@ -1,16 +1,15 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import itertools
 import argparse
 import json
 import sys
 from utils import (
     compute_spectra,
-    compute_haplotype_distance,
     perform_permutation_test,
     perform_ihd_scan,
 )
+from schema import IHDResultSchema, MutationSchema
 
 def main(args):
 
@@ -19,58 +18,37 @@ def main(args):
     with open(args.config, "rb") as config:
         config_dict = json.load(config)
 
-    geno_raw = pd.read_csv(config_dict['geno'])
-    marker_info = pd.read_csv(config_dict['markers'])
+    # read in genotype info
+    geno = pd.read_csv(config_dict['geno'])
 
-    # merge genotype and marker information
-    geno = geno_raw.merge(marker_info, on="marker")
-    geno = geno[geno['chromosome'] != "X"]
+    # read in singleton data and validate with pandera
+    mutations = pd.read_csv(args.mutations)
+    MutationSchema.validate(mutations)
 
-
-    singletons = pd.read_csv(args.singletons)
-    singletons['count'] = 1
-
-    if args.chrom:
-        base_chrom = args.chrom
-        if 'chr' in args.chrom:
-            base_chrom = args.chrom[3:]
-
-        geno = geno[(geno['chromosome'] == base_chrom) | (geno['chromosome'] == f"chr{base_chrom}") ]
-        singletons = singletons[(singletons['chrom'] == base_chrom) | (singletons['chrom'] == f"chr{base_chrom}")]
-
-    samples = singletons['Strain'].unique()
+    samples = mutations['sample'].unique()
     # get the overlap between those and the sample names in the genotype data
     samples_overlap = list(set(samples).intersection(set(geno.columns)))
 
     if len(samples_overlap) == 0:
-        print ("No samples in common between mutation data and genotype matrix.")
+        print ("""Sorry, no samples in common between mutation data 
+        and genotype matrix. Please ensure sample names are identical.""")
         sys.exit()
 
-    # then subset the genotype data to include only those samples
+    # then subset the genotype and mutation data to include only those samples
     cols2use = ["marker"]
     cols2use.extend(samples_overlap)
     geno = geno[cols2use]
 
-    singletons = singletons[singletons['Strain'].isin(samples_overlap)]
+    mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
 
     # for the null permutation test, shuffle the rows of the spectra
     # dataframe every time. otherwise keep it the same.
-    samples, mutations, spectra = compute_spectra(singletons, k=args.k)
-    smp2idx = dict(zip(samples, range(len(samples))))
+    samples, _, spectra = compute_spectra(mutations_filtered, k=args.k)
 
-    # get sums of mutation counts in each strain
-    spectra_sums = np.sum(spectra, axis=1)
-    spectra2keep = np.where(spectra_sums >= 0)[0]
-    samples, spectra = list(np.array(samples)[spectra2keep]), spectra[spectra2keep]
+    print (f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
+    total mutations.""")
 
-    print (f"Using {len(samples)} samples and {int(np.sum(spectra))} total mutations.")
-
-    # weight spectra if desired
-    weight_dict = None
-    if args.adj_column:
-        singletons['count'] = singletons['count'] / singletons[args.adj_column]
-
-    # convert string genotypes to integers based on config definitino
+    # convert string genotypes to integers based on config definition
     replace_dict = config_dict['genotypes']
     geno_asint = geno.replace(replace_dict).replace({1: np.nan})
 
@@ -85,8 +63,6 @@ def main(args):
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
     markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
 
-    #kinship_matrix = compute_kinship_matrix(geno_filtered)
-
     # compute the maximum cosine distance between groups of
     # haplotypes at each site in the genotype matrix
     focal_dists = perform_ihd_scan(
@@ -97,8 +73,9 @@ def main(args):
     res_df = pd.DataFrame({
         'marker': markers_filtered,
         'distance': focal_dists,
+        'k': args.k,
     })
-    res_df['k'] = args.k
+    IHDResultSchema.validate(res_df)
 
     # then do permutations
     max_distances = perform_permutation_test(
@@ -120,18 +97,12 @@ def main(args):
 
     f.savefig('max_dist.png', dpi=300)
 
-    # compute the median of the maximum distance distribution so
-    # that we can compute approximate "odds ratios" for our
-    # observed distances
-    res_df['null_mean'] = np.mean(max_distances)
-
-    res_df['pval'] = res_df['distance'].apply(lambda d: np.sum([p >= d for p in max_distances]) / args.permutations)
     res_df.to_csv(args.out, index=False)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument(
-        "--singletons",
+        "--mutations",
         type=str,
         help="Path to mutation data in CSV format.",
     )
