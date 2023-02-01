@@ -88,7 +88,6 @@ def compute_haplotype_distance(
     b_hap_sums = np.sum(b_haps, axis=0)
 
     dist = manual_cosine_distance(a_hap_sums, b_hap_sums)
-    dist = chi2_test(a_hap_sums, b_hap_sums)
 
     return dist
 
