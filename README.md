@@ -31,16 +31,13 @@ small number of input files.
     | sample | kmer | count |
     | - | - | - |
     | sample_A | CCT>CAT | 1 |
-    | sample_b | GCA>GAA | 1 |
+    | sample_B | GCA>GAA | 1 |
 
-    The `kmer` column *must* contain mutation types in the 3-mer format shown above -- the format will be validated at runtime.
+    > The `kmer` column *must* contain mutation types in the 3-mer format shown above -- the format will be validated at runtime.
 
-    The CSV file can contain either a) one row for every individual mutation observed in each sample, in which case the `count` column should always be 
-    set to 1 or b) the aggregate count of every mutation type observed in the sample, in which case the `count` column will reflect the total number of
-    each mutation type observed in the sample.
+    > The CSV file can contain either a) one row for every individual mutation observed in each sample, in which case the `count` column should always be set to 1 or b) the aggregate count of every mutation type observed in the sample, in which case the `count` column will reflect the total number of each mutation type observed in the sample.
 
-    The dataframe can have any number of additional columns, but only the three 
-    defined above will be used.
+    > The dataframe can have any number of additional columns, but only the three defined above will be used.
 
 2. **Marker genotypes**
 
@@ -133,8 +130,8 @@ pytest .
 ## Project layout
 
     scripts/
-        run_ihd_scan.py  # wrapper that calls utilities for computing inter-haplotype distances (IHD)
-        plot_ihd_scan.py    # code used to plot results of IHD scans
+        run_ihd_scan.py      # wrapper that calls utilities for computing inter-haplotype distances (IHD)
+        plot_ihd_scan.py     # code used to plot results of IHD scans
         utils.py             # bulk of the actual methods used for IHD
         schema.py            # pandera schema used to validate dataframes
     tests/
@@ -143,4 +140,4 @@ pytest .
     data/
         genotypes/           # directory containing formatted `.geno` files that contain sample genotypes at every tested marker
         json/                # directory containing JSON configuration files for IHD scans
-        mutations/          # directory containing per-sample *de novo* mutation data
+        mutations/           # directory containing per-sample *de novo* mutation data
