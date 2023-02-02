@@ -5,6 +5,8 @@ import argparse
 import numpy as np
 from schema import IHDResultSchema, MarkerMetadataSchema
 
+plt.rc("font", size=12)
+
 def main(args):
 
     # read in results of IHD scan and validate with pandera
@@ -18,23 +20,36 @@ def main(args):
     results_merged = results.merge(markers, on="marker")
 
     # get significant markers
-    signif = results_merged.query("distance >= suggestive_percentile")
+    signif = results_merged.query("Distance >= significant_percentile")
     signif.to_csv(f"{args.outpref}.significant_markers.csv", index=False)
 
+    label_meta = list(zip(
+        (
+            'Suggestive distance threshold (p <= 0.2)',
+            'Significant distance threshold (p <= 0.05)',
+        ),
+        ('suggestive', 'significant'),
+        ("cornflowerblue", "coral"),
+    ))[::-1]
+
     # plot manhattan
-    g = sns.FacetGrid(results_merged, row="chromosome", sharex=False, aspect=2.5, sharey=True)
+    g = sns.FacetGrid(
+        results_merged,
+        row="chromosome",
+        sharex=False,
+        aspect=2.5,
+        sharey=True,
+    )
+    for label, level, color in label_meta:
+        max_dist = results_merged[f'{level}_percentile'].unique()[0]
+        g.map(plt.axhline, y=max_dist, ls="--", c=color, label=label, lw=1.5)
+
     g.map(sns.scatterplot,
         args.colname,
-        "distance",
-        color="lightgrey",
+        "Distance",
+        color="grey",
+        s=50,
     )
-    for label, level, color in zip(
-        ('Suggestive distance threshold', 'Significant distance threshold'),
-        ('suggestive', 'significant'),
-        ("dodgerblue", "firebrick"),
-    ):
-        max_dist = results_merged[f'{level}_percentile'].unique()[0]
-        g.map(plt.axhline, y=max_dist, ls=":", c=color, label=label)
 
     g.add_legend()
     g.tight_layout()
@@ -42,14 +57,20 @@ def main(args):
 
     if args.chrom is not None:
         results_merged_chr = results_merged[results_merged["chromosome"] == args.chrom]
-        f, ax = plt.subplots()
+        f, ax = plt.subplots(figsize=(10, 5))
+        for label, level, color in label_meta:
+            max_dist = results_merged[f'{level}_percentile'].unique()[0]
+            ax.axhline(y=max_dist, ls=":", c=color, label=label, lw=2)
         sns.scatterplot(
             results_merged_chr,
             x=args.colname,
             y="Distance",
-            color="lightgrey",
+            color="grey",
             ax=ax,
+            s=50,
         )
+
+        ax.legend()
         f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.png", dpi=300)
 
 
