@@ -3,7 +3,7 @@
 Click the badge to see detailed documentation:
 
 [![Documentation Status](https://readthedocs.org/projects/ansicolortags/badge/?version=latest)](https://quinlan-lab.github.io/proj-mutator-mapping/reference/)
-
+[![Generic badge](https://img.shields.io/badge/docs-latest-blue.svg)](https://shields.io/)
 ## Summary
 
 Identify alleles that affect the mutation spectrum in bi-parental recombinant inbred crosses. 
