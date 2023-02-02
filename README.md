@@ -42,7 +42,11 @@ small number of input files.
     | sample | kmer | count |
     | - | - | - |
     | sample_A | CCT>CAT | 1 |
+    | sample_A | TGG>TCG | 1 |
     | sample_B | GCA>GAA | 1 |
+
+
+    **Notes:**
 
     > The `kmer` column *must* contain mutation types in the 3-mer format shown above -- the format will be validated at runtime.
 
@@ -90,7 +94,11 @@ small number of input files.
     }
     ```
 
-    The `genotypes` dictionary should map the observed genotypes in file #2 to integer values that will be used during the IHD scan.
+    **Notes:**
+
+    > The `genotypes` dictionary should map the observed genotypes in file #2 to integer values that will be used during the IHD scan.
+
+    > The two parental alleles *must* be mapped to values of 0 and 2, respectively. Heterozygous and unknown genotypes *must* be mapped to values of 1.
 
 ### Running an inter-haplotype distance scan
 
