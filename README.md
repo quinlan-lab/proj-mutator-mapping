@@ -19,15 +19,15 @@ Identify alleles that affect the mutation spectrum in bi-parental recombinant in
 > **Overview of permutation test to determine significance thresholds.**
 > To establish a threshold for the distance metric at a particular $p$ value (in this example, $p = 0.05$), we perform $N = 10,000$ permutations. In each permutation, we shuffle the labels associated with each haplotype's mutation data,  re-run the distance scan as outlined above, and store the maximum distance encountered at any genotyped site. Since the haplotype labels no longer correspond to the appropriate mutation data, these trials provide us with an estimate of the maximum inter-haplotype distance we'd expect to see by chance alone. We can then take the $\left(1 - p\right)$ percentile of the distribution of maximum distances as our threshold for determining if any experimental peaks are "significant."
 
-## Usage
-
 ## Requirements
+
+### Python dependencies
 
 These methods were written in Python 3.9.6, and the full list of dependencies is provided in `requirements.txt`.
 
 Dependencies can be installed with `pip install -r requirements.txt`.
 
-I recommend using [`pyenv`](https://github.com/pyenv/pyenv) and [`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv) to manage Python environments.
+> I recommend using [`pyenv`](https://github.com/pyenv/pyenv) and [`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv) to manage Python environments.
 
 ### Description of input files 
 
@@ -99,6 +99,8 @@ small number of input files.
     > The `genotypes` dictionary should map the observed genotypes in file #2 to integer values that will be used during the IHD scan.
 
     > The two parental alleles *must* be mapped to values of 0 and 2, respectively. Heterozygous and unknown genotypes *must* be mapped to values of 1.
+
+## Usage
 
 ### Running the full pipeline on BXD data
 
