@@ -17,6 +17,7 @@ MutationSchema = DataFrameSchema({
 
 MarkerMetadataSchema = DataFrameSchema({
     "marker": Column(str),
+    "chromosome": Column(str, coerce=True),
     "cM": Column(float, required=False),
     "Mb": Column(float, required=False),
 })
