@@ -64,7 +64,7 @@ def main(args):
                 f2_formatted.append(str(smpdict[s.sample_id]))
             else: continue
 
-    vcf.set_samples(f1_formatted + f2_formatted)
+    vcf.set_samples(p0_formatted + f1_formatted)
 
     chroms, chromlens = vcf.seqnames, vcf.seqlens
     chrom2len = dict(zip(chroms, chromlens))
@@ -81,7 +81,7 @@ def main(args):
 
     geno_header = ["marker"]
     uniq_haps = []
-    for s in f2:
+    for s in f1:
         if s.sample_id not in smpdict: continue
         for h in ("P", "M"):
             uniq_haps.append(f"{smpdict[s.sample_id]}_{h}")
@@ -120,14 +120,14 @@ def main(args):
             print (",".join(marker_vals), file=marker_outfh)
 
             gts = v.gt_types
-            if np.sum(gts[f1_idxs]) == 0: continue
+            if np.sum(gts[p0_idxs]) == 0: continue
 
             geno_vals = ["_".join([v.CHROM, str(v.POS)])]
 
             # by default, assume that both haplotypes have the REF
             # allele
             p_genotype, m_genotype = "A", "A"
-            for s in f2:
+            for s in f1:
                 if s.sample_id not in smpdict:
                     continue
                 true_s = str(smpdict[s.sample_id])

@@ -16,7 +16,7 @@ def annotate_with_kmer(row, ancestor):
 PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
 ref_fh = f"{PROJDIR}/data/ref/hg19.fa"
-mut_fh = f"{PROJDIR}/data/mutations/ceph/third_gen.dnms.txt"
+mut_fh = f"{PROJDIR}/data/mutations/ceph/second_gen.dnms.txt"
 smp_fh = f"{PROJDIR}/data/dbgap/phs001872.v1.pht009365.v1.p1.CEPH_Utah_Sample.MULTI.txt.gz"
 
 mutations = pd.read_csv(mut_fh, sep="\t")
@@ -24,7 +24,6 @@ ancestor = Ancestor(ref_fh, sequence_always_upper=True, k=3)
 sample_mapping = pd.read_csv(smp_fh, sep="\t", skiprows=10)
 
 smpdict = dict(zip(sample_mapping["SUBJECT_ID"], sample_mapping["SAMPLE_ID"]))
-print (len(smpdict))
 
 mutations["chromosome"] = mutations["chrom"].apply(lambda c: f"chr{c}")
 mutations = mutations[mutations["mut"] != "indel"]
