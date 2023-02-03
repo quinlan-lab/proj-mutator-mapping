@@ -15,8 +15,8 @@ def annotate_with_kmer(row, ancestor):
 
 PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
 
-ref_fh = f"{PROJDIR}/data/ref/hg19.masked.fa"
-mut_fh = f"{PROJDIR}/data/mutations/ceph/second_gen.dnms.txt"
+ref_fh = f"{PROJDIR}/data/ref/hg19.fa"
+mut_fh = f"{PROJDIR}/data/mutations/ceph/third_gen.dnms.txt"
 smp_fh = f"{PROJDIR}/data/dbgap/phs001872.v1.pht009365.v1.p1.CEPH_Utah_Sample.MULTI.txt.gz"
 
 mutations = pd.read_csv(mut_fh, sep="\t")
@@ -24,13 +24,15 @@ ancestor = Ancestor(ref_fh, sequence_always_upper=True, k=3)
 sample_mapping = pd.read_csv(smp_fh, sep="\t", skiprows=10)
 
 smpdict = dict(zip(sample_mapping["SUBJECT_ID"], sample_mapping["SAMPLE_ID"]))
+print (len(smpdict))
 
 mutations["chromosome"] = mutations["chrom"].apply(lambda c: f"chr{c}")
 mutations = mutations[mutations["mut"] != "indel"]
 
 mutations["kmer"] = mutations.apply(lambda row: annotate_with_kmer(row, ancestor), axis=1)
-mutations["orig_sample_id"] = mutations["new_sample_id"].apply(lambda s: smpdict[s])
-
+mutations["orig_sample_id"] = mutations["new_sample_id"].apply(lambda s: smpdict[s] if s in smpdict else "-9")
+mutations = mutations[mutations["orig_sample_id"] != "-9"]
+print (mutations.shape)
 new_df = []
 for i,row in mutations.iterrows():
     sample, haplotype = row["orig_sample_id"], row["phase"]
@@ -44,4 +46,4 @@ for i,row in mutations.iterrows():
     })
 
 new_df = pd.DataFrame(new_df)
-print (new_df)
+new_df.to_csv(f"{PROJDIR}/data/mutations/ceph/formatted_dnms.csv", index=False)
