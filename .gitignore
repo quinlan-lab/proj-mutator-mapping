@@ -2,9 +2,12 @@
 *.vcf.gz*
 *.html
 *.bed
+*.gz
 vcf/
 data/genotypes/cemee/
 .snakemake/
 csv/
 data/bam/
 data/vcf/
+data/ref/
+data/ped/
