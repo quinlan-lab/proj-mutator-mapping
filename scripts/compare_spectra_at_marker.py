@@ -12,11 +12,11 @@ PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 geno = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.geno").set_index("marker")
 
 markers = np.array(["rs30499894", "rs52263933"]) # chr6 and chr4
-markers = np.array(["rs6228198"]) # chr5
-markers = np.array(["rs13480950"]) # chr11
-markers = np.array(["rs30374203"]) 
+# markers = np.array(["rs6228198"]) # chr5
+# markers = np.array(["rs13480950"]) # chr11
+# markers = np.array(["rs30374203"]) 
 
-k = 3
+k = 1
 
 geno_at_marker = geno.loc[markers].to_dict()
 
@@ -58,19 +58,20 @@ elif k == 1:
                 'sample': s,
                 'Mutation type': m,
                 'Fraction': spectra_fracs[si, mi],
-                'Rate (per bp, per gen)': spectra[si, mi] / smp2generations[s] / 2.5e9,
+                'Rate': spectra[si, mi] / smp2generations[s] / 2.5e9,
                 'Haplotype': smp_geno,
             })
 
     df = pd.DataFrame(df)
 
-    lm = ols('Fraction ~ C(Haplotype)', data=df[df["Mutation type"] == "C>A"]).fit()
+    lm = ols('Rate ~ C(Haplotype)', data=df[df["Mutation type"] == "C>A"]).fit()
+    print (lm.summary())
     table = sm.stats.anova_lm(lm, typ=2)
     ssq = table['sum_sq'].values
     print ((ssq[0] / np.sum(ssq)) * 100)
 
     f, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 12))
-    for ax, kind in zip((ax1, ax2), ('Fraction', 'Rate (per bp, per gen)')):
+    for ax, kind in zip((ax1, ax2), ('Fraction', 'Rate')):
         sns.boxplot(
             df,
             x="Mutation type",
