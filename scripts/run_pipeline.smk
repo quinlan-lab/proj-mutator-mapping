@@ -10,7 +10,7 @@ rule all:
 rule download_singletons:
     input:
     output:
-        temp(PROJDIR + "/data/singletons/{chrom}.singletons.csv")
+        temp(PROJDIR + "/data/mutations/{chrom}.singletons.csv")
     shell:
         """
         wget -O {output} https://raw.githubusercontent.com/tomsasani/bxd_mutator_manuscript/main/data/singleton_vars/{wildcards.chrom}_singleton_vars.exclude.csv
@@ -18,12 +18,12 @@ rule download_singletons:
 
 rule combine_bxd_singletons:
     input:
-        singletons = expand(PROJDIR + "/data/singletons/{chrom}.singletons.csv", chrom=chroms),
+        singletons = expand(PROJDIR + "/data/mutations/{chrom}.singletons.csv", chrom=chroms),
         py_script = PROJDIR + "/scripts/combine_bxd_singletons.py",
         metadata = PROJDIR + "/data/bam_names_to_metadata.xlsx",
         config = PROJDIR + "/data/json/{cross}.json",
     output:
-        PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv"
+        PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.csv"
     shell:
         """
         python {input.py_script} \
@@ -35,7 +35,7 @@ rule combine_bxd_singletons:
 
 rule run_manhattan:
     input:
-        singletons = PROJDIR + "/data/singletons/{cross}/annotated_filtered_singletons.csv",
+        singletons = PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.csv",
         config = PROJDIR + "/data/json/{cross}.json",
         py_script = PROJDIR + "/scripts/run_ihd_scan.py"
     output:
@@ -46,7 +46,7 @@ rule run_manhattan:
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
-                                 -permutations 100
+                                 -permutations 1000
         """
 
 rule plot_manhattan:
