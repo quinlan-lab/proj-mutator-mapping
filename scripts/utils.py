@@ -247,7 +247,7 @@ def compute_pairwise_marker_distance(
     # pairwise distance array
     triu_idxs = np.triu_indices(n_markers, k=1)
     # loop over every pair of sites in the genotype matrix
-    for ni, nj in zip(triu_idxs):
+    for ni, nj in np.column_stack((triu_idxs[0], triu_idxs[1])):
         a_hap_idxs = np.where(genotype_matrix[ni] == genotype_to_use)[0]
         b_hap_idxs = np.where(genotype_matrix[nj] == genotype_to_use)[0]
 
@@ -257,7 +257,6 @@ def compute_pairwise_marker_distance(
         )
 
         cur_dist = compute_haplotype_distance(a_spectra, b_spectra)
-
         pairwise_distances[ni, nj] = cur_dist
 
     # complete the distance matrix 
