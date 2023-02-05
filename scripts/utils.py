@@ -210,6 +210,61 @@ def perform_permutation_test(
 
     return max_distances
 
+@numba.njit()
+def compute_pairwise_marker_distance(
+    spectra: np.ndarray,
+    genotype_matrix: np.ndarray,
+    genotype_to_use: int,
+) -> np.ndarray:
+    """Iterate over every pair of genotyped markers (i,j) in the `genotype_matrix`. 
+    At each marker, compute the aggregate mutation spectrum of haplotypes with the
+    specified `genotype_to_use`. Then, compute the distance between the aggregate 
+    spectra at markers i and j. Return a 2D numpy array of size (G, G), where G is the
+    number of genotyped sites, that contains the pairwise cosine distance between the
+    aggregate spectrum of haplotypes with `genotype_to_use` at every pair of markers.
+
+    Args:
+        spectra (np.ndarray): A 2D numpy array of mutation spectra in \
+            all genotyped samples, of size (N, M) where N is the number of \
+            samples and M is the number of mutation types.
+
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
+            every genotyped marker, of size (G, N), where G is the number \
+            of genotyped sites and N is the number of samples.
+
+        genotype_to_use (int): The integer value of the genotype to query \
+            at each genotyped marker.
+
+    Returns:
+        pairwise_distances (np.ndarray): 2D numpy array of size (G, G), where \
+        G is the the number of genotyped markers.
+    """
+
+    n_markers = genotype_matrix.shape[0]
+    # store distances between each pair of markers
+    pairwise_distances: np.ndarray = np.zeros((n_markers, n_markers), dtype=np.float64,)
+    # get the indices corresponding to the upper triangle of the 
+    # pairwise distance array
+    triu_idxs = np.triu_indices(n_markers, k=1)
+    # loop over every pair of sites in the genotype matrix
+    for ni, nj in zip(triu_idxs):
+        a_hap_idxs = np.where(genotype_matrix[ni] == genotype_to_use)[0]
+        b_hap_idxs = np.where(genotype_matrix[nj] == genotype_to_use)[0]
+
+        a_spectra, b_spectra = (
+            spectra[a_hap_idxs],
+            spectra[b_hap_idxs],
+        )
+
+        cur_dist = compute_haplotype_distance(a_spectra, b_spectra)
+
+        pairwise_distances[ni, nj] = cur_dist
+
+    # complete the distance matrix 
+    np.fill_diagonal(pairwise_distances, 0.)
+    pairwise_distances += pairwise_distances.T
+    return pairwise_distances
+
 
 def compute_spectra(
     mutations: pd.DataFrame,
