@@ -6,9 +6,8 @@ import seaborn as sns
 
 plt.rc('font', size=14)
 
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
-
-vcf = VCF(f"{PROJDIR}/data/vcf/AllMouse.vcf_90_recalibrated_snps_raw_indels_reheader_PopSorted.PASS.vcf.gz", gts012=True)
+PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
+vcf = VCF(f"{PROJDIR}/data/wild.vcf.gz", gts012=True)
 smp2idx = dict(zip(vcf.samples, range(len(vcf.samples))))
 idx2smp = {v:k for k,v in smp2idx.items()}
 
@@ -40,12 +39,18 @@ for region, name in zip(candidate_mutators, candidate_names):
             })
 
 res_df = pd.DataFrame(res)
+print (res_df)
 res_df['Subspecies'] = res_df['sample'].apply(lambda s: s.split('_')[0])
-res_df_grouped = res_df.groupby(['Mutation', 'Subspecies']).agg({'genotype': lambda g: sum(g) / (len(g) * 2)}).reset_index().rename(columns={'genotype': "Allele frequency"})
+res_df_grouped = res_df.groupby(['Mutation', 'Subspecies']).agg({
+    'genotype':
+    lambda g: sum(g) / (len(g) * 2)
+}).reset_index().rename(columns={'genotype': "Allele frequency"}, )
+
+print (res_df_grouped)
 
 f, ax = plt.subplots(figsize=(10, 6))
 sns.barplot(
-    res_df_grouped,
+    data=res_df_grouped,
     x="Mutation",
     y="Allele frequency",
     hue="Subspecies",
@@ -54,4 +59,5 @@ sns.barplot(
     ec='w',
     lw=2,
 )
+sns.set_style("ticks")
 f.savefig("wild.af.png", dpi=300)
