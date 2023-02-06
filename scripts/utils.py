@@ -241,28 +241,24 @@ def compute_pairwise_marker_distance(
     """
 
     n_markers = genotype_matrix.shape[0]
+    n_mutations = spectra.shape[1]
     # store distances between each pair of markers
-    pairwise_distances: np.ndarray = np.zeros((n_markers, n_markers), dtype=np.float64,)
+    pairwise_distances: np.ndarray = np.zeros((n_markers, n_mutations), dtype=np.float64,)
     # get the indices corresponding to the upper triangle of the 
     # pairwise distance array
     triu_idxs = np.triu_indices(n_markers, k=1)
+
     # loop over every pair of sites in the genotype matrix
-    for ni, nj in np.column_stack((triu_idxs[0], triu_idxs[1])):
-        a_hap_idxs = np.where(genotype_matrix[ni] == genotype_to_use)[0]
-        b_hap_idxs = np.where(genotype_matrix[nj] == genotype_to_use)[0]
+    for ni in np.arange(genotype_matrix.shape[0]):
+        s_hap_idxs = np.where(genotype_matrix[ni] == genotype_to_use)[0]
 
-        a_spectra, b_spectra = (
-            spectra[a_hap_idxs],
-            spectra[b_hap_idxs],
-        )
+        s_spectra = spectra[s_hap_idxs]
+        s_spectra_sum = np.sum(s_spectra, axis=0)
+        pairwise_distances[ni] = s_spectra_sum
 
-        cur_dist = compute_haplotype_distance(a_spectra, b_spectra)
-        pairwise_distances[ni, nj] = cur_dist
-
-    # complete the distance matrix 
-    np.fill_diagonal(pairwise_distances, 0.)
-    pairwise_distances += pairwise_distances.T
     return pairwise_distances
+
+
 
 
 def compute_spectra(

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import argparse
 import json
 import sys
@@ -9,6 +10,8 @@ from utils import (
     compute_pairwise_marker_distance,
 )
 from sklearn.manifold import MDS
+from skbio.stats.ordination import pcoa
+from sklearn.metrics.pairwise import cosine_distances
 from schema import IHDResultSchema, MutationSchema
 
 def main(args):
@@ -20,6 +23,7 @@ def main(args):
 
     # read in genotype info
     geno = pd.read_csv(config_dict['geno'])
+    markers = pd.read_csv(config_dict["markers"])
 
     # read in singleton data and validate with pandera
     mutations = pd.read_csv(args.mutations)
@@ -39,6 +43,8 @@ def main(args):
     cols2use.extend(samples_overlap)
     geno = geno[cols2use]
 
+    geno = geno.merge(markers, on="marker")
+
     mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
 
     # for the null permutation test, shuffle the rows of the spectra
@@ -47,64 +53,53 @@ def main(args):
 
     print (f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
     total mutations.""")
+    res_df = []
 
-    # convert string genotypes to integers based on config definition
-    replace_dict = config_dict['genotypes']
-    geno_asint = geno.replace(replace_dict).replace({1: np.nan})
+    for chrom, geno_chrom in geno.groupby('chromosome'):
 
-    # calculate allele frequencies at each site
-    ac = np.nansum(geno_asint[samples], axis=1)
-    an = np.sum(~np.isnan(geno_asint[samples]), axis=1) * 2
-    afs = ac / an
+        # convert string genotypes to integers based on config definition
+        replace_dict = config_dict['genotypes']
+        geno_asint = geno_chrom.replace(replace_dict).replace({1: np.nan})
 
-    # only consider sites where allele frequency is between thresholds
-    idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
-    print ("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
-    geno_filtered = geno_asint.iloc[idxs2keep][samples].values
-    markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
+        # calculate allele frequencies at each site
+        ac = np.nansum(geno_asint[samples], axis=1)
+        an = np.sum(~np.isnan(geno_asint[samples]), axis=1) * 2
+        afs = ac / an
 
-    # compute the pairwise_distances between the aggregate spectra
-    # of haplotypes with the A or B (or any) allele at each pair of sites
-    for genotype in (0, 2):
-        pairwise_dists = compute_pairwise_marker_distance(
-            spectra,
-            geno_filtered,
-            genotype,
-        )
+        # only consider sites where allele frequency is between thresholds
+        idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
+        print ("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
+        geno_filtered = geno_asint.iloc[idxs2keep][samples].values
+        markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
 
-        # then run MDS to get scaled distances at each marker
-        clf = MDS(n_components=2, dissimilarity="precomputed")
-        mds_ = clf.fit_transform(pairwise_dists)
-        print (mds_)
+        # compute the pairwise_distances between the aggregate spectra
+        # of haplotypes with the A or B (or any) allele at each pair of sites
+        for genotype in (0, 2):
+            spectra_sums = compute_pairwise_marker_distance(
+                spectra,
+                geno_filtered,
+                genotype,
+            )
+            pairwise_dists = cosine_distances(spectra_sums)
+            if chrom in ("4", "6"):
+                f, ax = plt.subplots()
+                sns.heatmap(pairwise_dists, ax=ax)
+                f.savefig(f"{chrom}.{genotype}.heat.png", dpi=200)
+            # then run MDS to get scaled distances at each marker
+            n_comp = 10
+            clf = MDS(n_components=n_comp, dissimilarity="precomputed", normalized_stress=False)
+            mds_ = clf.fit_transform(pairwise_dists)
+            #print (mds_)
+            mds_df = pd.DataFrame(mds_, columns=[f"MDS{n}" for n in range(1, n_comp + 1)])
+            mds_df["genotype"] = genotype
+            mds_df['marker'] = markers_filtered
+            res_df.append(mds_df)
 
-    # res_df = pd.DataFrame({
-    #     'marker': markers_filtered,
-    #     'Distance': focal_dists,
-    #     'k': args.k,
-    # })
-    # IHDResultSchema.validate(res_df)
+    res_df = pd.concat(res_df)
 
-    # # then do permutations
-    # max_distances = perform_permutation_test(
-    #     spectra,
-    #     geno_filtered,
-    #     n_permutations=args.permutations,
-    # )
+    
 
-    # f, ax = plt.subplots()
-    # ax.hist(max_distances, bins=20, ec='k', lw=1)
-
-    # # compute the 95th percentile of the maximum distance
-    # # distribution to figure out the distance corresponding to an alpha
-    # # of 0.05
-    # for pctile, label in zip((20, 5), ('suggestive', 'significant')):
-    #     score_pctile = np.percentile(max_distances, 100 - pctile)
-    #     res_df[f'{label}_percentile'] = score_pctile
-    #     ax.axvline(x=score_pctile, label=label)
-
-    # f.savefig('max_dist.png', dpi=300)
-
-    # res_df.to_csv(args.out, index=False)
+    res_df.to_csv(args.out, index=False)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
