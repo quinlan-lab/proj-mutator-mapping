@@ -92,12 +92,23 @@ def main(args):
     combined_merged = combined.merge(metadata, left_on="bxd_strain", right_on="bam_name")
     combined_merged['sample'] = combined_merged['GeneNetwork name']
 
-    combined_merged['haplotype_at_qtl'] = combined_merged['sample'].apply(
-    lambda s: find_haplotype(genos_at_markers, s)
-    if s in genos_at_markers.columns else "NA")
+    combined_merged['haplotype_at_chr4_qtl'] = combined_merged['sample'].apply(
+        lambda s: find_haplotype(genos_at_markers, s)
+        if s in genos_at_markers.columns else "NA")
 
-    combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "D"]
+    # get genotypes at top marker at chr4 eQTL
+    rsids = ["rs31412077"]
+    genos_at_markers = geno[geno['marker'].isin(rsids)]
 
+    combined_merged['haplotype_at_chr6_qtl'] = combined_merged['sample'].apply(
+        lambda s: find_haplotype(genos_at_markers, s)
+        if s in genos_at_markers.columns else "NA")
+
+    combined_merged = combined_merged.query('n_generations >= 20')
+
+    #combined_merged = combined_merged[combined_merged['haplotype_at_chr4_qtl'] == "D"]
+    #combined_merged = combined_merged[combined_merged['haplotype_at_chr6_qtl'] == "D"]
+  
     combined_merged = combined_merged[combined_merged['sample'] != "BXD68"]
     combined_merged['count'] = 1
     combined_merged.to_csv(args.out, index=False)

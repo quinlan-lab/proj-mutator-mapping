@@ -9,7 +9,7 @@ import statsmodels.api as sm
 from statannotations.Annotator import Annotator
 
 
-plt.rc("font", size=14)
+plt.rc("font", size=16)
 
 PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
@@ -60,7 +60,7 @@ elif k == 1:
         for m, mi in mut2idx.items():
             df.append({
                 'sample': s,
-                'Mutation type': m,#r"$\rightarrow$".join(m.split('>')),
+                'Mutation type': r"$\rightarrow$".join(m.split('>')),
                 'Fraction': spectra_fracs[si, mi],
                 'Rate': spectra[si, mi] / smp2generations[s] / 2.5e9,
                 'Haplotype': smp_geno,
@@ -74,7 +74,9 @@ elif k == 1:
     # ssq = table['sum_sq'].values
     # print ((ssq[0] / np.sum(ssq)) * 100)
 
-    f, ax = plt.subplots(figsize=(10, 6))
+    palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
+
+    f, ax = plt.subplots(figsize=(9, 6))
     sns.boxplot(
         data=df,
         x="Mutation type",
@@ -90,15 +92,19 @@ elif k == 1:
         x="Mutation type",
         y="Rate",
         hue="Haplotype",
+        ec='k',
+        linewidth=1,
         ax=ax,
-        palette="colorblind",
+        #palette="colorblind",
+        palette=palette,
         dodge=True,
     )
-
+    mutation_type = r"$\rightarrow$".join(["C", "A"])
     pairs = [
-        (("C>A", "B-B"), ("C>A", "B-D")),
-        (("C>A", "B-D"), ("C>A", "D-D")),
-        (("C>A", "D-B"), ("C>A", "D-D")),
+        ((mutation_type, "B-B"), (mutation_type, "B-D")),
+        ((mutation_type, "B-D"), (mutation_type, "D-D")),
+        ((mutation_type, "D-B"), (mutation_type, "D-D")),
+        ((mutation_type, "B-B"), (mutation_type, "D-B")),
     ]
 
     annotator = Annotator(
@@ -126,6 +132,9 @@ elif k == 1:
         title="Haplotypes at chr4 and chr6 peaks",
         frameon=False,
     )
+    sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     f.tight_layout()
     f.savefig('heatmap.png', dpi=300)
+    f.savefig('heatmap.eps')
+
