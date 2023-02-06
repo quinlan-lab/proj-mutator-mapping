@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 from schema import IHDResultSchema, MarkerMetadataSchema
 
-plt.rc("font", size=16)
+plt.rc("font", size=18)
 
 def main(args):
 
@@ -36,21 +36,23 @@ def main(args):
 
     label_meta = list(zip(
         (
-            'Suggestive distance threshold (p <= 0.2)',
-            'Significant distance threshold (p <= 0.05)',
+            'Suggestive distance threshold ' + r"$\left(p \leq 0.2\right)$",
+            'Significant distance threshold ' + r"$\left(p \leq 0.05\right)$",
         ),
         ('suggestive', 'significant'),
-        ("grey", "black"),
-        ("--", "--"),
+        ("grey", "grey"),
+        ("--", "-"),
     ))[::-1]
 
     # plot manhattan
-    f, ax = plt.subplots(figsize=(14, 6))
+    f, ax = plt.subplots(figsize=(16, 6))
 
     previous_max = 0
     xtick_positions, xticks = [], []
 
     colors = ["cornflowerblue", "coral"]
+    colors = ["#F07928", "#B0D8E1"]
+    colors = ["#E6803C", "#398D84"]
 
     for i, (
             chrom,
@@ -64,10 +66,10 @@ def main(args):
         ax.scatter(
             xvals,
             yvals,
-            s=50,
+            s=75,
             c=colors[color_idx],
-            ec="w",
-            lw=0.5,
+            ec="k",
+            lw=1,
         )
 
         previous_max += max(chrom_df[args.colname].values)
@@ -81,11 +83,21 @@ def main(args):
 
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels(xticks)
+
+    max_yval = max(results_merged["Distance"]) * 1.05
+    yticks = np.linspace(0, max_yval, num=7)
+    ytick_labels = [f"{x:.1e}" for x in yticks]
+    #ytick_labels[0] = "0"
+    ax.set_yticks(yticks[1:])
+    ax.set_yticklabels(ytick_labels[1:])
+    sns.set_style('ticks')
+    sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
     ax.set_ylabel("Distance")
-    ax.legend()
-    f.tight_layout()
+    #ax.legend(frameon=False)
+    f.tight_layout() 
     f.savefig(f"{args.outpref}.manhattan_plot.png", dpi=300)
+    f.savefig(f"{args.outpref}.manhattan_plot.eps")
 
     if args.chrom is not None:
         results_merged_chr = results_merged[results_merged["chromosome"] == args.chrom]
@@ -103,7 +115,8 @@ def main(args):
         )
 
         ax.legend()
-        f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.png", dpi=300)
+        #f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.png", dpi=300)
+        f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.eps")
 
 
 if __name__ == "__main__":
