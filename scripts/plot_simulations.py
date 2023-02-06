@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
+PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
 df = pd.read_csv(f"{PROJDIR}/results.csv")
 df['Power'] = df['pval'].apply(lambda p: p <= 0.05)
