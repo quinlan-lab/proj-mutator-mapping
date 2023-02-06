@@ -8,3 +8,4 @@ data/genotypes/cemee/
 csv/
 data/bam/
 data/vcf/
+scripts/__pycache__
