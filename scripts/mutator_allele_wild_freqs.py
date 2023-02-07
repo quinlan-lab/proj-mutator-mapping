@@ -46,7 +46,7 @@ res_df_grouped = res_df.groupby(['Mutation', 'Subspecies']).agg({
     lambda g: sum(g) / (len(g) * 2)
 }).reset_index().rename(columns={'genotype': "Allele frequency"}, )
 
-print (res_df_grouped)
+palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
 
 f, ax = plt.subplots(figsize=(10, 6))
 sns.barplot(
@@ -55,9 +55,10 @@ sns.barplot(
     y="Allele frequency",
     hue="Subspecies",
     ax=ax,
-    palette="colorblind",
-    ec='w',
+    palette=palette,
+    ec='k',
     lw=2,
 )
 sns.set_style("ticks")
+sns.despine(ax=ax, top=True, right=True)
 f.savefig("wild.af.png", dpi=300)
