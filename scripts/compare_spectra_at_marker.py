@@ -7,9 +7,11 @@ import seaborn as sns
 from statsmodels.formula.api import ols
 import statsmodels.api as sm
 from statannotations.Annotator import Annotator
+import scipy.stats as ss
+from statsmodels.stats.multitest import multipletests
 
 
-plt.rc("font", size=16)
+plt.rc("font", size=18)
 
 PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
@@ -61,12 +63,57 @@ elif k == 1:
             df.append({
                 'sample': s,
                 'Mutation type': r"$\rightarrow$".join(m.split('>')),
+                'Count': spectra[si, mi],
+                'Total': np.sum(spectra, axis=1)[si],
                 'Fraction': spectra_fracs[si, mi],
                 'Rate': spectra[si, mi] / smp2generations[s] / 2.5e9,
                 'Haplotype': smp_geno,
             })
 
     df = pd.DataFrame(df)
+    df_grouped = df.drop(columns=["sample"]).groupby(["Haplotype", "Mutation type"]).agg(sum).reset_index()
+
+    # compare mutation rates using Chi-square tests
+    comparisons = [
+        ("B-B", "B-D"),
+        ("B-D", "D-D"),
+        ("D-B", "D-D"),
+        ("B-B", "D-B"),
+    ]
+
+    res = []
+    for comparison_mut in df_grouped["Mutation type"].unique():
+
+        for a_hap, b_hap in comparisons:
+            a_hap_df = df_grouped[df_grouped["Haplotype"] == a_hap]
+            b_hap_df = df_grouped[df_grouped["Haplotype"] == b_hap]
+            # is focal mut and A hap
+            a_fore = a_hap_df[a_hap_df["Mutation type"] == comparison_mut]["Count"].values[0]
+            # is focal mut and B hap
+            b_fore = b_hap_df[b_hap_df["Mutation type"] == comparison_mut]["Count"].values[0]
+            # is not focal mut and A hap
+            a_back = a_hap_df[a_hap_df["Mutation type"] != comparison_mut]["Count"].values.sum()
+            # is not focal mut and B hap
+            b_back = b_hap_df[b_hap_df["Mutation type"] != comparison_mut]["Count"].values.sum()
+
+            _, p, _, _ = ss.chi2_contingency([
+                [a_fore, b_fore],
+                [a_back, b_back],
+            ])
+
+            res.append({
+                "a_hap": a_hap,
+                "b_hap": b_hap,
+                "mut": comparison_mut,
+                "p": p,
+            })
+    res_df = pd.DataFrame(res)
+    #print (res_df)
+    _, adj_p, _, _ = multipletests(res_df["p"].values, method="fdr_bh")
+    res_df["adj_p"] = adj_p 
+    print (res_df.query("adj_p < 0.05"))
+
+    df_grouped["Aggregate fraction"] = df_grouped["Count"] / df_grouped["Total"]
 
     # lm = ols("Rate ~ C(Haplotype, Treatment(reference='D-B'))", data=df[df["Mutation type"] == "C" + r"$\rightarrow$" + "A"]).fit()
     # print (lm.summary())
@@ -75,6 +122,35 @@ elif k == 1:
     # print ((ssq[0] / np.sum(ssq)) * 100)
 
     palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
+
+    f, ax = plt.subplots(figsize=(10, 6))
+    sns.barplot(
+        data=df_grouped,
+        x="Mutation type",
+        y="Aggregate fraction",
+        hue="Haplotype",
+        ax=ax,
+        palette=palette,
+        ec='k', 
+        lw=2,
+    )
+    handles, labels = ax.get_legend_handles_labels()
+    l = plt.legend(
+        handles,
+        labels,
+        title="Haplotypes at chr4 and chr6 peaks",
+        frameon=False,
+    )
+    #sns.set_style('ticks')
+    sns.despine(ax=ax, top=True, right=True)
+    # change all spines
+    for axis in ['top','bottom','left','right']:
+        ax.spines[axis].set_linewidth(2.5)
+
+    # increase tick width
+    ax.tick_params(width=2.5)
+    f.tight_layout()
+    f.savefig("o.png", dpi=300)
 
     f, ax = plt.subplots(figsize=(9, 6))
     sns.boxplot(
@@ -137,4 +213,3 @@ elif k == 1:
     f.tight_layout()
     f.savefig('heatmap.png', dpi=300)
     f.savefig('heatmap.eps')
-
