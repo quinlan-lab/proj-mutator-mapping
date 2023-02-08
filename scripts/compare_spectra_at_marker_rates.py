@@ -66,7 +66,7 @@ elif k == 1:
 
         #rate_per_gen = spectra[si, mi] / smp2generations[s]
         callable_bp = callable_kmers[callable_kmers["GeneNetwork name"] == s]
-
+        
 
         for m, mi in mut2idx.items():
             base_nuc = m.split(">")[0]
@@ -87,14 +87,11 @@ elif k == 1:
 
     # compare mutation rates using Chi-square tests
     comparisons = [
-        ("B-B", "B-D"), # ogg1 against wt
-        #("B-D", "D-D"), 
-        ("D-B", "D-D"), # both against mutyh
-        #("B-B", "D-B"),
+        ("B-B", "B-D"),
+        ("B-D", "D-D"),
+        ("D-B", "D-D"),
+        ("B-B", "D-B"),
     ]
-
-    pairs = []
-    pvalues = []
 
     res = []
     for comparison_mut in df_grouped["Mutation type"].unique():
@@ -116,56 +113,39 @@ elif k == 1:
                 [a_back, b_back],
             ])
 
-            if comparison_mut != r"$\rightarrow$".join(["C", "A"]): 
-                if p >= 0.05: continue
-            pvalues.append(p)
-            pairs.append(((comparison_mut, a_hap), (comparison_mut, b_hap)))
-
             res.append({
                 "a_hap": a_hap,
                 "b_hap": b_hap,
                 "mut": comparison_mut,
                 "p": p,
             })
-
     res_df = pd.DataFrame(res)
+    #print (res_df)
     _, adj_p, _, _ = multipletests(res_df["p"].values, method="fdr_bh")
-    res_df["adj_p"] = adj_p
+    res_df["adj_p"] = adj_p 
+    print (res_df.query("adj_p < 0.05"))
 
     df_grouped["Aggregate fraction"] = df_grouped["Count"] / df_grouped["Total"]
 
+    # lm = ols("Rate ~ C(Haplotype, Treatment(reference='D-B'))", data=df[df["Mutation type"] == "C" + r"$\rightarrow$" + "A"]).fit()
+    # print (lm.summary())
+    # table = sm.stats.anova_lm(lm, typ=2)
+    # ssq = table['sum_sq'].values
+    # print ((ssq[0] / np.sum(ssq)) * 100)
+
     palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
 
-    plt.figure(figsize=(10, 6))
-    ax = sns.barplot(
+    f, ax = plt.subplots(figsize=(10, 6))
+    sns.barplot(
         data=df_grouped,
         x="Mutation type",
         y="Aggregate fraction",
         hue="Haplotype",
-        #ax=ax,
+        ax=ax,
         palette=palette,
-        ec='k',
+        ec='k', 
         lw=2,
     )
-    annotator = Annotator(
-        ax,
-        pairs,
-        data=df_grouped,
-        x="Mutation type",
-        y="Rate",
-        hue="Haplotype",
-    )
-
-
-    annotator.configure(
-        test=None,
-        test_short_name=r"$\chi^{2}$",
-        #text_format="full",
-        #text_format="simple",
-        text_format="star",
-        #comparisons_correction="BH",
-    ).set_pvalues(pvalues=pvalues).annotate()
-
     handles, labels = ax.get_legend_handles_labels()
     l = plt.legend(
         handles,
@@ -177,10 +157,76 @@ elif k == 1:
     sns.despine(ax=ax, top=True, right=True)
     # change all spines
     for axis in ['top','bottom','left','right']:
-        ax.spines[axis].set_linewidth(1.5)
+        ax.spines[axis].set_linewidth(2.5)
 
     # increase tick width
-    ax.tick_params(width=1.5)
-    plt.tight_layout()
-    plt.savefig("aggregate_spectra_comparison.png", dpi=300)
-    plt.savefig("aggregate_spectra_comparison.eps")
+    ax.tick_params(width=2.5)
+    f.tight_layout()
+    f.savefig("aggregate_spectra_comparison.png", dpi=300)
+    f.savefig("aggregate_spectra_comparison.eps")
+
+    print (df)
+
+    f, ax = plt.subplots(figsize=(9, 6))
+    sns.boxplot(
+        data=df,
+        x="Mutation type",
+        y="Rate",
+        hue="Haplotype",
+        ax=ax,
+        color="white",
+        dodge=True,
+        fliersize=0,
+    )
+    sns.stripplot(
+        data=df,
+        x="Mutation type",
+        y="Rate",
+        hue="Haplotype",
+        ec='k',
+        linewidth=1,
+        ax=ax,
+        #palette="colorblind",
+        palette=palette,
+        dodge=True,
+    )
+
+    pairs = []
+    for mutation_type in df["Mutation type"].unique():
+        pairs.extend([
+            #((mutation_type, "B-B"), (mutation_type, "B-D")),
+            ((mutation_type, "B-D"), (mutation_type, "D-D")),
+            ((mutation_type, "D-B"), (mutation_type, "D-D")),
+            #((mutation_type, "B-B"), (mutation_type, "D-B")),
+        ])
+
+    annotator = Annotator(
+        ax,
+        pairs,
+        data=df,
+        x="Mutation type",
+        y="Rate",
+        hue="Haplotype",
+    )
+    annotator.configure(
+        #test='t-test_welch',
+        test ="Mann-Whitney",
+        comparisons_correction="BH",
+        text_format='star',
+    )
+    #annotator.apply_and_annotate()
+
+    # Get the handles and labels. For this example it'll be 2 tuples
+    # of length 4 each.
+    handles, labels = ax.get_legend_handles_labels()
+    l = plt.legend(
+        handles[4:],
+        labels[4:],
+        title="Haplotypes at chr4 and chr6 peaks",
+        frameon=False,
+    )
+    sns.set_style('ticks')
+    sns.despine(ax=ax, top=True, right=True)
+    f.tight_layout()
+    f.savefig('heatmap.png', dpi=300)
+    f.savefig('heatmap.eps')

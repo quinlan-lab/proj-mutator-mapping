@@ -142,52 +142,15 @@ dumont_grouped = dumont_tidy.groupby(["Combined haplotype", "Mutation type"]).ag
 
 dumont_grouped["Aggregate fraction"] = dumont_grouped["Count"] / dumont_grouped["Total"]
 
-f, ax = plt.subplots(figsize=(10, 6))
 
-palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
-
-res = []
-
-sns.barplot(
-    data=dumont_grouped,
-    x="Mutation type",
-    y="Aggregate fraction",
-    hue="Combined haplotype",
-    ax=ax,
-    palette=palette,
-    ec="k",
-    linewidth=2,
-)
-
-
-
-# change all spines
-for axis in ['top','bottom','left','right']:
-    ax.spines[axis].set_linewidth(2.5)
-
-# increase tick width
-ax.tick_params(width=2.5)
-sns.despine(ax=ax, top=True, right=True)
-
-handles, labels = ax.get_legend_handles_labels()
-l = plt.legend(
-    handles,
-    labels,
-    title="Haplotypes at chr4 and chr6 peaks",
-    frameon=False,
-)
-
-#sns.set_style("ticks")
-f.savefig(args.out + ".eps", dpi=300)
-
-res = []
+pairs, pvalues = [], []
 
 # compare spectra between strains with different
 # configurations of Mutyh mutations
 for cat_a, cat_b in [
-    ("D-D", "B-B"),
-    ("D-D", "B-D"),
-    ("D-B", "B-B"),
+    #("D-D", "B-B"),
+    #("D-D", "B-D"),
+    #("D-B", "B-B"),
     ("B-D", "B-B"),
     ("D-D", "D-B")
 ]:
@@ -268,14 +231,64 @@ for cat_a, cat_b in [
 
         _, p, _, _ = ss.chi2_contingency([[a_fore, b_fore], [a_back, b_back]])
 
-        res.append({
-            "mutation": mut,
-            "a_group": cat_a,
-            "b_group": cat_b,
-            "p": p})
+        pairs.append(((mut, cat_a), (mut, cat_b)))
+        pvalues.append(p)
+        
+f, ax = plt.subplots(figsize=(10, 6))
 
-res_df = pd.DataFrame(res)
+palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
 
-_, adj_pvals, _, _ = multipletests(res_df["p"], method="fdr_bh")
-res_df["adj_p"] = adj_pvals
-print (res_df.query("p <= 0.05"))
+res = []
+
+plt.figure(figsize=(10, 6))
+
+ax = sns.barplot(
+    data=dumont_grouped,
+    x="Mutation type",
+    y="Aggregate fraction",
+    hue="Combined haplotype",
+    #ax=ax,
+    palette=palette,
+    ec="k",
+    linewidth=2,
+)
+
+annotator = Annotator(
+        ax,
+        pairs,
+        data=dumont_grouped,
+        x="Mutation type",
+        y="Aggregate fraction",
+        hue="Combined haplotype",
+    )
+
+
+annotator.configure(
+    test=None,
+    test_short_name=r"$\chi^{2}$",
+    #text_format="full",
+    #text_format="simple",
+    text_format="star",
+    #comparisons_correction="BH",
+).set_pvalues(pvalues=pvalues).annotate()
+
+# change all spines
+for axis in ['top','bottom','left','right']:
+    ax.spines[axis].set_linewidth(1.5)
+
+# increase tick width
+ax.tick_params(width=1.5)
+
+handles, labels = ax.get_legend_handles_labels()
+l = plt.legend(
+    handles,
+    labels,
+    title="Haplotypes at chr4 and chr6 peaks",
+    frameon=False,
+)
+
+sns.set_style("ticks")
+sns.despine(ax=ax, top=True, right=True)
+
+plt.tight_layout()
+plt.savefig(args.out + ".eps", dpi=300)
