@@ -8,7 +8,7 @@ from cyvcf2 import VCF
 from statannotations.Annotator import Annotator
 from statsmodels.stats.multitest import multipletests
 
-plt.rc('font', size=16)
+plt.rc('font', size=18)
 
 p = argparse.ArgumentParser()
 p.add_argument(
@@ -78,8 +78,19 @@ cols2use.extend(["nA", "nC", "nT", "nG"])
 
 dumont_filtered = dumont[cols2use]
 
-rename_dict = {f"{m}": m.replace(">", r"$\rightarrow$")
-     for m in mutations}
+def make_rename_dict(colnames):
+    revcomp = {"A": "T", "T": "A", "C": "G", "G": "C"}
+    rename_dict = {}
+    for c in colnames:
+        orig, new = c.split('.')[0].split('>')
+        if orig == "T":
+            orig, new = "A", revcomp[new]
+        new_c = r"$\rightarrow$".join([orig, new])
+        rename_dict[c] = new_c
+    return rename_dict
+
+
+rename_dict = make_rename_dict(cols2use[1:7])
 
 # rename columns
 dumont_filtered.rename(
@@ -108,15 +119,10 @@ counts = dumont_filtered.values[:, 1:7]
 
 
 dumont_merged = dumont_filtered.merge(sanger_genos, on="strain").drop(columns="Strain")
-# dumont_tidy = dumont_merged.melt(
-#     id_vars=["strain", "Haplotype"],
-#     var_name="Mutation type",
-#     value_name="Rate",
-# )
 
-dumont_merged["Haplotypes at chr4 and chr6 peaks"] = dumont_merged["strain"].apply(lambda s: "-".join([smp2mutyh[s], smp2ogg[s]]))
+dumont_merged["Combined haplotype"] = dumont_merged["strain"].apply(lambda s: "-".join([smp2mutyh[s], smp2ogg[s]]))
 
-dumont_merged = dumont_merged[dumont_merged["Haplotypes at chr4 and chr6 peaks"].isin([
+dumont_merged = dumont_merged[dumont_merged["Combined haplotype"].isin([
     "B-B",
     "B-D",
     "D-B",
@@ -129,12 +135,12 @@ strain2sums = dict(zip(dumont_merged['strain'], np.sum(dumont_merged[mutations],
 
 dumont_merged.drop(columns=["nA", "nT", "nC", "nG", "Haplotype"], inplace=True)
 
-dumont_tidy = dumont_merged.melt(id_vars=["strain", "Haplotypes at chr4 and chr6 peaks"], var_name="Mutation type", value_name="Count")
+dumont_tidy = dumont_merged.melt(id_vars=["strain", "Combined haplotype"], var_name="Mutation type", value_name="Count")
 dumont_tidy["Total"] = dumont_tidy["strain"].apply(lambda s: strain2sums[s])
 
-dumont_grouped = dumont_tidy.groupby(["Haplotypes at chr4 and chr6 peaks", "Mutation type"]).agg({"Count": sum, "Total": sum}).reset_index()
+dumont_grouped = dumont_tidy.groupby(["Combined haplotype", "Mutation type"]).agg({"Count": sum, "Total": sum}).reset_index()
 
-dumont_grouped["Fraction"] = dumont_grouped["Count"] / dumont_grouped["Total"]
+dumont_grouped["Aggregate fraction"] = dumont_grouped["Count"] / dumont_grouped["Total"]
 
 f, ax = plt.subplots(figsize=(10, 6))
 
@@ -145,8 +151,8 @@ res = []
 sns.barplot(
     data=dumont_grouped,
     x="Mutation type",
-    y="Fraction",
-    hue="Haplotypes at chr4 and chr6 peaks",
+    y="Aggregate fraction",
+    hue="Combined haplotype",
     ax=ax,
     palette=palette,
     ec="k",
@@ -154,25 +160,24 @@ sns.barplot(
 )
 
 
-#ax.set_ylabel('Mutation rate (per bp, per gen.)')
 
 # change all spines
-# for axis in ['top','bottom','left','right']:
-#     ax.spines[axis].set_linewidth(2.5)
+for axis in ['top','bottom','left','right']:
+    ax.spines[axis].set_linewidth(2.5)
 
 # increase tick width
-#ax.tick_params(width=2.5)
+ax.tick_params(width=2.5)
 sns.despine(ax=ax, top=True, right=True)
 
-# handles, labels = ax.get_legend_handles_labels()
-# l = plt.legend(
-#     handles[4:],
-#     labels[4:],
-#     title="Haplotypes at chr4 and chr6 peaks",
-#     frameon=False,
-# )
+handles, labels = ax.get_legend_handles_labels()
+l = plt.legend(
+    handles,
+    labels,
+    title="Haplotypes at chr4 and chr6 peaks",
+    frameon=False,
+)
 
-sns.set_style("ticks")
+#sns.set_style("ticks")
 f.savefig(args.out + ".eps", dpi=300)
 
 res = []
@@ -187,8 +192,8 @@ for cat_a, cat_b in [
     ("D-D", "D-B")
 ]:
 
-    a_smps = dumont_tidy[dumont_tidy["Haplotypes at chr4 and chr6 peaks"] == cat_a]["strain"].unique()
-    b_smps = dumont_tidy[dumont_tidy["Haplotypes at chr4 and chr6 peaks"] == cat_b]["strain"].unique()
+    a_smps = dumont_tidy[dumont_tidy["Combined haplotype"] == cat_a]["strain"].unique()
+    b_smps = dumont_tidy[dumont_tidy["Combined haplotype"] == cat_b]["strain"].unique()
 
     # sample indices in each category
     a_idx = np.array([smp2idx[s] for s in a_smps if s in smp2idx])
