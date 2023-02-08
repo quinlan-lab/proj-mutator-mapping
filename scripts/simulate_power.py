@@ -6,6 +6,7 @@ import numba
 from utils import manual_cosine_distance, shuffle_spectra
 from typing import List
 import copy
+from line_profiler import LineProfiler
 
 class Haplotypes(object):
 
@@ -167,7 +168,6 @@ def run_permutations(
 
 
 def main():
-    rng = np.random.default_rng(42)
 
     # define the mutation types and expected lambdas to simulate
     base_mutations = ["C>T", "C>A", "C>G", "A>T", "A>C", "A>G"]
@@ -205,11 +205,11 @@ def main():
     ### ------
 
     # number of haplotypes to simulate
-    n = [100]
+    n = [50, 100]
     # fraction of samples to add the mutator allele to
     f = [0.5]
     # amounts to augment the mutation probabilities by
-    m = [1.01, 1.05, 1.1, 1.2, 1.3, 1.4, 1.5, 2.0]
+    m = list(np.arange(1.0, 1.5, 0.05))
     # indices of mutations to augment
     if kmer_size == 3:
         # in the case of the 3-mer spectra, we'll augment
@@ -217,24 +217,22 @@ def main():
         i = [
             list(range(0, 4)),
             list(range(0, 8)),
-            list(range(0, 16)),
             list(range(16, 20)),
             list(range(16, 24)),
-            list(range(16, 32)),
         ]
     else:
         i = [0, 1, 2]
     # number of total mutations to simulate on each haplotype
-    c = [50, 100, 200]
+    c = [10, 50, 100, 500]
     # fraction of mutations subject to effects of mutator
     p = [1.]
     # number of markers to simulate in each permutation
-    k = [1, 10, 100]
+    k = [1]
 
     # for each parameter combination, how many replicates to perform
-    n_replicates = 10
+    n_replicates = 100
     # in each replicate, how many permutations to perform
-    n_permutations = 100
+    n_permutations = 1_000
 
     for (
             n_haplotypes,
@@ -307,6 +305,7 @@ def main():
                     '# of haplotypes': n_haplotypes,
                     '% with mutator': frac,
                     'Mutator effect size': augment,
+                    '% augmented': pct_to_augment,
                     '# of mutations': count,
                     'Mutation type': mutation_type,
                     '# genotyped markers': n_markers,
@@ -320,6 +319,7 @@ def main():
 
 if __name__ == "__main__":
     # lp = LineProfiler()
+    # lp.add_function(run_permutations)
     # lp_wrapper = lp(main)
     # lp_wrapper()
     # lp.print_stats()
