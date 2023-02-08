@@ -150,7 +150,8 @@ elif k == 1:
     # increase tick width
     ax.tick_params(width=2.5)
     f.tight_layout()
-    f.savefig("o.png", dpi=300)
+    f.savefig("aggregate_spectra_comparison.png", dpi=300)
+    f.savefig("aggregate_spectra_comparison.eps")
 
     f, ax = plt.subplots(figsize=(9, 6))
     sns.boxplot(
