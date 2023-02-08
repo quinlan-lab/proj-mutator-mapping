@@ -79,10 +79,17 @@ def main(args):
 
     for label, level, color, style in label_meta:
         max_dist = results_merged[f'{level}_percentile'].unique()[0]
-        ax.axhline(y=max_dist, ls=style, c=color, label=label, lw=1.5)
+        ax.axhline(y=max_dist, ls=style, c=color, label=label, lw=2)
 
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels(xticks)
+
+    # change all spines
+    for axis in ['top','bottom','left','right']:
+        ax.spines[axis].set_linewidth(2.5)
+
+    # increase tick width
+    ax.tick_params(width=2.5)
 
     max_yval = max(results_merged["Distance"]) * 1.05
     yticks = np.linspace(0, max_yval, num=7)
@@ -90,7 +97,7 @@ def main(args):
     #ytick_labels[0] = "0"
     ax.set_yticks(yticks[1:])
     ax.set_yticklabels(ytick_labels[1:])
-    sns.set_style('ticks')
+    #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
     ax.set_ylabel("Distance")
