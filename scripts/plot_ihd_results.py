@@ -86,10 +86,10 @@ def main(args):
 
     # change all spines
     for axis in ['top','bottom','left','right']:
-        ax.spines[axis].set_linewidth(2.5)
+        ax.spines[axis].set_linewidth(2.)
 
     # increase tick width
-    ax.tick_params(width=2.5)
+    ax.tick_params(width=2.)
 
     max_yval = max(results_merged["Distance"]) * 1.05
     yticks = np.linspace(0, max_yval, num=7)
@@ -97,11 +97,11 @@ def main(args):
     #ytick_labels[0] = "0"
     ax.set_yticks(yticks[1:])
     ax.set_yticklabels(ytick_labels[1:])
-    #sns.set_style('ticks')
+    sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
     ax.set_ylabel("Distance")
-    #ax.legend(frameon=False)
+    ax.legend(frameon=False)
     f.tight_layout() 
     f.savefig(f"{args.outpref}.manhattan_plot.png", dpi=300)
     f.savefig(f"{args.outpref}.manhattan_plot.eps")
