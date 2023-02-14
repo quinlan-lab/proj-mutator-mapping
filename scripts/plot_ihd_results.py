@@ -41,7 +41,7 @@ def main(args):
         ),
         ('suggestive', 'significant'),
         ("grey", "grey"),
-        ("--", "-"),
+        ("--", "--"),
     ))[::-1]
 
     # plot manhattan
@@ -78,6 +78,7 @@ def main(args):
 
 
     for label, level, color, style in label_meta:
+        if level == "suggestive": continue
         max_dist = results_merged[f'{level}_percentile'].unique()[0]
         ax.axhline(y=max_dist, ls=style, c=color, label=label, lw=1.5)
 
@@ -90,7 +91,7 @@ def main(args):
     #ytick_labels[0] = "0"
     ax.set_yticks(yticks[1:])
     ax.set_yticklabels(ytick_labels[1:])
-    sns.set_style('ticks')
+    #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
     ax.set_ylabel("Distance")
