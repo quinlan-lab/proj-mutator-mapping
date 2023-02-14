@@ -22,6 +22,8 @@ print (callable_kmers)
 geno = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.geno").set_index("marker")
 
 markers = np.array(["rs46276051", "rs52263933"]) # chr6 and chr4
+#markers = np.array(["rs46276051"]) # chr6 and chr4
+
 # markers = np.array(["rs6228198"]) # chr5
 # markers = np.array(["rs13480950"]) # chr11
 # markers = np.array(["rs30374203"])
@@ -45,13 +47,13 @@ for s in samples_shared:
     marker_genos = "-".join([v for k,v in sorted_markers])
     smp2genotype[s] = marker_genos
 
-a_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v.split('-')[1] == "B"])
-b_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v.split('-')[1] == "D"])
-
-a_spectra_sum = np.sum(spectra[a_smp_i], axis=0)
-b_spectra_sum = np.sum(spectra[b_smp_i], axis=0)
 
 if k == 3:
+    a_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v.split('-')[1] == "B"])
+    b_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v.split('-')[1] == "D"])
+
+    a_spectra_sum = np.sum(spectra[a_smp_i], axis=0)
+    b_spectra_sum = np.sum(spectra[b_smp_i], axis=0)
     mutation_comparison(b_spectra_sum, a_spectra_sum, mut2idx, vmin=-1, vmax=1)
 elif k == 1:
 
@@ -85,6 +87,8 @@ elif k == 1:
     df = pd.DataFrame(df)
     df_grouped = df.drop(columns=["sample"]).groupby(["Haplotype", "Mutation type"]).agg(sum).reset_index()
 
+    palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
+
     # compare mutation rates using Chi-square tests
     comparisons = [
         ("B-B", "B-D"), # ogg1 against wt
@@ -92,6 +96,44 @@ elif k == 1:
         ("D-B", "D-D"), # both against mutyh
         #("B-B", "D-B"),
     ]
+
+    #comparisons = [("B", "D")]
+
+    f, ax = plt.subplots(figsize=(10, 6))
+    sns.boxplot(
+        data=df,#[df["Haplotype"].isin(["D-B", "D-D"])],
+        x="Mutation type",
+        y="Rate",
+        hue="Haplotype",
+        ax=ax,
+        color="white",
+        fliersize=0,
+    )
+    sns.stripplot(
+        data=df,#[df["Haplotype"].isin(["D-B", "D-D"])],
+        x="Mutation type",
+        y="Rate",
+        palette=palette,
+        hue="Haplotype",
+        dodge=True,
+        ax=ax,
+    )
+    sns.despine(ax=ax, top=True, right=True)
+    for axis in ['top','bottom','left','right']:
+        ax.spines[axis].set_linewidth(1.5)
+
+    # increase tick width
+    ax.tick_params(width=1.5)
+    handles, labels = ax.get_legend_handles_labels()
+    l = plt.legend(
+        handles[4:],
+        labels[4:],
+        title="Genotypes at chr4 and chr6 peaks",
+        frameon=False,
+    )
+    f.tight_layout()
+    f.savefig("aggregate_mutation_spectra.jitter.png", dpi=300)
+
 
     pairs = []
     pvalues = []
@@ -133,8 +175,6 @@ elif k == 1:
     res_df["adj_p"] = adj_p
 
     df_grouped["Aggregate fraction"] = df_grouped["Count"] / df_grouped["Total"]
-
-    palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
 
     plt.figure(figsize=(8, 6))
     ax = sns.barplot(
