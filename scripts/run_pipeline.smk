@@ -3,9 +3,9 @@ PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
 
-rule all:
+rule all: 
     input:
-        expand(PROJDIR + "/csv/bxd/k{k}.genome.significant_markers.csv", k=[1,3]),
+        expand(PROJDIR + "/csv/{cross}.k{k}.genome.results.csv", cross=["bxd"], k=[1])
 
 rule download_singletons:
     input:
@@ -37,7 +37,7 @@ rule run_manhattan:
     input:
         singletons = PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.csv",
         config = PROJDIR + "/data/json/{cross}.json",
-        py_script = PROJDIR + "/scripts/run_ihd_scan.py"
+        py_script = PROJDIR + "/scripts/generate_ihd_distros.py"
     output:
         PROJDIR + "/csv/{cross}.k{k}.genome.results.csv"
     shell:

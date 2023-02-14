@@ -9,7 +9,7 @@ def chi2_test(a: np.ndarray, b: np.ndarray) -> np.float64:
     observed = np.vstack((a, b))
     #print (observed)
     stat, p, _, _ = chi2_contingency(observed)
-    return p
+    return stat
 
 
 @numba.njit
@@ -89,7 +89,7 @@ def compute_haplotype_distance(
     b_hap_sums = np.sum(b_haps, axis=0)
 
     dist = manual_cosine_distance(a_hap_sums, b_hap_sums)
-
+    #dist = chi2_test(a_hap_sums, b_hap_sums)
     return dist
 
 
@@ -166,6 +166,7 @@ def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
     n_permutations: int = 1_000,
+    return_all: bool = False,
 ) -> List[np.float64]:
     """Conduct a permutation test to assess the significance of 
     any observed IHD peaks. In each of the `n_permutations` trials, 
@@ -189,14 +190,17 @@ def perform_permutation_test(
         n_permutations (int, optional): Number of permutations to perform \
             (i.e., number of times to shuffle the spectra and compute IHDs at \
             each marker). Defaults to 1_000.
-
+            
+        return_all (bool, optional): Whether to return the complete list of \
+            distances at every marker in the permutation trial, as opposed to \
+            just the maximum distance at a given marker. Defaults to False.
     Returns:
         null_distances (List[np.float64]): List of length `n_permutations`, \
             containing the maximum cosine distance encountered in each permutation.
     """
 
     # store max cosdist encountered in each permutation
-    max_distances: List[np.float16] = []
+    distances: List[np.float16] = []
     for pi in range(n_permutations):
         if pi > 0 and pi % 100 == 0: print(pi)
         # shuffle the mutation spectra by row
@@ -206,9 +210,12 @@ def perform_permutation_test(
             shuffled_spectra,
             genotype_matrix,
         )
-        max_distances.append(max(perm_distances))
+        if return_all:
+            distances.extend(perm_distances)
+        else:
+            distances.append(max(perm_distances))
 
-    return max_distances
+    return distances
 
 
 def compute_spectra(

@@ -97,7 +97,7 @@ def main(args):
     if s in genos_at_markers.columns else "NA")
 
     #combined_merged = combined_merged[combined_merged['n_generations'] >= 20]
-
+ 
     #combined_merged = combined_merged[combined_merged['true_epoch'].isin([2, 4])]
     #combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "D"]
 
