@@ -8,7 +8,7 @@ from cyvcf2 import VCF
 from statannotations.Annotator import Annotator
 from statsmodels.stats.multitest import multipletests
 
-plt.rc('font', size=18)
+plt.rc('font', size=20)
 
 p = argparse.ArgumentParser()
 p.add_argument(
@@ -230,17 +230,15 @@ for cat_a, cat_b in [
         b_back = sum(b_adj) - b_fore
 
         _, p, _, _ = ss.chi2_contingency([[a_fore, b_fore], [a_back, b_back]])
-
+        if p >= 0.05: continue
         pairs.append(((mut, cat_a), (mut, cat_b)))
         pvalues.append(p)
         
-f, ax = plt.subplots(figsize=(10, 6))
-
 palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
 
 res = []
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(8, 6))
 
 ax = sns.barplot(
     data=dumont_grouped,
@@ -287,8 +285,10 @@ l = plt.legend(
     frameon=False,
 )
 
-sns.set_style("ticks")
+#sns.set_style("ticks")
 sns.despine(ax=ax, top=True, right=True)
 
 plt.tight_layout()
-plt.savefig(args.out + ".eps", dpi=300)
+plt.savefig(args.out + ".eps")
+plt.savefig(args.out + ".png", dpi=300)
+

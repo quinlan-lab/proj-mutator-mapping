@@ -11,7 +11,7 @@ import scipy.stats as ss
 from statsmodels.stats.multitest import multipletests
 
 
-plt.rc("font", size=18)
+plt.rc("font", size=20)
 
 PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
@@ -116,8 +116,8 @@ elif k == 1:
                 [a_back, b_back],
             ])
 
-            if comparison_mut != r"$\rightarrow$".join(["C", "A"]): 
-                if p >= 0.05: continue
+            #if comparison_mut != r"$\rightarrow$".join(["C", "A"]): 
+            if p >= 0.05: continue
             pvalues.append(p)
             pairs.append(((comparison_mut, a_hap), (comparison_mut, b_hap)))
 
@@ -136,7 +136,7 @@ elif k == 1:
 
     palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(8, 6))
     ax = sns.barplot(
         data=df_grouped,
         x="Mutation type",
@@ -156,7 +156,6 @@ elif k == 1:
         hue="Haplotype",
     )
 
-
     annotator.configure(
         test=None,
         test_short_name=r"$\chi^{2}$",
@@ -173,7 +172,7 @@ elif k == 1:
         title="Haplotypes at chr4 and chr6 peaks",
         frameon=False,
     )
-    sns.set_style('ticks')
+    #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     # change all spines
     for axis in ['top','bottom','left','right']:
