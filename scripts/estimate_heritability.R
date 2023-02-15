@@ -12,7 +12,6 @@ phen_df = subset(phen_df, sample != "BXD68")
 phenotypes = c("C_A", "C_T", "C_G", "A_T", "A_C", "A_G")
 phen_matrix = as.matrix(phen_df[phenotypes])
 
-
 strain_names = phen_df$sample
 rownames(phen_matrix) = strain_names
 
@@ -33,34 +32,44 @@ covariate_cols = c("haplotype_at_chr4_qtl")#, "haplotype_at_chr6_qtl")
 covariate_matrix = as.matrix(phen_df[covariate_cols])
 rownames(covariate_matrix) = phen_df$sample
 
+# calculate kinship between strains using the
+# "overall" method
+k = calc_kinship(pr, 'overall')
+
+# perform genome scan
+hsq <- est_herit(phen_matrix, k, addcovar=covariate_matrix)
+
+print (hsq)
 res_df <- NULL
 
+chroms = c(1:19)
+
 # loop over chromosomes and calculate heritability 
-for (chrom in 1:19) {
+for (chrom_idx in 1:19) {
 
-    chrom_str = toString(chrom)
+    chrom_idx_str = toString(chrom_idx)
 
+    # figure out chromosomes to use 
+    chroms2use = chroms[1:chrom_idx]
+    
     # calculate kinship between strains using the
     # "overall" method
-    k = calc_kinship(pr[, chrom], 'overall')
+    k = calc_kinship(pr[, chroms2use], "overall")
 
     # perform genome scan
-    hsq <- est_herit(phen_matrix, k)#, covariate_matrix)
+    hsq <- est_herit(phen_matrix, k, addcovar=covariate_matrix, reml=T)
 
-    print (chrom)
-    print (hsq)
-
-    idxs = c(1:6)
+    mut_idxs = c(1:6)
         
     if (is.null(res_df)) {
-        res_df <- data.frame(chromosome=rep(chrom_str, 6),
-                        heritability=hsq[idxs],
+        res_df <- data.frame(chromosome=rep(chrom_idx_str, 6),
+                        heritability=hsq[mut_idxs],
                         mutation=phenotypes)
         
     }
     else {
-        hsq_df <- data.frame(chromosome=rep(chrom_str, 6),
-                        heritability=hsq[idxs],
+        hsq_df <- data.frame(chromosome=rep(chrom_idx_str, 6),
+                        heritability=hsq[mut_idxs],
                         mutation=phenotypes)
 
         res_df <- rbind(res_df, hsq_df)

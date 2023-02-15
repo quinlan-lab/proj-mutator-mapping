@@ -80,23 +80,23 @@ def main():
     sample_overlap = list(set(geno_samples).intersection(set(spectra_wide["sample"].to_list())))
     spectra_wide = spectra_wide[spectra_wide['sample'].isin(sample_overlap)]
 
-    spectra_wide = spectra_wide[spectra_wide["haplotype_at_chr4_qtl"] == 1]
+    #spectra_wide = spectra_wide[spectra_wide["haplotype_at_chr4_qtl"] == 1]
 
     raw_spectra = spectra_wide[[c.replace(">", "_") for c in mutation_types]].values
-    #clr_spectra = clr(raw_spectra)
-    # spectra_wide_clr = pd.DataFrame(
-    #     clr_spectra,
-    #     columns=[c.replace(">", "_") for c in mutation_types],
-    # )
-    # spectra_wide_clr['sample'] = spectra_wide["sample"]
+    clr_spectra = clr(raw_spectra)
+    spectra_wide_clr = pd.DataFrame(
+        clr_spectra,
+        columns=[c.replace(">", "_") for c in mutation_types],
+    )
+    spectra_wide_clr['sample'] = spectra_wide["sample"]
     # add covariates
-    # for rsid, qtl_name in zip(["rs52263933", "rs31412077"], ["chr4", "chr6"]):
-    #     # get genotypes at top marker at QTL
-    #     genos_at_markers = geno[geno['marker'] == rsid]
+    for rsid, qtl_name in zip(["rs52263933", "rs31412077"], ["chr4", "chr6"]):
+        # get genotypes at top marker at QTL
+        genos_at_markers = geno[geno['marker'] == rsid]
 
-    #     spectra_wide_clr[f'haplotype_at_{qtl_name}_qtl'] = spectra_wide_clr['sample'].apply(
-    #         lambda s: find_haplotype(genos_at_markers, s)
-    #         if s in genos_at_markers.columns else -1)
+        spectra_wide_clr[f'haplotype_at_{qtl_name}_qtl'] = spectra_wide_clr['sample'].apply(
+            lambda s: find_haplotype(genos_at_markers, s)
+            if s in genos_at_markers.columns else -1)
 
 
     spectra_wide.dropna().to_csv(f"{PROJDIR}/csv/tidy_spectra.csv", index=False)
