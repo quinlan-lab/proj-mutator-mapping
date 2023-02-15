@@ -99,7 +99,7 @@ def main(args):
     #combined_merged = combined_merged[combined_merged['n_generations'] >= 20]
  
     #combined_merged = combined_merged[combined_merged['true_epoch'].isin([2, 4])]
-    #combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "D"]
+    combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "B"]
 
     combined_merged = combined_merged[combined_merged['sample'] != "BXD68"]
     combined_merged['count'] = 1
