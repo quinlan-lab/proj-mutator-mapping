@@ -4,6 +4,7 @@ import re
 from collections import Counter
 import json
 from schema import MarkerMetadataSchema
+import numpy as np
 
 def find_haplotype(genos: pd.DataFrame, sample: str) -> str:
     """
@@ -20,7 +21,7 @@ def find_haplotype(genos: pd.DataFrame, sample: str) -> str:
         if geno_freq[g] > (total * 0.5): most_freq_geno = g[0]
         else: continue
 
-    return most_freq_geno
+    return 1 if most_freq_geno == "D" else 0 if most_freq_geno == "B" else np.nan
 
 def get_generation(gen: str) -> int:
     """
