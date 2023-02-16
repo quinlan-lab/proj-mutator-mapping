@@ -1,6 +1,4 @@
-import pandera as pa
 from pandera import Column, Check, DataFrameSchema
-from typing import Optional
 
 
 IHDResultSchema = DataFrameSchema({

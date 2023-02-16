@@ -157,7 +157,6 @@ def run_permutations(
 
 
 def main():
-    rng = np.random.default_rng(42)
 
     base_mutations = ["C>T", "C>A", "C>G", "A>T", "A>C", "A>G"]
     base_lambdas = [0.4, 0.1, 0.075, 0.075, 0.075, 0.275]
@@ -186,9 +185,9 @@ def main():
 
     res = []
 
-    n_haplotypes = [20, 50, 100] # number of haplotypes to simulate
-    frac = [0.5] # fraction of samples to add a mutator to
-    effect_size = list(np.arange(1, 1.5, 0.1)) # amount to augment the mutation probability (lambda) by
+    n_haplotypes = [20, 50, 100]  # number of haplotypes to simulate
+    frac = [0.5]  # fraction of samples to add a mutator to
+    effect_size = list(np.arange(1, 1.5, 0.1))  # amount to augment the mutation probability (lambda) by
     if kmer_size == 3:
         mutation_idxs = [
             list(range(0, 4)),
@@ -200,9 +199,9 @@ def main():
         ]
     else:
         mutation_idxs = [0, 1, 2]
-    mutation_count = [50, 100, 200] # number of mutations to simulate per haplotypes
-    pct_to_augment = [1.] # fraction of mutations subject to effects of mutator
-    n_markers = [1] # number of markers used
+    mutation_count = [50, 100, 200]  # number of mutations to simulate per haplotypes
+    pct_to_augment = [1.]  # fraction of mutations subject to effects of mutator
+    n_markers = [1]  # number of markers used
 
     for (
             n,
@@ -307,8 +306,4 @@ def main():
     res_df.to_csv('results.csv', index=False)
 
 if __name__ == "__main__":
-    # lp = LineProfiler()
-    # lp_wrapper = lp(main)
-    # lp_wrapper()
-    # lp.print_stats()
     main()

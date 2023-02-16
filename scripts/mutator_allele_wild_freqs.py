@@ -9,7 +9,7 @@ plt.rc('font', size=14)
 PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 vcf = VCF(f"{PROJDIR}/data/wild.vcf.gz", gts012=True)
 smp2idx = dict(zip(vcf.samples, range(len(vcf.samples))))
-idx2smp = {v:k for k,v in smp2idx.items()}
+idx2smp = {v:k for k, v in smp2idx.items()}
 
 candidate_mutators = [
     "chr6:113328509-113328510",
@@ -39,7 +39,7 @@ for region, name in zip(candidate_mutators, candidate_names):
             })
 
 res_df = pd.DataFrame(res)
-print (res_df)
+
 res_df['Subspecies'] = res_df['sample'].apply(lambda s: s.split('_')[0])
 res_df_grouped = res_df.groupby(['Mutation', 'Subspecies']).agg({
     'genotype':

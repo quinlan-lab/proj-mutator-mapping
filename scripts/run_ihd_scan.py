@@ -30,7 +30,7 @@ def main(args):
     samples_overlap = list(set(samples).intersection(set(geno.columns)))
 
     if len(samples_overlap) == 0:
-        print ("""Sorry, no samples in common between mutation data 
+        print("""Sorry, no samples in common between mutation data 
         and genotype matrix. Please ensure sample names are identical.""")
         sys.exit()
 
@@ -45,7 +45,7 @@ def main(args):
     # dataframe every time. otherwise keep it the same.
     samples, _, spectra = compute_spectra(mutations_filtered, k=args.k)
 
-    print (f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
+    print(f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
     total mutations.""")
 
     # convert string genotypes to integers based on config definition
@@ -59,7 +59,7 @@ def main(args):
 
     # only consider sites where allele frequency is between thresholds
     idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
-    print ("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
+    print("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
     markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
 
