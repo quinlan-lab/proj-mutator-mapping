@@ -1,7 +1,7 @@
 # Mapping mutator alleles with inter-haplotype distance
 
 [![Docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://quinlan-lab.github.io/proj-mutator-mapping/reference/) 
-![`pytest`](https://github.com/quinlan-lab/proj-mutator-mapping/actions/workflows/starter.yml/badge.svg)
+![pytest](https://github.com/quinlan-lab/proj-mutator-mapping/actions/workflows/starter/badge.svg)
 ## Summary
 
 Identify alleles that affect the mutation spectrum in bi-parental recombinant inbred crosses. 
