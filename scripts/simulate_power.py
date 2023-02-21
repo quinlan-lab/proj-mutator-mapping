@@ -159,6 +159,7 @@ def run_permutations(
 def main():
 
     base_mutations = ["C>T", "C>A", "C>G", "A>T", "A>C", "A>G"]
+    base_mutations = [m.replace(">", r"$\rightarrow$") for m in base_mutations]
     base_lambdas = [0.4, 0.1, 0.075, 0.075, 0.075, 0.275]
     nucs = ["A", "T", "C", "G"]
 
@@ -187,7 +188,7 @@ def main():
 
     n_haplotypes = [20, 50, 100]  # number of haplotypes to simulate
     frac = [0.5]  # fraction of samples to add a mutator to
-    effect_size = list(np.arange(1, 1.5, 0.1))  # amount to augment the mutation probability (lambda) by
+    effect_size = list(np.arange(1, 1.5, 0.05))  # amount to augment the mutation probability (lambda) by
     if kmer_size == 3:
         mutation_idxs = [
             list(range(0, 4)),
@@ -199,7 +200,7 @@ def main():
         ]
     else:
         mutation_idxs = [0, 1, 2]
-    mutation_count = [50, 100, 200]  # number of mutations to simulate per haplotypes
+    mutation_count = [10, 50, 100, 200, 500]  # number of mutations to simulate per haplotypes
     pct_to_augment = [1.]  # fraction of mutations subject to effects of mutator
     n_markers = [1]  # number of markers used
 
@@ -223,7 +224,7 @@ def main():
             )):
 
         replicates = 100
-        n_permutations = 500
+        n_permutations = 100
 
         for rep in range(replicates):
             # generate wt and mutant haplotypes

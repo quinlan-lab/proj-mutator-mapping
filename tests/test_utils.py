@@ -1,5 +1,5 @@
 import numpy as np
-from scripts.utils import (
+from ihd.utils import (
     compute_haplotype_distance,
     compute_colmean,
     compute_spectra,

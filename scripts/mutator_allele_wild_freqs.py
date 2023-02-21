@@ -7,7 +7,7 @@ import seaborn as sns
 plt.rc('font', size=14)
 
 PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
-vcf = VCF(f"{PROJDIR}/data/wild.vcf.gz", gts012=True)
+vcf = VCF(f"{PROJDIR}/data/vcf/wild.vcf.gz", gts012=True)
 smp2idx = dict(zip(vcf.samples, range(len(vcf.samples))))
 idx2smp = {v:k for k, v in smp2idx.items()}
 
@@ -18,9 +18,9 @@ candidate_mutators = [
 ]
 
 candidate_names = [
-    "Ogg1 (p.Thr95Ala)",
-    "Setmar (p.Leu103Phe)",
-    "Setmar (p.Ser273Arg)",
+    "Ogg1\n(p.Thr95Ala)",
+    "Setmar\n(p.Leu103Phe)",
+    "Setmar\n(p.Ser273Arg)",
 ]
 
 res = []
@@ -59,6 +59,13 @@ sns.barplot(
     ec='k',
     lw=2,
 )
-sns.set_style("ticks")
+# change all spines
+for axis in ['top','bottom','left','right']:
+    ax.spines[axis].set_linewidth(1.5)
+
+# increase tick width
+ax.tick_params(width=1.5)
+ax.legend(frameon=False, loc="upper center", ncol=2, alignment="center")
+f.tight_layout()
 sns.despine(ax=ax, top=True, right=True)
 f.savefig("wild.af.png", dpi=300)
