@@ -1,3 +1,3 @@
-See below for descriptions of relevant method for computing IHD.
+See below for descriptions of relevant methods for computing IHD.
 
-::: scripts.utils
+::: ihd.utils
