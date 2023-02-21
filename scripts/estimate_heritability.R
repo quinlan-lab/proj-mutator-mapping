@@ -5,77 +5,89 @@ library(qtl2)
 bxd <- read_cross2("/Users/tomsasani/quinlanlab/proj-mutator-mapping/data/Rqtl_data/bxd.rqtl2.json")
 
 # read in the phenotype values for each BXD strain
-phen_df = read.csv("/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/tidy_spectra.csv", header=T)
-phen_df = subset(phen_df, sample != "BXD68")
+phen_df <- read.csv("/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/tidy_spectra.csv", header=T)
+phen_df <- subset(phen_df, sample != "BXD68")
 
 # get phenotypes as a matrix 
-phenotypes = c("C_A", "C_T", "C_G", "A_T", "A_C", "A_G")
-phen_matrix = as.matrix(phen_df[phenotypes])
+phenotypes <- c("C_A", "C_T", "C_G", "A_T", "A_C", "A_G")
+phen_matrix <- as.matrix(phen_df[phenotypes])
 
-strain_names = phen_df$sample
-rownames(phen_matrix) = strain_names
+strain_names <- phen_df$sample
+rownames(phen_matrix) <- strain_names
 
 # subset cross2 to relevant BXDs
-bxd = bxd[phen_df$sample, ]
+bxd <- bxd[phen_df$sample, ]
 
 # insert pseudomarkers into the genotype map
 # following lines are from https://kbroman.org/pages/teaching.html
-gmap <- insert_pseudomarkers(bxd$gmap, step=0.2, stepwidth='max')
+gmap <- insert_pseudomarkers(bxd$gmap, step=0.2, stepwidth = 'max')
 pmap <- interp_map(gmap, bxd$gmap, bxd$pmap)
 
 # calculate QTL genotype probabilities
 # (error_prob taken directly from R/qtl2 user guide)
-pr <- calc_genoprob(bxd, gmap, error_prob=0.002, map_function="c-f")
+pr <- calc_genoprob(bxd, gmap, error_prob = 0.002, map_function = "c-f")
 
-# get covariates as a matrix 
-covariate_cols = c("haplotype_at_chr4_qtl")#, "haplotype_at_chr6_qtl")
-covariate_matrix = as.matrix(phen_df[covariate_cols])
-rownames(covariate_matrix) = phen_df$sample
+# get covariates as a matrix
+covariate_cols <- c("haplotype_at_chr4_qtl")#, "haplotype_at_chr6_qtl")
+covariate_matrix <- as.matrix(phen_df[covariate_cols])
+rownames(covariate_matrix) <- phen_df$sample
 
 # calculate kinship between strains using the
 # "overall" method
-k = calc_kinship(pr, 'overall')
+k <- calc_kinship(pr, "overall")
 
 # perform genome scan
-hsq <- est_herit(phen_matrix, k, addcovar=covariate_matrix)
+hsq <- est_herit(phen_matrix, k, addcovar = covariate_matrix)
 
-print (hsq)
+print(hsq)
 res_df <- NULL
 
-chroms = c(1:19)
+chroms <- c(1:19)
 
-# loop over chromosomes and calculate heritability 
+# loop over chromosomes and calculate heritability
 for (chrom_idx in 1:19) {
 
-    chrom_idx_str = toString(chrom_idx)
+    chrom_idx_str <- toString(chrom_idx)
 
-    # figure out chromosomes to use 
-    chroms2use = chroms[1:chrom_idx]
-    
+    start_chrom <- 1 
+    end_chrom <- chrom_idx
+
+    print(start_chrom)
+    print(end_chrom)
+
+
+    # figure out chromosomes to use
+    chroms2use <- chroms[start_chrom:end_chrom]
+
     # calculate kinship between strains using the
     # "overall" method
-    k = calc_kinship(pr[, chroms2use], "overall")
-
-    # perform genome scan
-    hsq <- est_herit(phen_matrix, k, addcovar=covariate_matrix, reml=T)
-
-    mut_idxs = c(1:6)
-        
-    if (is.null(res_df)) {
-        res_df <- data.frame(chromosome=rep(chrom_idx_str, 6),
-                        heritability=hsq[mut_idxs],
-                        mutation=phenotypes)
-        
+    if (chrom_idx > 1) {
+        k <- calc_kinship(pr[, chroms2use], "overall")
     }
     else {
-        hsq_df <- data.frame(chromosome=rep(chrom_idx_str, 6),
-                        heritability=hsq[mut_idxs],
-                        mutation=phenotypes)
+        k <- calc_kinship(pr[, chroms2use], "overall")
+    }
+
+    # perform genome scan
+    hsq <- est_herit(phen_matrix, k)#, addcovar = covariate_matrix)
+
+    mut_idxs <- c(1:6)
+
+    if (is.null(res_df)) {
+        res_df <- data.frame(chromosome = rep(chrom_idx_str, 6),
+                        heritability = hsq[mut_idxs],
+                        mutation = phenotypes)
+
+    }
+    else {
+        hsq_df <- data.frame(chromosome = rep(chrom_idx_str, 6),
+                        heritability = hsq[mut_idxs],
+                        mutation = phenotypes)
 
         res_df <- rbind(res_df, hsq_df)
     }
 
-    
+
 }
 
 write.csv(res_df, "/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/heritability.csv")

@@ -64,7 +64,7 @@ def main():
     spectra_wide = spectra_merged.pivot(
         index="sample",
         columns="mutation",
-        values="fraction",
+        values="rate",
     ).reset_index()
 
     # add covariates

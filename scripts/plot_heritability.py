@@ -25,7 +25,7 @@ print (ind)
 f, ax = plt.subplots(figsize=(12, 6))
 for i, (mutation, mut_df) in enumerate(df.groupby("Mutation type")):
     mut_df = mut_df.sort_values("chromosome")
-    cum_heritability = mut_df["heritability"].values 
+    cum_heritability = mut_df["heritability"].values[::-1]
     lw = 3 if mutation == "C" + r"$\rightarrow$" + "A" else 2 
     ls = "-" if mutation == "C" + r"$\rightarrow$" + "A" else "--"
     ax.plot(ind, cum_heritability, label=mutation, lw=lw, ls=ls, c=palette[i])
@@ -33,9 +33,9 @@ for i, (mutation, mut_df) in enumerate(df.groupby("Mutation type")):
 ax.legend(frameon=False)
 ax.set_xticks(ind)
 ax.set_xticklabels(k for k,v in chrom2pct.items())
-ax.set_ylabel("Cumulative heritability")
+ax.set_ylabel("Fraction of heritability explained")
 ax.set_xlabel("Chromosome")
-ax.set_title("Cumulative heritability of 1-mer mutation fractions")
+ax.set_title("Heritability of germline mutation fractions in the BXDs\n(after conditioning on the chr4 QTL)")
 sns.despine(top=True, right=True, ax=ax)
 f.tight_layout()
 f.savefig('heritability.chr4_conditioned.png', dpi=300)
