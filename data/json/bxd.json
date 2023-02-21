@@ -4,7 +4,7 @@
       "D": 2,
       "H": 1
     },
-    "geno": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/data/genotypes/bxd.geno",
-    "markers": "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping/data/genotypes/bxd.markers"
+    "geno": "data/genotypes/bxd.geno",
+    "markers": "data/genotypes/bxd.markers"
   }
   
