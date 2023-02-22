@@ -9,15 +9,10 @@ Identify alleles that affect the mutation spectrum in bi-parental recombinant in
 
 ### Overview of method
 
-![](img/distance_diagram.png)
+![](img/method_overview.png.png)
 
 > **Overview of inter-haplotype distance method.**
-> In this toy example, a collection of 4 haplotypes ($h_1$ through $h_4$) have been genotyped as either “orange” (allele A) or “blue” (allele B) at each of three loci ($g_n$). In each of these 4 haplotypes, we have also identified de novo germline mutations, shown as filled grey dots along the lengths of the haplotypes. At the first site $g_1$, we group the haplotypes by their genotype at $g_1$,  compute the aggregate mutation spectrum in each group, and compute the cosine distance between those two aggregate mutation spectra. We then repeat this process at each genotyped site.
-
-![](img/permutation_diagram.png)
-
-> **Overview of permutation test to determine significance thresholds.**
-> To establish a threshold for the distance metric at a particular $p$ value (in this example, $p = 0.05$), we perform $N = 10,000$ permutations. In each permutation, we shuffle the labels associated with each haplotype's mutation data,  re-run the distance scan as outlined above, and store the maximum distance encountered at any genotyped site. Since the haplotype labels no longer correspond to the appropriate mutation data, these trials provide us with an estimate of the maximum inter-haplotype distance we'd expect to see by chance alone. We can then take the $\left(1 - p\right)$ percentile of the distribution of maximum distances as our threshold for determining if any experimental peaks are "significant."
+> In this toy example, a collection of 4 haplotypes ($h_1$ through $h_4$) have been genotyped as either “orange” (allele A) or “blue” (allele B) at each of three loci ($g_n$). In each of these 4 haplotypes, we have also identified de novo germline mutations, shown as filled grey dots along the lengths of the haplotypes. At the first site $g_1$, we group the haplotypes by their genotype at $g_1$,  compute the aggregate mutation spectrum in each group, and compute the cosine distance between those two aggregate mutation spectra. We then repeat this process at each genotyped site. To establish a threshold for the distance metric at a particular $p$ value (in this example, $p = 0.05$), we perform $N = 10,000$ permutations. In each permutation, we shuffle the labels associated with each haplotype's mutation data,  re-run the distance scan as outlined above, and store the maximum distance encountered at any genotyped site. Since the haplotype labels no longer correspond to the appropriate mutation data, these trials provide us with an estimate of the maximum inter-haplotype distance we'd expect to see by chance alone. We can then take the $\left(1 - p\right)$ percentile of the distribution of maximum distances as our threshold for determining if any experimental peaks are "significant."
 
 ## Requirements
 
@@ -33,7 +28,6 @@ Dependencies can be installed with `pip install -r requirements.txt`.
 
 Before running an inter-haplotype distance (IHD) scan, you'll need to prepare a
 small number of input files.
-
 
 1. ***De novo* germline mutation data**
 
@@ -149,6 +143,8 @@ Tests can be run using `pytest` from the root level of the project directory as:
 ```
 pytest .
 ```
+
+These tests are run automatically via GitHub actions after each commit to this repository, as well. See the badge at the top of the README for the status (pass/fail) of those tests.
 
 ## Project layout
 
