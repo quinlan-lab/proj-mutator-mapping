@@ -2,7 +2,6 @@
 *.html
 *.bed
 *.csv 
-*.png
 *.eps
 *.pyc
 vcf/
