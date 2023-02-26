@@ -95,7 +95,7 @@ class Haplotypes(object):
         self.hap_mut = hap_mut
         self.hap_wt = hap_wt
 
-#@numba.njit
+@numba.njit
 def manual_cosine_distance(a: np.ndarray, b: np.ndarray) -> np.float64:
     dot = a.dot(b)
     a_sumsq, b_sumsq = np.sum(np.square(a)), np.sum(np.square(b))
@@ -108,7 +108,7 @@ def chisquare(a: np.ndarray, b: np.ndarray) -> np.float64:
     res = ss.chi2_contingency(observed)
     return res.statistic
 
-#@numba.njit
+@numba.njit
 def run_permutations(
     *,
     wt_haps: np.ndarray,
@@ -144,11 +144,11 @@ def run_permutations(
             a_hap_sums = np.sum(random_mut_haps, axis=0)
             b_hap_sums = np.sum(random_wt_haps, axis=0)
             
-            #dist = manual_cosine_distance(a_hap_sums, b_hap_sums)
-            try:
-                dist = chisquare(a_hap_sums, b_hap_sums)
-            except ValueError:
-                continue
+            dist = manual_cosine_distance(a_hap_sums, b_hap_sums)
+            #try:
+            #    dist = chisquare(a_hap_sums, b_hap_sums)
+            #except ValueError:
+            #    continue
             if dist > max_dist: max_dist = dist
 
         all_dists.append(max_dist)
@@ -186,7 +186,7 @@ def main():
 
     res = []
 
-    n_haplotypes = [20, 50, 100]  # number of haplotypes to simulate
+    n_haplotypes = [50, 100]  # number of haplotypes to simulate
     frac = [0.5]  # fraction of samples to add a mutator to
     effect_size = list(np.arange(1, 1.5, 0.05))  # amount to augment the mutation probability (lambda) by
     if kmer_size == 3:
@@ -200,7 +200,7 @@ def main():
         ]
     else:
         mutation_idxs = [0, 1, 2]
-    mutation_count = [10, 50, 100, 200, 500]  # number of mutations to simulate per haplotypes
+    mutation_count = [10, 50, 100, 500]  # number of mutations to simulate per haplotypes
     pct_to_augment = [1.]  # fraction of mutations subject to effects of mutator
     n_markers = [1]  # number of markers used
 
@@ -224,7 +224,7 @@ def main():
             )):
 
         replicates = 100
-        n_permutations = 100
+        n_permutations = 1_000
 
         for rep in range(replicates):
             # generate wt and mutant haplotypes
@@ -258,18 +258,18 @@ def main():
             wt_hap_idxs = np.arange(n_wt_haps) + 1
             wt_hap_idxs += np.max(mut_hap_idxs)
 
-            # focal_dist = manual_cosine_distance(
-            #     np.sum(haps[mut_hap_idxs], axis=0),
-            #     np.sum(haps[wt_hap_idxs], axis=0))
+            focal_dist = manual_cosine_distance(
+                np.sum(haps[mut_hap_idxs], axis=0),
+                np.sum(haps[wt_hap_idxs], axis=0))
 
-            try:
-                focal_dist = chisquare(
-                    np.sum(haps[mut_hap_idxs], axis=0),
-                    np.sum(haps[wt_hap_idxs], axis=0),
-                )
-            except ValueError:
-                print ("Value Error!")
-                continue
+            # try:
+            #     focal_dist = chisquare(
+            #         np.sum(haps[mut_hap_idxs], axis=0),
+            #         np.sum(haps[wt_hap_idxs], axis=0),
+            #     )
+            # except ValueError:
+            #     print ("Value Error!")
+            #     continue
 
             # simulate with expectation that all markers are at 50%
             all_dists = run_permutations(

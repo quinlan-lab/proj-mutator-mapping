@@ -1,5 +1,4 @@
 import pandas as pd
-from run_ihd_scan import compute_spectra
 import numpy as np
 from compare_mutation_spectra import mutation_comparison
 import matplotlib.pyplot as plt
@@ -9,7 +8,12 @@ import statsmodels.api as sm
 from statannotations.Annotator import Annotator
 import scipy.stats as ss
 from statsmodels.stats.multitest import multipletests
+from skbio.stats.composition import clr, ilr
+import sys
 
+# adding Folder_2 to the system path
+sys.path.insert(0, '/Users/tomsasani/quinlanlab/proj-mutator-mapping/')
+from ihd.utils import compute_spectra
 
 plt.rc("font", size=20)
 
@@ -17,16 +21,9 @@ PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
 callable_kmers = pd.read_csv(f"{PROJDIR}/data/coverage/combined.callable_kmer_content.csv")
 
-print (callable_kmers)
-
 geno = pd.read_csv(f"{PROJDIR}/data/genotypes/bxd.geno").set_index("marker")
 
-markers = np.array(["rs46276051", "rs52263933"]) # chr6 and chr4
-#markers = np.array(["rs46276051"]) # chr6 and chr4
-
-# markers = np.array(["rs6228198"]) # chr5
-# markers = np.array(["rs13480950"]) # chr11
-# markers = np.array(["rs30374203"])
+markers = np.array(["rs31001331", "rs52263933"]) # chr6 and chr4
 
 k = 1
 
@@ -35,8 +32,9 @@ geno_at_marker = geno.loc[markers].to_dict()
 mutations = pd.read_csv(f"{PROJDIR}/data/mutations/bxd/annotated_filtered_singletons.csv")
 
 smp2generations = dict(zip(mutations['sample'], mutations['n_generations']))
-
+smp2epoch = dict(zip(mutations['sample'], mutations['true_epoch']))
 samples, mutation_types, spectra = compute_spectra(mutations, k=k)
+
 smp2idx = dict(zip(samples, range(len(samples))))
 mut2idx = dict(zip(mutation_types, range(len(mutation_types))))
 samples_shared = list(set(samples).intersection(set(geno.columns[1:])))
@@ -49,8 +47,8 @@ for s in samples_shared:
 
 
 if k == 3:
-    a_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v.split('-')[1] == "B"])
-    b_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v.split('-')[1] == "D"])
+    a_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v == "D-B"])
+    b_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v == "D-D"])
 
     a_spectra_sum = np.sum(spectra[a_smp_i], axis=0)
     b_spectra_sum = np.sum(spectra[b_smp_i], axis=0)
@@ -58,6 +56,9 @@ if k == 3:
 elif k == 1:
 
     spectra_fracs = spectra / np.sum(spectra, axis=1)[:, np.newaxis]
+    spectra_fracs_clr = ilr(spectra_fracs)
+    #print (spectra_fracs_clr)
+
     df = []
     for s in samples_shared:
         si = smp2idx[s]
@@ -80,40 +81,59 @@ elif k == 1:
                 'Count': spectra[si, mi],
                 'Total': np.sum(spectra, axis=1)[si],
                 'Fraction': spectra_fracs[si, mi],
+                'CLR_Fraction': spectra_fracs_clr[si, mi - 1] if m != "A>C" else 0,
+                'Generations': smp2generations[s],
+                'Callable': n_callable_bp,
+                'Epoch': smp2epoch[s],
+                'IS_AIL': 1 if smp2epoch[s] in (3, 5) else 0,
+                'ADJ_AGE': n_callable_bp * smp2generations[s],
                 'Rate': rate,
-                'Haplotype': smp_geno,
+                "is_ca": 1 if m == "C>A" else 0,
+                "Haplotype": smp_geno,
+                'Haplotype_A': smp_geno.split('-')[0],
+                'Haplotype_B': smp_geno.split('-')[1],
             })
 
     df = pd.DataFrame(df)
+    df.to_csv(f"{PROJDIR}/csv/true_tidy_spectra.csv", index=False)
     df_grouped = df.drop(columns=["sample"]).groupby(["Haplotype", "Mutation type"]).agg(sum).reset_index()
 
-    palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
+    palette = dict(
+        zip(
+            ["B-B", "B-D", "D-B", "D-D"],
+            ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"],
+        ))
 
     # compare mutation rates using Chi-square tests
     comparisons = [
         ("B-B", "B-D"), # ogg1 against wt
-        #("B-D", "D-D"), 
+        #("B-D", "D-D"),
         ("D-B", "D-D"), # both against mutyh
         #("B-B", "D-B"),
     ]
 
     #comparisons = [("B", "D")]
 
-    f, ax = plt.subplots(figsize=(10, 6))
+    phen = "Fraction"
+    phen = "Rate"
+
+    f, ax = plt.subplots(figsize=(8, 6))
     sns.boxplot(
-        data=df,#[df["Haplotype"].isin(["D-B", "D-D"])],
+        data=df,#.sort_values("Mutation type", ascending=True),
         x="Mutation type",
-        y="Rate",
+        y=phen,
         hue="Haplotype",
         ax=ax,
         color="white",
         fliersize=0,
     )
     sns.stripplot(
-        data=df,#[df["Haplotype"].isin(["D-B", "D-D"])],
+        data=df,#.sort_values("Mutation type", ascending=True),
         x="Mutation type",
-        y="Rate",
+        y=phen,
         palette=palette,
+        ec='k',
+        linewidth=0.75,
         hue="Haplotype",
         dodge=True,
         ax=ax,
@@ -124,15 +144,46 @@ elif k == 1:
 
     # increase tick width
     ax.tick_params(width=1.5)
+
+    #ax.set_ylim(0, 0.6)
+    mutation_type = r"$\rightarrow$".join(["C", "A"])
+    pairs = [
+    ((mutation_type, "B-B"), (mutation_type, "B-D")),
+    ((mutation_type, "B-D"), (mutation_type, "D-D")),
+    ((mutation_type, "D-B"), (mutation_type, "D-D")),
+    #((mutation_type, "B-B"), (mutation_type, "D-B")),
+    #((mutation_type, "B-B"), (mutation_type, "D-D")),
+
+    ]
+
+    annotator = Annotator(
+        ax,
+        pairs,
+        data=df,
+        x="Mutation type",
+        y=phen,
+        hue="Haplotype",
+    )
+
+    annotator.configure(
+        #test='t-test_welch',
+        test ="Mann-Whitney",
+        #comparisons_correction="BH",
+        text_format='full',
+    )
+    annotator.apply_and_annotate()
+
     handles, labels = ax.get_legend_handles_labels()
+    print (handles, labels)
     l = plt.legend(
         handles[4:],
         labels[4:],
-        title="Genotypes at chr4 and chr6 peaks",
+        title="Haplotypes at chr4 and chr6 peaks",
         frameon=False,
     )
     f.tight_layout()
     f.savefig("aggregate_mutation_spectra.jitter.png", dpi=300)
+    f.savefig("aggregate_mutation_spectra.jitter.eps")
 
 
     pairs = []
@@ -158,7 +209,7 @@ elif k == 1:
                 [a_back, b_back],
             ])
 
-            #if comparison_mut != r"$\rightarrow$".join(["C", "A"]): 
+            #if comparison_mut != r"$\rightarrow$".join(["C", "A"]):
             if p >= 0.05: continue
             pvalues.append(p)
             pairs.append(((comparison_mut, a_hap), (comparison_mut, b_hap)))

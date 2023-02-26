@@ -148,7 +148,7 @@ pairs, pvalues = [], []
 # compare spectra between strains with different
 # configurations of Mutyh mutations
 for cat_a, cat_b in [
-    #("D-D", "B-B"),
+    ("D-D", "B-B"),
     #("D-D", "B-D"),
     #("D-B", "B-B"),
     ("B-D", "B-B"),
@@ -157,7 +157,6 @@ for cat_a, cat_b in [
 
     a_smps = dumont_tidy[dumont_tidy["Combined haplotype"] == cat_a]["strain"].unique()
     b_smps = dumont_tidy[dumont_tidy["Combined haplotype"] == cat_b]["strain"].unique()
-
     # sample indices in each category
     a_idx = np.array([smp2idx[s] for s in a_smps if s in smp2idx])
     b_idx = np.array([smp2idx[s] for s in b_smps if s in smp2idx])

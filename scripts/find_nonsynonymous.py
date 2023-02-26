@@ -1,7 +1,7 @@
 from cyvcf2 import VCF
 import numpy as np
 
-PROJDIR = "/scratch/ucgd/lustre-work/quinlan/u1006375/proj-mutator-mapping"
+PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
 vcf = VCF(f"{PROJDIR}/data/vcf/bxd.regions.snpeff.vcf.gz", gts012=True)
 smp2idx = dict(zip(vcf.samples, range(len(vcf.samples))))
@@ -10,6 +10,8 @@ DBA = "sample_4512-JFI-0334_DBA_2J_three_lanes_phased_possorted_bam"
 C57 = "sample_4512-JFI-0333_C57BL_6J_two_lanes_phased_possorted_bam"
 
 for v in vcf:
+    if v.POS < 109_000_000: continue 
+    if v.POS > 119_000_000: break
     if len(v.ALT) > 1: continue
     annotations = v.INFO.get("ANN").split(';')
     rel_ann = [a for a in annotations if a.split('|')[7] == "protein_coding"]
