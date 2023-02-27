@@ -270,3 +270,137 @@ def compute_spectra(
     ], spectra.values[:, 1:]
 
     return samples, mutations, spectra.astype(np.float64)
+
+@numba.njit()
+def perform_ihd_epistasis_scan(
+    spectra: np.ndarray,
+    genotype_matrix: np.ndarray,
+) -> np.ndarray:
+    """Iterate over every pair of genotyped markers in the `genotype_matrix`. 
+    At each marker in the pair, split the haplotypes into two groups based 
+    on sample genotypes at the marker. Then, compute pairwise cosine distances
+    between all of the haplotype combinations (AB, aB, Ab, ab) and calculate the
+    difference between the maximum distance and the sum of the other distances.
+
+    Args:
+        spectra (np.ndarray): A 2D numpy array of mutation spectra in \
+            all genotyped samples, of size (N, M) where N is the number of \
+            samples and M is the number of mutation types.
+
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
+            every genotyped marker, of size (G, N), where G is the number \
+            of genotyped sites and N is the number of samples.
+
+    Returns:
+        distances (np.ndarray): Matrix of epistasis distances between every
+        pair of markers of size (G, G), where G is the number of genotyped
+        sites in the genotype_matrix.
+    """
+
+    # store distances at every pair of markers
+    n_sites = genotype_matrix.shape[0]
+    distances = np.zeros((n_sites, n_sites))#, dtype=np.float16)
+    # loop over every pair of sites in the genotype matrix.
+    # we can iterate over every pair in the upper triangle of 
+    # the genotype matrix to save some time.
+    pair_idxs = np.triu_indices(n_sites, k=1)
+    for ni, nj in np.dstack((pair_idxs[0], pair_idxs[1]))[0]:
+        #if ni % 100 == 0: print (ni)
+        #print (ni, nj)
+        ai_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
+        bi_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
+
+        aj_hap_idxs = np.where(genotype_matrix[nj] == 0)[0]
+        bj_hap_idxs = np.where(genotype_matrix[nj] == 2)[0]
+
+        spectra_arr = (
+            spectra[ai_hap_idxs],
+            spectra[bi_hap_idxs],
+            spectra[aj_hap_idxs],
+            spectra[bj_hap_idxs],
+        )
+
+        # aggregate the spectra of samples with the
+        # various haplotype combinations
+        agg_idxs = [
+            [0, 2], # ab haplotypes
+            [0, 3], # aB
+            [1, 2],  # Ab
+            [1, 3],  # AB
+        ]
+
+        agg_spectra: List[np.ndarray] = []
+        for pi, pj in agg_idxs:
+            # aggregate the spectra of samples with the various genotype
+            # combinations
+            agg_spec = np.vstack((spectra_arr[pi], spectra_arr[pj]))
+            agg_spectra.append(agg_spec)
+            #print (agg_spec)
+        # then loop over pairs of haplotypes to get distances 
+        comp_idxs = [
+            [0, 1], # ab vs aB
+            [0, 2], # ab vs Ab
+            [0, 3], # ab vs AB
+        ]
+        pair_dists: List[np.float16] = []
+        for pi, pj in comp_idxs:
+            cur_dist = compute_haplotype_distance(agg_spectra[pi], agg_spectra[pj])
+            pair_dists.append(cur_dist)
+        # compute 'epistasis distance' as the difference between
+        # the AB-ab distance and the sum of the aB-ab and Ab-ab distances
+        epi_dist = pair_dists[-1] - sum(pair_dists[:2])
+        #epi_dist = max(pair_dists) - (sum(pair_dists) - max(pair_dists))
+        distances[ni, nj] = epi_dist
+
+    
+
+    return distances
+
+@numba.njit()
+def perform_epistasis_permutation_test(
+    spectra: np.ndarray,
+    genotype_matrix: np.ndarray,
+    n_permutations: int = 100,
+) -> List[np.float64]:
+    """Conduct a permutation test to assess the significance of 
+    any observed IHD peaks. In each of the `n_permutations` trials, 
+    do the following: 1. create a shuffled version of the input mutation `spectra`, so that
+    sample names/indices no longer correspond to the appropriate mutation
+    spectrum. 2. run an IHD scan by computing the cosine distance between
+    the aggregate mutation spectrum of samples with either genotype
+    at every marker in the `genotype_matrix`. 3. store the maximum cosine distance encountered at any marker.
+    Then, return a list of the maximum cosine distances encountered in each of
+    the trials.
+
+    Args:
+        spectra (np.ndarray): A 2D numpy array of mutation spectra in all \
+            genotyped samples, of size (N, M) where N is the number of samples \
+            and M is the number of mutation types.
+
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every \
+            genotyped marker, of size (G, N), where G is the number of genotyped \
+            sites and N is the number of samples.
+
+        n_permutations (int, optional): Number of permutations to perform \
+            (i.e., number of times to shuffle the spectra and compute IHDs at \
+            each marker). Defaults to 1_000.
+
+    Returns:
+        null_distances (List[np.float64]): List of length `n_permutations`, \
+            containing the maximum cosine distance encountered in each permutation.
+    """
+
+    # store max cosdist encountered in each permutation
+    max_distances: List[np.float16] = []
+    for pi in range(n_permutations):
+        if pi > 0 and pi % 1 == 0: print(pi)
+        # shuffle the mutation spectra by row
+        shuffled_spectra = shuffle_spectra(spectra)
+        # compute the cosine distances at each marker
+        epi_dists = perform_ihd_epistasis_scan(
+            shuffled_spectra,
+            genotype_matrix,
+        )
+        max_distances.append(np.max(epi_dists))
+
+    return max_distances
