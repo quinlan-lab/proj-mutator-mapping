@@ -77,11 +77,19 @@ def test_perform_ihd_scan(spectra_array, genotype_array):
                        ]))
 
 
-@pytest.mark.parametrize("n_permutations", [100, 1000])
-def test_perform_ihd_permutation_test(spectra_array, genotype_array, n_permutations):
+@pytest.mark.parametrize("n_permutations,comparison_wide", [
+    (100, False),
+    (1000, False),
+    (100, True),
+])
+def test_perform_ihd_permutation_test(spectra_array, genotype_array, n_permutations, comparison_wide):
     perm_res = perform_permutation_test(
         spectra_array,
         genotype_array,
         n_permutations=n_permutations,
+        comparison_wide=comparison_wide,
     )
-    assert len(perm_res) == n_permutations
+    if comparison_wide: 
+        assert perm_res.shape[0] == n_permutations and perm_res.shape[1] == genotype_array.shape[0]
+    else:
+        assert perm_res.shape[0] == n_permutations
