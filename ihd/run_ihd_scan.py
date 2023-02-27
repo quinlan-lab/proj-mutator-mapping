@@ -78,24 +78,20 @@ def main(args):
     IHDResultSchema.validate(res_df)
 
     # then do permutations
-    max_distances = perform_permutation_test(
+    null_distances = perform_permutation_test(
         spectra,
         geno_filtered,
         n_permutations=args.permutations,
+        comparison_wide=args.comparison_wide,
     )
-
-    f, ax = plt.subplots()
-    ax.hist(max_distances, bins=20, ec='k', lw=1)
 
     # compute the 95th percentile of the maximum distance
     # distribution to figure out the distance corresponding to an alpha
     # of 0.05
-    for pctile, label in zip((20, 5), ('suggestive', 'significant')):
-        score_pctile = np.percentile(max_distances, 100 - pctile)
-        res_df[f'{label}_percentile'] = score_pctile
-        ax.axvline(x=score_pctile, label=label)
-
-    f.savefig('max_dist.png', dpi=300)
+    for pctile in (20, 5, 1):
+        score_pctile = np.percentile(null_distances, 100 - pctile, axis=0)
+        if not args.comparison_wide: score_pctile = score_pctile[0]
+        res_df[f'{100 - pctile}th_percentile'] = score_pctile
 
     res_df.to_csv(args.out, index=False)
 
@@ -127,6 +123,11 @@ if __name__ == "__main__":
         default=1_000,
         help=
         "Number of permutations to perform when calculating significance thresholds.",
+    )
+    p.add_argument(
+        "-comparison_wide",
+        action="store_true",
+        help="Use per-marker instead of genome-wide distance thresholds.",
     )
     p.add_argument("-adj_column", default=None)
     p.add_argument("-chrom", default=None)

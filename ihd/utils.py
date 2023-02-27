@@ -166,6 +166,7 @@ def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
     n_permutations: int = 1_000,
+    comparison_wide: bool = False,
 ) -> List[np.float64]:
     """Conduct a permutation test to assess the significance of 
     any observed IHD peaks. In each of the `n_permutations` trials, 
@@ -190,13 +191,23 @@ def perform_permutation_test(
             (i.e., number of times to shuffle the spectra and compute IHDs at \
             each marker). Defaults to 1_000.
 
+        comparison_wide (bool, optional): Whether to output null distances \
+            for each individual marker, as opposed to a genome-wide maximum.
+              
+
     Returns:
         null_distances (List[np.float64]): List of length `n_permutations`, \
             containing the maximum cosine distance encountered in each permutation.
     """
 
-    # store max cosdist encountered in each permutation
-    max_distances: List[np.float16] = []
+    # store max cosdist encountered in each permutation, or if desired,
+    # per-marker null distances
+    n_markers = genotype_matrix.shape[0]
+    null_distances: np.ndarray = np.zeros((
+        n_permutations,
+        n_markers if comparison_wide else 1,
+    ))
+    
     for pi in range(n_permutations):
         if pi > 0 and pi % 100 == 0: print(pi)
         # shuffle the mutation spectra by row
@@ -206,9 +217,12 @@ def perform_permutation_test(
             shuffled_spectra,
             genotype_matrix,
         )
-        max_distances.append(max(perm_distances))
+        if comparison_wide:
+            null_distances[pi] = perm_distances 
+        else:
+            null_distances[pi] = max(perm_distances)
 
-    return max_distances
+    return null_distances
 
 
 def compute_spectra(
@@ -251,7 +265,7 @@ def compute_spectra(
     # compute 3-mer spectra
     hap_spectra_agg = mutations.groupby(['sample', 'kmer']).agg({
         'count': sum
-    }).reset_index()  
+    }).reset_index()
     # if 1-mer spectra are desired, compute that
     if k == 1:
         # add base mutation type
