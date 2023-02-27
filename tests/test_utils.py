@@ -1,11 +1,14 @@
 import numpy as np
 from ihd.utils import (
     compute_haplotype_distance,
+    perform_ihd_scan,
+    perform_permutation_test,
     compute_colmean,
     compute_spectra,
     shuffle_spectra,
 )
 import pytest
+
 
 def test_shuffle_spectra(
     wt_haplotype_array: np.ndarray,
@@ -63,3 +66,22 @@ def test_compute_spectra(good_mutation_dataframe):
             [11, 10, 4, 7, 14, 4],
         ]),
     )
+
+def test_perform_ihd_scan(spectra_array, genotype_array):
+    focal_dists = perform_ihd_scan(spectra_array, genotype_array)
+    assert np.allclose(np.array(focal_dists),
+                       np.array([
+                           0.083842,
+                           0.273145,
+                           0.132533,
+                       ]))
+
+
+@pytest.mark.parametrize("n_permutations", [100, 1000])
+def test_perform_ihd_permutation_test(spectra_array, genotype_array, n_permutations):
+    perm_res = perform_permutation_test(
+        spectra_array,
+        genotype_array,
+        n_permutations=n_permutations,
+    )
+    assert len(perm_res) == n_permutations
