@@ -167,7 +167,7 @@ def perform_permutation_test(
     genotype_matrix: np.ndarray,
     n_permutations: int = 1_000,
     comparison_wide: bool = False,
-) -> List[np.float64]:
+) -> np.ndarray:
     """Conduct a permutation test to assess the significance of 
     any observed IHD peaks. In each of the `n_permutations` trials, 
     do the following: 1. create a shuffled version of the input mutation `spectra`, so that
@@ -176,7 +176,10 @@ def perform_permutation_test(
     the aggregate mutation spectrum of samples with either genotype
     at every marker in the `genotype_matrix`. 3. store the maximum cosine distance encountered at any marker.
     Then, return a list of the maximum cosine distances encountered in each of
-    the trials.
+    the trials. Alternatively, if `comparison_wide` is True, return a matrix of
+    size (P, G), where P is the number of permutations and G is the number of
+    genotyped markers, in which we store the cosine distance value encountered at
+    every marker in every permutation trial.
 
     Args:
         spectra (np.ndarray): A 2D numpy array of mutation spectra in all \
@@ -196,8 +199,11 @@ def perform_permutation_test(
               
 
     Returns:
-        null_distances (List[np.float64]): List of length `n_permutations`, \
-            containing the maximum cosine distance encountered in each permutation.
+        null_distances (np.ndarray): 2D numpy array of size (P, G) \
+            where P is the number of permutations and G is either 1 \
+            (if we're computing a genome-wide distance threshold) or \
+            the number of genotyped markers (if we're computing thresholds \
+            at each individual marker).
     """
 
     # store max cosdist encountered in each permutation, or if desired,
