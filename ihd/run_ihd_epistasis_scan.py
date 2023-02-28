@@ -27,7 +27,7 @@ def main(args):
     markers = pd.read_csv(config_dict['markers'], dtype={"marker": str, "chromosome": str})
     MarkerMetadataSchema.validate(markers)
     geno = geno.merge(markers, on="marker")
-    #geno = geno[geno["chromosome"].isin(list(map(str, range(7, 10))))]
+    geno = geno[geno["chromosome"].isin(list(map(str, range(4, 8))))]
 
     # read in singleton data and validate with pandera
     mutations = pd.read_csv(args.mutations)

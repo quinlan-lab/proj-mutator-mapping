@@ -251,7 +251,7 @@ def compute_spectra(
     # compute 3-mer spectra
     hap_spectra_agg = mutations.groupby(['sample', 'kmer']).agg({
         'count': sum
-    }).reset_index()  
+    }).reset_index()
     # if 1-mer spectra are desired, compute that
     if k == 1:
         # add base mutation type
@@ -297,21 +297,33 @@ def perform_ihd_epistasis_scan(
         sites in the genotype_matrix.
     """
 
+    threshold = 10
+
     # store distances at every pair of markers
     n_sites = genotype_matrix.shape[0]
     distances = np.zeros((n_sites, n_sites))#, dtype=np.float16)
     # loop over every pair of sites in the genotype matrix.
-    # we can iterate over every pair in the upper triangle of 
+    # we can iterate over every pair in the upper triangle of
     # the genotype matrix to save some time.
     pair_idxs = np.triu_indices(n_sites, k=1)
     for ni, nj in np.dstack((pair_idxs[0], pair_idxs[1]))[0]:
-        #if ni % 100 == 0: print (ni)
-        #print (ni, nj)
+
+
         ai_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
         bi_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
 
         aj_hap_idxs = np.where(genotype_matrix[nj] == 0)[0]
         bj_hap_idxs = np.where(genotype_matrix[nj] == 2)[0]
+
+        if sum([
+                a.shape[0] < threshold for a in (
+                    ai_hap_idxs,
+                    bi_hap_idxs,
+                    aj_hap_idxs,
+                    bj_hap_idxs,
+                )
+        ]) > 0:
+            continue
 
         spectra_arr = (
             spectra[ai_hap_idxs],
@@ -336,7 +348,7 @@ def perform_ihd_epistasis_scan(
             agg_spec = np.vstack((spectra_arr[pi], spectra_arr[pj]))
             agg_spectra.append(agg_spec)
             #print (agg_spec)
-        # then loop over pairs of haplotypes to get distances 
+        # then loop over pairs of haplotypes to get distances
         comp_idxs = [
             [0, 1], # ab vs aB
             [0, 2], # ab vs Ab
@@ -352,7 +364,7 @@ def perform_ihd_epistasis_scan(
         #epi_dist = max(pair_dists) - (sum(pair_dists) - max(pair_dists))
         distances[ni, nj] = epi_dist
 
-    
+
 
     return distances
 

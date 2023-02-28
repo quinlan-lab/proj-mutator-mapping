@@ -5,7 +5,7 @@ from matplotlib.patches import Rectangle
 import numpy as np
 
 res = pd.read_csv("o.csv")
-X_idxs = res[res["chromosome"] == "X"].index.values
+#X_idxs = res[res["chromosome"] == "X"].index.values
 
 threshold = res["threshold"].values[0]
 
@@ -17,9 +17,7 @@ vals = res.drop(columns=[
     "Mb",
 ]).values
 
-print (np.min(X_idxs))
 
-vals = vals[:np.min(X_idxs), :np.min(X_idxs)]
 
 vals += vals.T
 
