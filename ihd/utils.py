@@ -1,17 +1,91 @@
 import pandas as pd
 import numpy as np
-from typing import List, Iterable, Sequence, Tuple
+from typing import List, Iterable, Sequence, Tuple, Callable
 import numba
 from sklearn.linear_model import LinearRegression
 from scipy.stats import chi2_contingency
 
-def chi2_test(a: np.ndarray, b: np.ndarray) -> np.float64:
+@numba.njit
+def compute_manual_chisquare(a: np.ndarray, b: np.ndarray) -> np.float64:
+    """Compute a chi-square test of independence between two
+    groups of observations. Since numba doesn't cooperate with the
+    `scipy.stats` implementation, I've written a "manual" version
+    of the calculation so that it's jit-able.
+
+    Args:
+        a (np.ndarray): 1D numpy array of (N, ) observations.
+        b (np.ndarray): 1D numpy array of (N, ) obseravtions.
+
+    Returns:
+        chisquare_stat (np.float64): The Chi-square statistic comparing \
+            observed vs. expected values of each observation.
+    """
     observed = np.vstack((a, b))
-    stat, p, _, _ = chi2_contingency(observed)
-    return p
+    row_sums = compute_nansum(observed, row=True)
+    col_sums = compute_nansum(observed, row=False)
+    total = np.nansum(observed)
+
+    expected = np.zeros(observed.shape, dtype=np.float64)
+    for row_i in np.arange(row_sums.shape[0]):
+        for col_i in np.arange(col_sums.shape[0]):
+            exp = (row_sums[row_i] * col_sums[col_i]) / total
+            expected[row_i, col_i] = exp
+    chi_stat = np.sum(np.square(observed - expected) / expected)
+    return chi_stat
+
 
 @numba.njit
-def compute_nanrowsum(a: np.ndarray) -> np.ndarray:
+def compute_pairwise_differences(a: np.ndarray, b: np.ndarray) -> np.float64:
+    a_n, b_n = a.shape[1], b.shape[1]
+    pairwise_diffs = 0
+    pairs = 0
+    for i in np.arange(a_n):
+        a_gts = a[:, i]
+        for j in np.arange(b_n):
+            b_gts = b[:, j]
+            pairwise_diffs += np.nansum(np.abs(a_gts - b_gts))
+            pairs += 1
+    return pairwise_diffs / pairs
+
+
+@numba.njit
+def compute_genotype_fst(genotype_matrix: np.ndarray) -> np.ndarray:
+    """Compute the genetic similarity between groups of haplotypes
+    at every genotyped marker. At each marker, divide the haplotypes into
+    two groups based on the parental allele each haplotype inherited. In 
+    each group, calculate allele frequencies at every marker along the genome.
+    Then, calculate the Pearson correlation coefficient between the two groups'
+    allele frequency vectors.
+
+    Args:
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
+            every genotyped marker, of size (G, N), where G is the number \
+            of genotyped sites and N is the number of samples.
+
+    Returns:
+        genotype_similarity (np.ndarray): A 1D numpy array of size (G, ), where G is the number \
+        of genotyped sites.
+    """
+    # store genotype similarities at every marker
+    genotype_fst: np.ndarray = np.zeros(genotype_matrix.shape[0], dtype=np.float64)
+    # loop over every site in the genotype matrix
+    for ni in np.arange(genotype_matrix.shape[0]):
+        a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
+        b_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
+        # compute allele frequencies in each haplotype group
+        a_acs, b_acs = (
+            genotype_matrix[:, a_hap_idxs],
+            genotype_matrix[:, b_hap_idxs],
+        )
+        if ni % 100 == 0: print (ni)
+        bw = compute_pairwise_differences(a_acs, b_acs)
+        a_w = compute_pairwise_differences(a_acs, a_acs)
+        genotype_fst[ni] = (bw - a_w) / bw
+    
+    return genotype_fst
+
+@numba.njit
+def compute_nansum(a: np.ndarray, row: bool = True) -> np.ndarray:
     """Compute the sum of a 2D numpy array
     on a per-row basis, ignoring nans. Since `numba` does not
     support kwargs in the `np.nansum` function, it's
@@ -25,9 +99,10 @@ def compute_nanrowsum(a: np.ndarray) -> np.ndarray:
         rowsums (np.ndarray): A 1D numpy array of size (N, ) containing \
             sums of every row in the input.
     """
-    empty_a = np.zeros(a.shape[0])
-    for i in range(a.shape[0]):
-        empty_a[i] = np.nansum(a[i])
+    idx = 0 if row else 1
+    empty_a = np.zeros(a.shape[idx])
+    for i in range(a.shape[idx]):
+        empty_a[i] = np.nansum(a[i]) if row else np.nansum(a[:, i])
     return empty_a
 
 @numba.njit
@@ -48,14 +123,13 @@ def compute_allele_frequency(genotype_matrix: np.ndarray) -> np.ndarray:
     # figure out the allele number
     allele_number = genotype_matrix.shape[1] * 2
     # sum the genotypes at each locus
-    allele_counts = compute_nanrowsum(genotype_matrix)
-    assert allele_counts.shape[0] == genotype_matrix.shape[0]
+    allele_counts = compute_nansum(genotype_matrix, row=True)
     # get allele frequencies
     return allele_counts / allele_number
 
 
 @numba.njit
-def manual_cosine_distance(
+def compute_manual_cosine_distance(
     a: np.ndarray,
     b: np.ndarray,
 ) -> np.float64:
@@ -79,9 +153,9 @@ def manual_cosine_distance(
 
 
 @numba.njit
-def compute_colmean(a: np.ndarray) -> np.ndarray:
+def compute_mean(a: np.ndarray, row = True) -> np.ndarray:
     """Compute the mean of a 2D numpy array
-    on a per-column basis. Since `numba` does not
+    on either a per-column or per-row basis. Since `numba` does not
     support kwargs in the `np.mean` function, it's
     necessary to piece this out into its own function
     so that it can be decorated with `numba.njit`.
@@ -89,13 +163,16 @@ def compute_colmean(a: np.ndarray) -> np.ndarray:
     Args:
         a (np.ndarray): A 2D numpy array of size (N, M).
 
+        row (bool, optional): Whether to calculate means by row or column. Defaults to True.
+
     Returns:
-        colmeans (np.ndarray): A 1D numpy array of size (M, ) containing \
-            column-wise means of the input.
+        colmeans (np.ndarray): A 1D numpy array of size (M, ) or size (N, ) \
+             containing column-wise or row-wise means of the input.
     """
-    empty_a = np.zeros(a.shape[1])
+    idx = 0 if row else 1
+    empty_a = np.zeros(a.shape[idx])
     for i in range(a.shape[1]):
-        empty_a[i] = np.mean(a[:, i])
+        empty_a[i] = np.mean(a[i]) if row else np.mean(a[:, i])
     return empty_a
 
 
@@ -103,6 +180,7 @@ def compute_colmean(a: np.ndarray) -> np.ndarray:
 def compute_haplotype_distance(
     a_haps: np.ndarray,
     b_haps: np.ndarray,
+    distance_method: Callable = compute_manual_chisquare,
 ) -> np.float64:
     """Compute the cosine distance between the aggregate
     mutation spectrum of two collections of haplotype mutation data.
@@ -130,7 +208,7 @@ def compute_haplotype_distance(
     a_hap_sums = np.sum(a_haps, axis=0)
     b_hap_sums = np.sum(b_haps, axis=0)
 
-    dist = manual_cosine_distance(a_hap_sums, b_hap_sums)
+    dist = distance_method(a_hap_sums, b_hap_sums)
 
     return dist
 
@@ -200,6 +278,7 @@ def perform_ihd_scan(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
     genotype_similarity: np.ndarray,
+    distance_method: Callable = compute_manual_chisquare,
 ) -> np.ndarray:
     """Iterate over every genotyped marker in the `genotype_matrix`, 
     divide the haplotypes into two groups based on sample genotypes at the 
@@ -233,7 +312,7 @@ def perform_ihd_scan(
             spectra[b_hap_idxs],
         )
 
-        cur_dist = compute_haplotype_distance(a_spectra, b_spectra)
+        cur_dist = compute_haplotype_distance(a_spectra, b_spectra, distance_method)
         focal_dist[ni] = cur_dist
 
     resids = compute_residuals(genotype_similarity, focal_dist)
@@ -268,6 +347,7 @@ def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
     genotype_similarity: np.ndarray,
+    distance_method: Callable = compute_manual_chisquare,
     n_permutations: int = 1_000,
     comparison_wide: bool = False,
 ) -> np.ndarray:
@@ -330,6 +410,7 @@ def perform_permutation_test(
             shuffled_spectra,
             genotype_matrix,
             genotype_similarity,
+            distance_method,
         )
 
         if comparison_wide:
