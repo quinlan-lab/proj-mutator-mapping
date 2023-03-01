@@ -108,12 +108,12 @@ def main(args):
     ytick_labels = [round(x, 1) for x in yticks]
 
     #ytick_labels[0] = "0"
-    ax.set_yticks(yticks[1:])
-    ax.set_yticklabels(ytick_labels[1:])
+    #ax.set_yticks(yticks[1:])
+    #ax.set_yticklabels(ytick_labels[1:])
     #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
-    ax.set_ylabel("Cosine distance residual")
+    ax.set_ylabel("Adjusted " + r"$\chi^2$ " + "statistic")
     ax.legend(frameon=False)
     f.tight_layout()
     f.savefig(f"{args.outpref}.manhattan_plot.png", dpi=300)

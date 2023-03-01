@@ -3,7 +3,7 @@ from ihd.utils import (
     compute_haplotype_distance,
     perform_ihd_scan,
     perform_permutation_test,
-    compute_colmean,
+    compute_mean,
     compute_spectra,
     shuffle_spectra,
     compute_nansum,
@@ -11,7 +11,6 @@ from ihd.utils import (
     compute_genotype_similarity,
     compute_residuals,
     compute_manual_chisquare,
-    compute_manual_cosine_distance,
 )
 import pytest
 import scipy.stats as ss
@@ -48,11 +47,11 @@ def test_compute_mean(
     mut_haplotype_array: np.ndarray,
 ):
     assert np.all(np.isclose(
-        compute_colmean(wt_haplotype_array),
+        compute_mean(wt_haplotype_array, row=False),
         np.array([2., 3., 3., 3., 2., 1.]),
     ))
     assert np.all(np.isclose(
-        compute_colmean(mut_haplotype_array),
+        compute_mean(mut_haplotype_array, row=False),
         np.array([2., 2., 5., 3., 4., 3.]),
     ))
 

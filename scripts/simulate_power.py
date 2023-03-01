@@ -5,7 +5,11 @@ import pandas as pd
 from scipy.spatial.distance import cosine as cosdist
 import numba
 import scipy.stats as ss
+import sys
 
+# adding Folder_2 to the system path
+sys.path.insert(0, '/Users/tomsasani/quinlanlab/proj-mutator-mapping/')
+from ihd.utils import compute_manual_chisquare
 class Haplotypes(object):
 
     def __init__(
@@ -95,18 +99,6 @@ class Haplotypes(object):
         self.hap_mut = hap_mut
         self.hap_wt = hap_wt
 
-@numba.njit
-def manual_cosine_distance(a: np.ndarray, b: np.ndarray) -> np.float64:
-    dot = a.dot(b)
-    a_sumsq, b_sumsq = np.sum(np.square(a)), np.sum(np.square(b))
-    a_norm, b_norm = np.sqrt(a_sumsq), np.sqrt(b_sumsq)
-    cossim = dot / (a_norm * b_norm)
-    return 1 - cossim
-
-def chisquare(a: np.ndarray, b: np.ndarray) -> np.float64:
-    observed = np.vstack((a, b))
-    res = ss.chi2_contingency(observed)
-    return res.statistic
 
 @numba.njit
 def run_permutations(
@@ -144,11 +136,8 @@ def run_permutations(
             a_hap_sums = np.sum(random_mut_haps, axis=0)
             b_hap_sums = np.sum(random_wt_haps, axis=0)
             
-            dist = manual_cosine_distance(a_hap_sums, b_hap_sums)
-            #try:
-            #    dist = chisquare(a_hap_sums, b_hap_sums)
-            #except ValueError:
-            #    continue
+            dist = compute_manual_chisquare(a_hap_sums, b_hap_sums)
+            
             if dist > max_dist: max_dist = dist
 
         all_dists.append(max_dist)
@@ -258,18 +247,10 @@ def main():
             wt_hap_idxs = np.arange(n_wt_haps) + 1
             wt_hap_idxs += np.max(mut_hap_idxs)
 
-            focal_dist = manual_cosine_distance(
+            focal_dist = compute_manual_chisquare(
                 np.sum(haps[mut_hap_idxs], axis=0),
                 np.sum(haps[wt_hap_idxs], axis=0))
 
-            # try:
-            #     focal_dist = chisquare(
-            #         np.sum(haps[mut_hap_idxs], axis=0),
-            #         np.sum(haps[wt_hap_idxs], axis=0),
-            #     )
-            # except ValueError:
-            #     print ("Value Error!")
-            #     continue
 
             # simulate with expectation that all markers are at 50%
             all_dists = run_permutations(
