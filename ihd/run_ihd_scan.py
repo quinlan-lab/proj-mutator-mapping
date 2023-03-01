@@ -8,8 +8,13 @@ from utils import (
     compute_spectra,
     perform_permutation_test,
     perform_ihd_scan,
+    compute_genotype_similarity,
 )
 from schema import IHDResultSchema, MutationSchema
+import seaborn as sns
+import statsmodels.api as sm
+import numba
+
 
 def main(args):
 
@@ -20,6 +25,7 @@ def main(args):
 
     # read in genotype info
     geno = pd.read_csv(config_dict['geno'])
+    
 
     # read in singleton data and validate with pandera
     mutations = pd.read_csv(args.mutations)
@@ -60,15 +66,39 @@ def main(args):
     # only consider sites where allele frequency is between thresholds
     idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
     print("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
+
+    idxs2keep = np.arange(1000, 3000)
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
     markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
+
+    # compute similarity between allele frequencies at each marker 
+    genotype_similarity = compute_genotype_similarity(geno_filtered)
 
     # compute the maximum cosine distance between groups of
     # haplotypes at each site in the genotype matrix
     focal_dists = perform_ihd_scan(
         spectra,
         geno_filtered,
+        genotype_similarity,
     )
+    
+
+    f, ax = plt.subplots()
+    new_df = pd.DataFrame({
+        "Genotype correlation": genotype_similarity,
+        "Spectra distance": focal_dists,
+    })
+    sns.regplot(
+        data=new_df,
+        x="Genotype correlation",
+        y="Spectra distance",
+        ax=ax,
+    )
+    X, y = new_df["Genotype correlation"].values, new_df["Spectra distance"].values
+    lr = sm.OLS(y, sm.add_constant(X)).fit()
+    print (lr.summary())
+    f.savefig("o.png", dpi=200)
+
 
     res_df = pd.DataFrame({
         'marker': markers_filtered,
@@ -81,6 +111,7 @@ def main(args):
     null_distances = perform_permutation_test(
         spectra,
         geno_filtered,
+        genotype_similarity,
         n_permutations=args.permutations,
         comparison_wide=args.comparison_wide,
     )

@@ -7,9 +7,51 @@ from scipy.stats import chi2_contingency
 
 def chi2_test(a: np.ndarray, b: np.ndarray) -> np.float64:
     observed = np.vstack((a, b))
-    #print (observed)
     stat, p, _, _ = chi2_contingency(observed)
     return p
+
+@numba.njit
+def compute_nanrowsum(a: np.ndarray) -> np.ndarray:
+    """Compute the sum of a 2D numpy array
+    on a per-row basis, ignoring nans. Since `numba` does not
+    support kwargs in the `np.nansum` function, it's
+    necessary to piece this out into its own function
+    so that it can be decorated with `numba.njit`.
+
+    Args:
+        a (np.ndarray): A 2D numpy array of size (N, M).
+
+    Returns:
+        rowsums (np.ndarray): A 1D numpy array of size (N, ) containing \
+            sums of every row in the input.
+    """
+    empty_a = np.zeros(a.shape[0])
+    for i in range(a.shape[0]):
+        empty_a[i] = np.nansum(a[i])
+    return empty_a
+
+@numba.njit
+def compute_allele_frequency(genotype_matrix: np.ndarray) -> np.ndarray:
+    """Given a genotype matrix of size (G, N) where G is the number of 
+    genotyped sites and N is the number of samples, compute the allele 
+    frequency at every marker.
+
+    Args:
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
+            every genotyped marker, of size (G, N), where G is the number \
+            of genotyped sites and N is the number of samples.
+
+    Returns:
+        allele_frequencies (np.ndarray): A 1D numpy array of size (G, ) containing allele frequencies \
+        at every genotyped site in the collection of N samples.
+    """
+    # figure out the allele number
+    allele_number = genotype_matrix.shape[1] * 2
+    # sum the genotypes at each locus
+    allele_counts = compute_nanrowsum(genotype_matrix)
+    assert allele_counts.shape[0] == genotype_matrix.shape[0]
+    # get allele frequencies
+    return allele_counts / allele_number
 
 
 @numba.njit
@@ -118,10 +160,47 @@ def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
 
 
 @numba.njit()
+def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
+    """Compute the genetic similarity between groups of haplotypes
+    at every genotyped marker. At each marker, divide the haplotypes into
+    two groups based on the parental allele each haplotype inherited. In 
+    each group, calculate allele frequencies at every marker along the genome.
+    Then, calculate the Pearson correlation coefficient between the two groups'
+    allele frequency vectors.
+
+    Args:
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
+            every genotyped marker, of size (G, N), where G is the number \
+            of genotyped sites and N is the number of samples.
+
+    Returns:
+        genotype_similarity (np.ndarray): A 1D numpy array of size (G, ), where G is the number \
+        of genotyped sites.
+    """
+    # store genotype similarities at every marker
+    genotype_sims: np.ndarray = np.zeros(genotype_matrix.shape[0], dtype=np.float64)
+    # loop over every site in the genotype matrix
+    for ni in np.arange(genotype_matrix.shape[0]):
+        a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
+        b_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
+        # compute allele frequencies in each haplotype group
+        a_afs, b_afs = (
+            compute_allele_frequency(genotype_matrix[:, a_hap_idxs]),
+            compute_allele_frequency(genotype_matrix[:, b_hap_idxs]),
+        )
+        # compute Pearson correlation between allele frequencies
+        af_corr = np.corrcoef(a_afs, b_afs)[0][1]
+        genotype_sims[ni] = af_corr
+    
+    return genotype_sims
+
+
+@numba.njit()
 def perform_ihd_scan(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
-) -> List[np.float64]:
+    genotype_similarity: np.ndarray,
+) -> np.ndarray:
     """Iterate over every genotyped marker in the `genotype_matrix`, 
     divide the haplotypes into two groups based on sample genotypes at the 
     marker, and compute the distance between the aggregate mutation spectra
@@ -143,7 +222,7 @@ def perform_ihd_scan(
     """
 
     # store distances at each marker
-    focal_dist: List[np.float32] = []
+    focal_dist: np.ndarray = np.zeros(genotype_matrix.shape[0], dtype=np.float64)
     # loop over every site in the genotype matrix
     for ni in np.arange(genotype_matrix.shape[0]):
         a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
@@ -155,16 +234,40 @@ def perform_ihd_scan(
         )
 
         cur_dist = compute_haplotype_distance(a_spectra, b_spectra)
+        focal_dist[ni] = cur_dist
 
-        focal_dist.append(cur_dist)
+    resids = compute_residuals(genotype_similarity, focal_dist)
+    return resids
 
-    return focal_dist
+
+@numba.njit
+def compute_residuals(
+    X: np.ndarray,
+    y: np.ndarray,
+) -> np.ndarray:
+    """Use ordinary least-squares (OLS) to fit a linear model
+    predicting `y` as a function of `X`. Then, compute the residuals
+    between the predicted y-values and the true y-values.
+
+    Args:
+        X (np.ndarray): 1D numpy array of size (M, ).
+        y (np.ndarray): 1D numpy array of size (M, ).
+
+    Returns:
+        resids (np.ndarray): 1D numpy array of size (M, ) containing residuals.
+    """
+    X = np.vstack((X, np.ones(X.shape[0]))).T
+    m, c = np.linalg.lstsq(X, y)[0]
+    y_ = (X[:, 0] * m) + c
+    resids = y - y_
+    return resids
 
 
 @numba.njit()
 def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
+    genotype_similarity: np.ndarray,
     n_permutations: int = 1_000,
     comparison_wide: bool = False,
 ) -> np.ndarray:
@@ -213,20 +316,26 @@ def perform_permutation_test(
         n_permutations,
         n_markers if comparison_wide else 1,
     ))
-    
+
     for pi in range(n_permutations):
         if pi > 0 and pi % 100 == 0: print(pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)
         # compute the cosine distances at each marker
+
+        # NOTE: currently recomputing the genotype correlations
+        # in every permutation. this is slow, since we can just
+        # compute them once and re-use them in each permutation.
         perm_distances = perform_ihd_scan(
             shuffled_spectra,
             genotype_matrix,
+            genotype_similarity,
         )
+
         if comparison_wide:
-            null_distances[pi] = perm_distances 
+            null_distances[pi] = perm_distances
         else:
-            null_distances[pi] = max(perm_distances)
+            null_distances[pi] = np.max(perm_distances)
 
     return null_distances
 

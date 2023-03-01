@@ -56,6 +56,22 @@ def genotype_array() -> np.ndarray:
         [0, 0, 2, 0],
     ]).astype(np.float64)
 
+@pytest.fixture
+def genotype_similarity() -> np.ndarray:
+    return np.array([0.5, 0.5, 0.5]).astype(np.float64)
+
+@pytest.fixture
+def genotype_array_nans() -> np.ndarray:
+    """genotype array of shape (G, N), where
+    G is the number of sites and N is the number
+    of samples.
+    """
+    return np.array([
+        [0, 2, 2, np.nan],
+        [2, np.nan, 0, 0],
+        [np.nan, 0, np.nan, 0],
+    ]).astype(np.float64)
+
 
 @pytest.fixture
 def bad_mutation_dataframe(seed: int = 42) -> pd.DataFrame:

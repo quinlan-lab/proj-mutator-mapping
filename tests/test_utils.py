@@ -6,6 +6,10 @@ from ihd.utils import (
     compute_colmean,
     compute_spectra,
     shuffle_spectra,
+    compute_nanrowsum,
+    compute_allele_frequency,
+    compute_genotype_similarity,
+    compute_residuals,
 )
 import pytest
 
@@ -54,6 +58,28 @@ def test_compute_spectra(bad_mutation_dataframe):
     _, _, _ = compute_spectra(bad_mutation_dataframe, k=1)
 
 
+def test_compute_rowsum(genotype_array):
+    rowsums = compute_nanrowsum(genotype_array)
+    assert np.array_equal(np.array([4., 3., 2.]), rowsums,)
+
+def test_compute_rowsum_nans(genotype_array_nans):
+    rowsums = compute_nanrowsum(genotype_array_nans)
+    assert np.array_equal(np.array([4., 2., 0.]), rowsums,)
+
+def test_compute_allele_frequency_nans(genotype_array_nans):
+    af = compute_allele_frequency(genotype_array_nans)
+    assert np.array_equal(np.array([0.5, 0.25, 0.]), af,)
+
+
+def test_compute_genotype_similarity(genotype_array):
+    genotype_sims = compute_genotype_similarity(genotype_array)
+    exp = np.array([
+        np.corrcoef([1., 0.25, 0.5], [0., 0.5, 0.]),
+        np.corrcoef([0., 1., 0.], [0.5, 0., 0.5]),
+        np.corrcoef([1., 0., 1.], [1/3, 0.5, 0.]),
+    ])
+
+
 def test_compute_spectra(good_mutation_dataframe):
     samples, mutations, spectra = compute_spectra(good_mutation_dataframe, k=1)
     assert samples == ["A", "B", "C"]
@@ -67,14 +93,24 @@ def test_compute_spectra(good_mutation_dataframe):
         ]),
     )
 
-def test_perform_ihd_scan(spectra_array, genotype_array):
-    focal_dists = perform_ihd_scan(spectra_array, genotype_array)
-    assert np.allclose(np.array(focal_dists),
-                       np.array([
+@pytest.mark.parametrize("X,y", [(np.arange(5).astype(np.float64), np.arange(5).astype(np.float64)),])
+def test_compute_residuals(X, y):
+    assert np.allclose(compute_residuals(X, y), np.zeros(5))
+
+def test_perform_ihd_scan(spectra_array, genotype_array, genotype_similarity):
+    focal_dists = perform_ihd_scan(
+        spectra_array,
+        genotype_array,
+        genotype_similarity,
+    )
+
+    raw_dists = np.array([
                            0.083842,
                            0.273145,
                            0.132533,
-                       ]))
+                       ])
+    assert np.allclose(np.array(focal_dists),
+                       raw_dists - np.mean(raw_dists))
 
 
 @pytest.mark.parametrize("n_permutations,comparison_wide", [
@@ -82,14 +118,15 @@ def test_perform_ihd_scan(spectra_array, genotype_array):
     (1000, False),
     (100, True),
 ])
-def test_perform_ihd_permutation_test(spectra_array, genotype_array, n_permutations, comparison_wide):
+def test_perform_ihd_permutation_test(spectra_array, genotype_array, genotype_similarity, n_permutations, comparison_wide):
     perm_res = perform_permutation_test(
         spectra_array,
         genotype_array,
+        genotype_similarity,
         n_permutations=n_permutations,
         comparison_wide=comparison_wide,
     )
-    if comparison_wide: 
+    if comparison_wide:
         assert perm_res.shape[0] == n_permutations and perm_res.shape[1] == genotype_array.shape[0]
     else:
         assert perm_res.shape[0] == n_permutations

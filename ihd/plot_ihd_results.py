@@ -1,5 +1,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import seaborn as sns
 import argparse
 import numpy as np
@@ -24,8 +25,10 @@ def main(args):
         results_merged["chromosome"] = results_merged['chromosome'].apply(lambda c: int(c.split("chr")[1]))
     results_merged = results_merged[results_merged["chromosome"] != "X"]
 
+    pctile_label = f"95th_percentile"
+
     # get significant markers
-    signif = results_merged.query("Distance >= significant_percentile")
+    signif = results_merged[results_merged["Distance"] >= results_merged[pctile_label]]
     signif.to_csv(f"{args.outpref}.significant_markers.csv", index=False)
 
     chrom_order = list(map(str, range(1, 23)))
@@ -34,30 +37,33 @@ def main(args):
     results_merged["sort_idx"] = results_merged["chromosome"].apply(lambda c: chrom_order_idx[c])
     results_merged.sort_values("sort_idx", inplace=True)
 
-    label_meta = list(zip(
-        (
-            'Suggestive distance threshold ' + r"$\left(p \leq 0.2\right)$",
-            'Significant distance threshold ' + r"$\left(p \leq 0.05\right)$",
-        ),
-        ('suggestive', 'significant'),
-        ("grey", "grey"),
-        ("--", "-"),
-    ))[::-1]
-
     # plot manhattan
     f, ax = plt.subplots(figsize=(16, 6))
+
+    max_threshold_dist = np.max(results_merged[pctile_label])
+
+    ax.axhline(
+        y=max_threshold_dist,
+        ls=":",
+        c="grey",
+        label="Genome-wide significance threshold " +
+        r"$\left(p \leq 0.05\right)$",
+        lw=2,
+    )
 
     previous_max = 0
     xtick_positions, xticks = [], []
 
-    colors = ["cornflowerblue", "coral"]
-    colors = ["#F07928", "#B0D8E1"]
     colors = ["#E6803C", "#398D84"]
 
     for i, (
             chrom,
             chrom_df,
     ) in enumerate(results_merged.groupby("chromosome", sort=False)):
+
+        chrom_df["is_significant"] = chrom_df["Distance"] >= chrom_df[pctile_label]
+        chrom_df["ec"] = chrom_df["is_significant"].apply(lambda s: "k" if s else "w")
+        chrom_df["lw"] = chrom_df["is_significant"].apply(lambda s: 1 if s else 0.5)
 
         color_idx = i % 2
         xvals = chrom_df[args.colname].values + previous_max
@@ -68,18 +74,14 @@ def main(args):
             yvals,
             s=75,
             c=colors[color_idx],
-            ec="k",
-            lw=1,
+            ec=chrom_df["ec"].values,
+            lw=chrom_df["lw"].values,
         )
 
         previous_max += max(chrom_df[args.colname].values)
         xtick_positions.append(np.median(xvals))
         xticks.append(chrom)
 
-
-    for label, level, color, style in label_meta:
-        max_dist = results_merged[f'{level}_percentile'].unique()[0]
-        ax.axhline(y=max_dist, ls=style, c=color, label=label, lw=2)
 
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels(xticks)
@@ -91,18 +93,27 @@ def main(args):
     # increase tick width
     ax.tick_params(width=2.)
 
-    max_yval = max(results_merged["Distance"]) * 1.05
-    yticks = np.linspace(0, max_yval, num=7)
+    max_yval = max([
+        max(results_merged["Distance"]) * 1.05,
+        max_threshold_dist,
+    ])
+
+    min_yval = min([
+        min(results_merged["Distance"]) * 1.05,
+        max_threshold_dist,
+    ])
+
+    yticks = np.linspace(min_yval, max_yval, num=8)
     ytick_labels = [f"{x:.1e}" for x in yticks]
     #ytick_labels[0] = "0"
     ax.set_yticks(yticks[1:])
     ax.set_yticklabels(ytick_labels[1:])
-    sns.set_style('ticks')
+    #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
-    ax.set_ylabel("Distance")
+    ax.set_ylabel("Cosine distance")
     ax.legend(frameon=False)
-    f.tight_layout() 
+    f.tight_layout()
     f.savefig(f"{args.outpref}.manhattan_plot.png", dpi=300)
     f.savefig(f"{args.outpref}.manhattan_plot.eps")
 

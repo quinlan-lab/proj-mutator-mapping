@@ -2,10 +2,10 @@ PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
-
+ 
 rule all:
     input:
-        expand(PROJDIR + "/csv/bxd/k{k}.genome.significant_markers.csv", k=[1,3]),
+        expand(PROJDIR + "/csv/bxd/k{k}.genome.significant_markers.csv", k=[1]),
         PROJDIR + "/data/mutations/bxd/annotated_filtered_shared.csv"
 
 rule download_singletons:
@@ -73,7 +73,7 @@ rule run_manhattan:
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
-                                 -permutations 1000
+                                 -permutations 100 
         """
 
 rule plot_manhattan:
