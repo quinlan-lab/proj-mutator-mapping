@@ -3,7 +3,7 @@ from pandera import Column, Check, DataFrameSchema
 
 IHDResultSchema = DataFrameSchema({
     "marker": Column(str),
-    "Distance": Column(float, Check.in_range(min_value=-1, max_value=2)),
+    "Distance": Column(float),#, Check.in_range(min_value=0)),#, max_value=2)),
     "k": Column(int, Check.isin([1, 3])),
 })
 

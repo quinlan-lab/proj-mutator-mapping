@@ -9,6 +9,8 @@ from utils import (
     perform_permutation_test,
     perform_ihd_scan,
     compute_genotype_similarity,
+    compute_manual_chisquare,
+    compute_manual_cosine_distance,
 )
 from schema import IHDResultSchema, MutationSchema
 import seaborn as sns
@@ -25,7 +27,6 @@ def main(args):
 
     # read in genotype info
     geno = pd.read_csv(config_dict['geno'])
-    
 
     # read in singleton data and validate with pandera
     mutations = pd.read_csv(args.mutations)
@@ -66,13 +67,15 @@ def main(args):
     # only consider sites where allele frequency is between thresholds
     idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
     print("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
-
-    idxs2keep = np.arange(1000, 3000)
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
     markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
 
     # compute similarity between allele frequencies at each marker 
     genotype_similarity = compute_genotype_similarity(geno_filtered)
+    
+    distance_method = compute_manual_chisquare
+    if args.distance_method == "cosine":
+        distance_method = compute_manual_cosine_distance
 
     # compute the maximum cosine distance between groups of
     # haplotypes at each site in the genotype matrix
@@ -80,9 +83,9 @@ def main(args):
         spectra,
         geno_filtered,
         genotype_similarity,
+        distance_method=distance_method,
     )
     
-
     f, ax = plt.subplots()
     new_df = pd.DataFrame({
         "Genotype correlation": genotype_similarity,
@@ -93,6 +96,7 @@ def main(args):
         x="Genotype correlation",
         y="Spectra distance",
         ax=ax,
+        scatter_kws={"alpha": 0.25}
     )
     X, y = new_df["Genotype correlation"].values, new_df["Spectra distance"].values
     lr = sm.OLS(y, sm.add_constant(X)).fit()
@@ -112,6 +116,7 @@ def main(args):
         spectra,
         geno_filtered,
         genotype_similarity,
+        distance_method=distance_method,
         n_permutations=args.permutations,
         comparison_wide=args.comparison_wide,
     )
@@ -162,6 +167,7 @@ if __name__ == "__main__":
     )
     p.add_argument("-adj_column", default=None)
     p.add_argument("-chrom", default=None)
+    p.add_argument("-distance_method", default="chisquare", type=str)
     args = p.parse_args()
 
     main(args)

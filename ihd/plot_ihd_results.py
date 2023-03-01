@@ -18,7 +18,7 @@ def main(args):
     markers = pd.read_csv(args.markers, dtype={"marker": str, "chromosome": str})
     MarkerMetadataSchema.validate(markers)
 
-    results_merged = results.merge(markers, on="marker")
+    results_merged = results.merge(markers, on="marker").astype({"chromosome": str})
 
     chr_pref = any(["chr" in c for c in results_merged["chromosome"].unique()])
     if chr_pref:
@@ -36,6 +36,10 @@ def main(args):
     chrom_order_idx = dict(zip(chrom_order, range(len(chrom_order))))
     results_merged["sort_idx"] = results_merged["chromosome"].apply(lambda c: chrom_order_idx[c])
     results_merged.sort_values("sort_idx", inplace=True)
+
+    results_merged["is_significant"] = results_merged["Distance"] >= results_merged[pctile_label]
+    results_merged["ec"] = results_merged["is_significant"].apply(lambda s: "k" if s else "w")
+    results_merged["lw"] = results_merged["is_significant"].apply(lambda s: 1 if s else 0.5)
 
     # plot manhattan
     f, ax = plt.subplots(figsize=(16, 6))
@@ -60,10 +64,6 @@ def main(args):
             chrom,
             chrom_df,
     ) in enumerate(results_merged.groupby("chromosome", sort=False)):
-
-        chrom_df["is_significant"] = chrom_df["Distance"] >= chrom_df[pctile_label]
-        chrom_df["ec"] = chrom_df["is_significant"].apply(lambda s: "k" if s else "w")
-        chrom_df["lw"] = chrom_df["is_significant"].apply(lambda s: 1 if s else 0.5)
 
         color_idx = i % 2
         xvals = chrom_df[args.colname].values + previous_max
@@ -105,36 +105,50 @@ def main(args):
 
     yticks = np.linspace(min_yval, max_yval, num=8)
     ytick_labels = [f"{x:.1e}" for x in yticks]
+    ytick_labels = [round(x, 1) for x in yticks]
+
     #ytick_labels[0] = "0"
     ax.set_yticks(yticks[1:])
     ax.set_yticklabels(ytick_labels[1:])
     #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
-    ax.set_ylabel("Cosine distance")
+    ax.set_ylabel("Cosine distance residual")
     ax.legend(frameon=False)
     f.tight_layout()
     f.savefig(f"{args.outpref}.manhattan_plot.png", dpi=300)
     f.savefig(f"{args.outpref}.manhattan_plot.eps")
 
     if args.chrom is not None:
-        results_merged_chr = results_merged[results_merged["chromosome"] == args.chrom]
         f, ax = plt.subplots(figsize=(10, 5))
-        for label, level, color in label_meta:
-            max_dist = results_merged[f'{level}_percentile'].unique()[0]
-            ax.axhline(y=max_dist, ls=":", c=color, label=label, lw=2)
-        sns.scatterplot(
-            results_merged_chr,
-            x=args.colname,
-            y="Distance",
-            color="grey",
-            ax=ax,
-            s=50,
+
+        results_merged_chr = results_merged[results_merged["chromosome"] == args.chrom]
+        max_threshold_dist = np.max(results_merged_chr[pctile_label])
+
+        ax.axhline(
+            y=max_threshold_dist,
+            ls=":",
+            c="grey",
+            label="Genome-wide significance threshold " +
+            r"$\left(p \leq 0.05\right)$",
+            lw=2,
+        )
+
+        xvals = results_merged_chr[args.colname].values
+        yvals = results_merged_chr["Distance"].values
+
+        ax.scatter(
+            xvals,
+            yvals,
+            s=75,
+            c=colors[0],
+            ec=results_merged_chr["ec"].values,
+            lw=results_merged_chr["lw"].values,
         )
 
         ax.legend()
-        #f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.png", dpi=300)
-        f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.eps")
+        f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.png", dpi=300)
+        #f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.eps")
 
 
 if __name__ == "__main__":

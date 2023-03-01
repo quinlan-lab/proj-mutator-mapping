@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
-from typing import List, Iterable, Sequence, Tuple, Callable
+from typing import Callable
 import numba
-from sklearn.linear_model import LinearRegression
-from scipy.stats import chi2_contingency
 
 @numba.njit
 def compute_manual_chisquare(a: np.ndarray, b: np.ndarray) -> np.float64:
@@ -35,56 +33,6 @@ def compute_manual_chisquare(a: np.ndarray, b: np.ndarray) -> np.float64:
 
 
 @numba.njit
-def compute_pairwise_differences(a: np.ndarray, b: np.ndarray) -> np.float64:
-    a_n, b_n = a.shape[1], b.shape[1]
-    pairwise_diffs = 0
-    pairs = 0
-    for i in np.arange(a_n):
-        a_gts = a[:, i]
-        for j in np.arange(b_n):
-            b_gts = b[:, j]
-            pairwise_diffs += np.nansum(np.abs(a_gts - b_gts))
-            pairs += 1
-    return pairwise_diffs / pairs
-
-
-@numba.njit
-def compute_genotype_fst(genotype_matrix: np.ndarray) -> np.ndarray:
-    """Compute the genetic similarity between groups of haplotypes
-    at every genotyped marker. At each marker, divide the haplotypes into
-    two groups based on the parental allele each haplotype inherited. In 
-    each group, calculate allele frequencies at every marker along the genome.
-    Then, calculate the Pearson correlation coefficient between the two groups'
-    allele frequency vectors.
-
-    Args:
-        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
-            every genotyped marker, of size (G, N), where G is the number \
-            of genotyped sites and N is the number of samples.
-
-    Returns:
-        genotype_similarity (np.ndarray): A 1D numpy array of size (G, ), where G is the number \
-        of genotyped sites.
-    """
-    # store genotype similarities at every marker
-    genotype_fst: np.ndarray = np.zeros(genotype_matrix.shape[0], dtype=np.float64)
-    # loop over every site in the genotype matrix
-    for ni in np.arange(genotype_matrix.shape[0]):
-        a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
-        b_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
-        # compute allele frequencies in each haplotype group
-        a_acs, b_acs = (
-            genotype_matrix[:, a_hap_idxs],
-            genotype_matrix[:, b_hap_idxs],
-        )
-        if ni % 100 == 0: print (ni)
-        bw = compute_pairwise_differences(a_acs, b_acs)
-        a_w = compute_pairwise_differences(a_acs, a_acs)
-        genotype_fst[ni] = (bw - a_w) / bw
-    
-    return genotype_fst
-
-@numba.njit
 def compute_nansum(a: np.ndarray, row: bool = True) -> np.ndarray:
     """Compute the sum of a 2D numpy array
     on a per-row basis, ignoring nans. Since `numba` does not
@@ -94,6 +42,9 @@ def compute_nansum(a: np.ndarray, row: bool = True) -> np.ndarray:
 
     Args:
         a (np.ndarray): A 2D numpy array of size (N, M).
+
+        row (bool, optional): Whether to calculate means by row or column. Defaults to True.
+
 
     Returns:
         rowsums (np.ndarray): A 1D numpy array of size (N, ) containing \
@@ -129,10 +80,7 @@ def compute_allele_frequency(genotype_matrix: np.ndarray) -> np.ndarray:
 
 
 @numba.njit
-def compute_manual_cosine_distance(
-    a: np.ndarray,
-    b: np.ndarray,
-) -> np.float64:
+def compute_manual_cosine_distance(a: np.ndarray, b: np.ndarray) -> np.float64:
     """Compute the cosine distance between
     two 1D numpy arrays. Although methods to compute
     cosine similarity and distance exist in `scipy` and
@@ -182,13 +130,14 @@ def compute_haplotype_distance(
     b_haps: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
 ) -> np.float64:
-    """Compute the cosine distance between the aggregate
+    """Compute the distance between the aggregate
     mutation spectrum of two collections of haplotype mutation data.
     The input arrays should both be 2D numpy arrays of size (N, M), 
     with rows and columns corresponding to samples and mutation types, 
     respectively. This method will first aggregate the mutation spectra across 
     samples to create two new 1D arrays, each of size (M, ). Then, it 
-    will compute the cosine distance between  those two 1D arrays. 
+    will compute the distance between those two 1D arrays using the provided 
+    distance method.
 
     Args:
         a_haps (np.ndarray): 2D array of size (N, M) containing the mutation \
@@ -199,8 +148,13 @@ def compute_haplotype_distance(
             spectrum of each sample, where N is the number of samples and M \
             is the number of mutation types.
 
+        distance_method (Callable, optional): Callable method to compute the \
+            distance between aggregate mutation spectra. Must accept two 1D numpy \
+            arrays and return a single floating point value. Defaults to \
+            `compute_manual_chisquare`.
+
     Returns:
-        distance (np.float64): Cosine distance between the aggregate \
+        distance (np.float64): Distance between the aggregate \
             mutation spectra of the two haplotypes.
     """
     # first, sum the spectrum arrays such that we add up the
@@ -269,7 +223,7 @@ def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
         # compute Pearson correlation between allele frequencies
         af_corr = np.corrcoef(a_afs, b_afs)[0][1]
         genotype_sims[ni] = af_corr
-    
+
     return genotype_sims
 
 
@@ -295,8 +249,13 @@ def perform_ihd_scan(
             every genotyped marker, of size (G, N), where G is the number \
             of genotyped sites and N is the number of samples.
 
+        distance_method (Callable, optional): Callable method to compute the \
+            distance between aggregate mutation spectra. Must accept two 1D numpy \
+            arrays and return a single floating point value. Defaults to \
+            `compute_manual_chisquare`.
+
     Returns:
-        distances (List[np.float64]): List of inter-haplotype cosine \
+        distances (List[np.float64]): List of inter-haplotype \
         distances at every marker.
     """
 
@@ -312,7 +271,11 @@ def perform_ihd_scan(
             spectra[b_hap_idxs],
         )
 
-        cur_dist = compute_haplotype_distance(a_spectra, b_spectra, distance_method)
+        cur_dist = compute_haplotype_distance(
+            a_spectra,
+            b_spectra,
+            distance_method=distance_method,
+        )
         focal_dist[ni] = cur_dist
 
     resids = compute_residuals(genotype_similarity, focal_dist)
@@ -355,13 +318,13 @@ def perform_permutation_test(
     any observed IHD peaks. In each of the `n_permutations` trials, 
     do the following: 1. create a shuffled version of the input mutation `spectra`, so that
     sample names/indices no longer correspond to the appropriate mutation
-    spectrum. 2. run an IHD scan by computing the cosine distance between
+    spectrum. 2. run an IHD scan by computing the distance between
     the aggregate mutation spectrum of samples with either genotype
-    at every marker in the `genotype_matrix`. 3. store the maximum cosine distance encountered at any marker.
-    Then, return a list of the maximum cosine distances encountered in each of
+    at every marker in the `genotype_matrix`. 3. store the maximum distance encountered at any marker.
+    Then, return a list of the maximum distances encountered in each of
     the trials. Alternatively, if `comparison_wide` is True, return a matrix of
     size (P, G), where P is the number of permutations and G is the number of
-    genotyped markers, in which we store the cosine distance value encountered at
+    genotyped markers, in which we store the distance value encountered at
     every marker in every permutation trial.
 
     Args:
@@ -372,6 +335,11 @@ def perform_permutation_test(
         genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every \
             genotyped marker, of size (G, N), where G is the number of genotyped \
             sites and N is the number of samples.
+
+        distance_method (Callable, optional): Callable method to compute the \
+            distance between aggregate mutation spectra. Must accept two 1D numpy \
+            arrays and return a single floating point value. Defaults to \
+            `compute_manual_chisquare`.
 
         n_permutations (int, optional): Number of permutations to perform \
             (i.e., number of times to shuffle the spectra and compute IHDs at \
@@ -389,7 +357,7 @@ def perform_permutation_test(
             at each individual marker).
     """
 
-    # store max cosdist encountered in each permutation, or if desired,
+    # store max distance encountered in each permutation, or if desired,
     # per-marker null distances
     n_markers = genotype_matrix.shape[0]
     null_distances: np.ndarray = np.zeros((
@@ -401,16 +369,13 @@ def perform_permutation_test(
         if pi > 0 and pi % 100 == 0: print(pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)
-        # compute the cosine distances at each marker
 
-        # NOTE: currently recomputing the genotype correlations
-        # in every permutation. this is slow, since we can just
-        # compute them once and re-use them in each permutation.
+        # perform the IHD scan
         perm_distances = perform_ihd_scan(
             shuffled_spectra,
             genotype_matrix,
             genotype_similarity,
-            distance_method,
+            distance_method = distance_method,
         )
 
         if comparison_wide:
