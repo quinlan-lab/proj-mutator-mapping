@@ -42,17 +42,6 @@ class Haplotypes(object):
         while self.n_mut_haps < 1: self.n_mut_haps += 1
         while self.n_wt_haps < 1: self.n_wt_haps += 1
 
-    def compute_haplotype_distance(
-        self,
-        a_haps: np.ndarray,
-        b_haps: np.ndarray,
-    ):
-        a_hap_sums = np.sum(a_haps, axis=0)
-        b_hap_sums = np.sum(b_haps, axis=0)
-
-        dist = cosdist(a_hap_sums, b_hap_sums)
-
-        return dist
 
     def generate_haplotypes(self, pct_to_augment: float = 1.):
 
@@ -147,9 +136,9 @@ def run_permutations(
 
 def main():
 
-    base_mutations = ["C>T", "C>A", "C>G", "A>T", "A>C", "A>G"]
+    base_mutations = ["C>T", "CpG>TpG", "C>A", "C>G", "A>T", "A>C", "A>G"]
     base_mutations = [m.replace(">", r"$\rightarrow$") for m in base_mutations]
-    base_lambdas = [0.4, 0.1, 0.075, 0.075, 0.075, 0.275]
+    base_lambdas = [0.29, 0.17, 0.12, 0.075, 0.1, 0.075, 0.17]
     nucs = ["A", "T", "C", "G"]
 
     kmer_size = 1
@@ -162,6 +151,9 @@ def main():
         # a particular "base" mutation type
         mutations, lambdas = [], []
         for m, l in zip(base_mutations, base_lambdas):
+            if m == "C>T":
+                l = 0.46
+            if m == "CpG>TpG": continue
             per_k_l = l / 16
             orig, new = m.split('>')
             for fp in nucs:
@@ -188,7 +180,7 @@ def main():
             list(range(16, 32)),
         ]
     else:
-        mutation_idxs = [0, 1, 2]
+        mutation_idxs = [0, 2, 3]
     mutation_count = [10, 50, 100, 500]  # number of mutations to simulate per haplotypes
     pct_to_augment = [1.]  # fraction of mutations subject to effects of mutator
     n_markers = [1]  # number of markers used
