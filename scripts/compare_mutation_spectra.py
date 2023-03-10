@@ -12,11 +12,11 @@ def mutation_comparison(
     sub_1_counts: np.ndarray,
     mut2idx: Dict[str, int],
     nmer4norm=None,
-    title=r"$log_{2}$" +" ratio of singleton fractions\n in strains with D vs. B haplotypes at QTL",
+    title=r"$log_{2}$" +" ratio of singleton fractions in strains with D vs. B haplotypes at QTL",
     outname='heatmap.png',
     plot_type='heatmap',
-    vmin: float = -1,
-    vmax: float = 1,
+    vmin= None,
+    vmax= None,
 ):
     """
     plot a comparison of mutation spectra in one subset of strains
@@ -26,7 +26,7 @@ def mutation_comparison(
     mut2idx: dictionary mapping mutation types to indices
     """
 
-    plt.rc('font', size=14)
+    plt.rc('font', size=16)
 
     # map "base" mutation types to output indices
     # in the final plot. the heatmap will have 6
@@ -111,11 +111,11 @@ def mutation_comparison(
         y = sub_1_counts[mut_idx]
 
         if any([c == 0 for c in [x, np.sum(sub_0_counts), y, np.sum(sub_1_counts)]]): 
-            p = 1
+            stat, p = 0, 1
         else:
             # chi2 contingency table to compare mutation
             # frequencies in either subset
-            _, p, _, _ = ss.chi2_contingency(
+            stat, p, _, _ = ss.chi2_contingency(
                 [[x, np.sum(sub_0_counts)], [y, np.sum(sub_1_counts)]], )
 
         orig_mut = muts[mut_idx]
@@ -151,138 +151,55 @@ def mutation_comparison(
 
     # find indices where ratio of sub_0:sub_1 is significant
     # at Bonferonni-corrected p-value
-    flat_pvals = pvals.flatten()
-    reject, adj_pvals, _, _ =  multipletests(flat_pvals, alpha=0.05, method="fdr_bh")
-    pvals = adj_pvals.reshape(out_array.shape)
-    sig_pvals = np.where(pvals < 0.05)# / flat_pvals.shape[0]))
-    non_sig_pvals = np.where(pvals >= 0.05)
+    sig_pvals = np.where(pvals < 0.05 / 96)
 
-    sns.set_style('ticks')
+    f, ax = plt.subplots(figsize=(14, 3))
 
-    if plot_type == "scatter":
+    sns.heatmap(
+        out_array.T,
+        cmap="coolwarm",
+        edgecolor='w',
+        vmin=vmin,
+        vmax=vmin,
+    )
 
-        f, ax = plt.subplots()
+    # plot "dots" in heatmap where the ratio is significant
+    for (x, y) in zip(sig_pvals[0], sig_pvals[1]):
+        
+        ax.scatter(x + 0.5, y + 0.5, c='w', edgecolor='k')
 
-        sns.set_style('ticks')
+    # add boundary lines between each block of 16 mutations
+    for x in np.arange(0, out_shape[0], 4):
+        print (x)
+        ax.axvline(x=x, ls=':', c='k')
 
-        # map base mutation types to colors to aesthetically
-        # group 3-mer mutation in plot
-        mut_colors = dict(
-            zip(["A>C", "A>G", "A>T", "C>A", "C>G", "C>T"],
-                sns.color_palette('colorblind', 6)[::-1]))
-
-        x_max, y_max = 0, 0
-
-        # plot data, and record maximum x and y values
-        # so that we can plot an abline later
-
-        # plot significant values first, with a black stroke
-        # on outside of circles
-        for (y, x) in zip(sig_pvals[0], sig_pvals[1]):
-            x_frac = sub_0_counts_grid[y, x] / np.sum(sub_0_counts_grid)
-            y_frac = sub_1_counts_grid[y, x] / np.sum(sub_1_counts_grid)
-
-            if y_frac > y_max: y_max = y_frac
-            if x_frac > x_max: x_max = x_frac
-
-            base_mut = base_muts_out[y, x]
-            ax.scatter(x_frac,
-                       y_frac,
-                       edgecolor='k',
-                       color=mut_colors[base_mut],
-                       s=75)
-
-        # then plot non-significant values, with a white stroke
-        # on outside of circles
-        for (y, x) in zip(non_sig_pvals[0], non_sig_pvals[1]):
-            x_frac = sub_0_counts_grid[y, x] / np.sum(sub_0_counts_grid)
-            y_frac = sub_1_counts_grid[y, x] / np.sum(sub_1_counts_grid)
-
-            if y_frac > y_max: y_max = y_frac
-            if x_frac > x_max: x_max = x_frac
-
-            base_mut = base_muts_out[y, x]
-
-            ax.scatter(
-                x_frac,
-                y_frac,
-                edgecolor='w',
-                color=mut_colors[base_mut],
-                s=75,
-            )
-
-        ax.axline((0, 0), (x_max, y_max), color='k', zorder=0)
-
-        # generate a custom legend, describing the above
-        # mappings of mutations to colors
-        custom_legend = [
-            Line2D(
-                [0],
-                [0],
-                marker='o',
-                color='w',
-                label=mut,
-                markerfacecolor=mut_colors[mut],
-                markersize=10,
-            ) for mut in mut_colors
-        ]
-
-        ax.legend(handles=custom_legend, frameon=False)
-
-        ax.set_xlabel("Fraction of singletons in CC\nstrains with IAP element")
-        ax.set_ylabel("Fraction of singletons in CC\nstrains without IAP element")
-
-        sns.despine(ax=ax, top=True, right=True)
-
-        f.tight_layout()
-
-        f.savefig(outname, bbox_inches='tight', dpi=300)
-
-    elif plot_type == "heatmap":
-        f, ax = plt.subplots(figsize=(4, 8))
-
-        cmap = sns.diverging_palette(230, 15, as_cmap=True)
-
-        sns.heatmap(
-            out_array,
-            cmap="coolwarm",
-            edgecolor='w',
-            vmin=vmin,
-            vmax=vmax,
-        )
-
-        # plot "dots" in heatmap where the ratio is significant
-        for (y, x) in zip(sig_pvals[0], sig_pvals[1]):
+    # add in y-axis labels
+    xlabs = []
+    x2labs = []
+    for i, m in enumerate(muts_out[:, 0].T):
+        m_split = m.split('>')
+        xlab = None
+        if i == 0: xlab = "5'-" + m_split[0][0]
+        else:
             
-            ax.scatter(x + 0.5, y + 0.5, c='w', edgecolor='k')
+            xlab = m_split[0][0]
+        xlabs.append(xlab)
 
-        # add boundary lines between each block of 16 mutations
-        for x in np.arange(0, out_shape[0], 4):
-            ax.axhline(y=x, ls=':', c='k')
+    # and x-axis labels
+    ylabs = [
+        "3'-" + m[-1] if i == 0 else m[-1]
+        for i, m in enumerate(muts_out[-1])
+    ]
 
-        # add in y-axis labels
-        ylabs = []
-        for i, m in enumerate(muts_out[:, 0]):
-            m_split = m.split('>')
-            ylab = None
-            if i == 0: ylab = "5'-" + m_split[0][0]
-            else:
-                if i in (2, 6, 10, 14, 18, 22):
-                    ylab = m_split[0][1] + r'$\to$' + m_split[1][
-                        1] + r'  ' + m_split[0][0]
-                else:
-                    ylab = m_split[0][0]
-            ylabs.append(ylab)
+    ax.set_xticks(np.arange(len(xlabs)) + 0.5)
 
-        # and x-axis labels
-        xlab = [
-            "3'-" + m[-1] if i == 0 else m[-1]
-            for i, m in enumerate(muts_out[-1])
-        ]
-
-        ax.set_xticklabels(xlab)
-        ax.set_yticklabels(ylabs, rotation=0)
-
-        ax.set_title(title, fontsize=12)
-        f.tight_layout()
-        f.savefig(outname, bbox_inches='tight')
+    ax.set_yticks(np.arange(len(ylabs)) + 0.5)
+    ax.set_xticklabels(xlabs, rotation=0)
+    ax.set_yticklabels(ylabs, rotation=0)
+    ax2 = ax.twiny()
+    ax2.set_xticks(np.arange(2, 23, 4))
+    ax2.set_xlim(0, 24)
+    ax2.set_xticklabels([m.replace(">", r"$\rightarrow$") for m in mut_out_idx.keys()])
+    plt.tick_params(top = False)
+    f.tight_layout()
+    f.savefig(outname, bbox_inches='tight', dpi=300)

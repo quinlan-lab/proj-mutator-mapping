@@ -11,6 +11,7 @@ from statsmodels.stats.multitest import multipletests
 from skbio.stats.composition import clr, ilr
 import sys
 
+
 # adding Folder_2 to the system path
 sys.path.insert(0, '/Users/tomsasani/quinlanlab/proj-mutator-mapping/')
 from ihd.utils import compute_spectra
@@ -37,7 +38,7 @@ samples, mutation_types, spectra = compute_spectra(mutations, k=k)
 
 smp2idx = dict(zip(samples, range(len(samples))))
 mut2idx = dict(zip(mutation_types, range(len(mutation_types))))
-samples_shared = list(set(samples).intersection(set(geno.columns[1:])))
+samples_shared = list(set(samples).intersection(set(geno.columns)))
 
 smp2genotype = {}
 for s in samples_shared:
@@ -45,19 +46,19 @@ for s in samples_shared:
     marker_genos = "-".join([v for k,v in sorted_markers])
     smp2genotype[s] = marker_genos
 
-
 if k == 3:
     a_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v == "D-B"])
     b_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v == "D-D"])
 
+
     a_spectra_sum = np.sum(spectra[a_smp_i], axis=0)
     b_spectra_sum = np.sum(spectra[b_smp_i], axis=0)
-    mutation_comparison(b_spectra_sum, a_spectra_sum, mut2idx, vmin=-1, vmax=1)
+    mutation_comparison(b_spectra_sum, a_spectra_sum, mut2idx, outname="heatmap.png")#, vmin=-1, vmax=1, )
 elif k == 1:
 
     spectra_fracs = spectra / np.sum(spectra, axis=1)[:, np.newaxis]
-    spectra_fracs_clr = ilr(spectra_fracs)
-    #print (spectra_fracs_clr)
+
+    ordered_mutations = list(mut2idx.keys())
 
     df = []
     for s in samples_shared:
@@ -67,12 +68,13 @@ elif k == 1:
         if smp_gens < 0: continue
         if "H" in smp_geno: continue
 
-        #rate_per_gen = spectra[si, mi] / smp2generations[s]
         callable_bp = callable_kmers[callable_kmers["GeneNetwork name"] == s]
 
 
         for m, mi in mut2idx.items():
+            #mi = mut2idx[m]
             base_nuc = m.split(">")[0]
+            if base_nuc == "CpG": base_nuc = "C"
             n_callable_bp = callable_bp[callable_bp["nucleotide"] == base_nuc]["count"].values[0]
             rate = spectra[si, mi] / smp2generations[s] / n_callable_bp
             df.append({
@@ -81,7 +83,8 @@ elif k == 1:
                 'Count': spectra[si, mi],
                 'Total': np.sum(spectra, axis=1)[si],
                 'Fraction': spectra_fracs[si, mi],
-                'CLR_Fraction': spectra_fracs_clr[si, mi - 1] if m != "A>C" else 0,
+                #'CLR_Fraction': spectra_fracs_ilr[si, mi],# if m != ordered_mutations[-1] else -9,
+                #'BC_Fraction': spectra_fracs_box_cox[si, mi],
                 'Generations': smp2generations[s],
                 'Callable': n_callable_bp,
                 'Epoch': smp2epoch[s],
@@ -89,14 +92,14 @@ elif k == 1:
                 'ADJ_AGE': n_callable_bp * smp2generations[s],
                 'Rate': rate,
                 "is_ca": 1 if m == "C>A" else 0,
-                "Haplotype": smp_geno,
+                "Haplotypes": smp_geno,
                 'Haplotype_A': smp_geno.split('-')[0],
                 'Haplotype_B': smp_geno.split('-')[1],
             })
 
     df = pd.DataFrame(df)
     df.to_csv(f"{PROJDIR}/csv/true_tidy_spectra.csv", index=False)
-    df_grouped = df.drop(columns=["sample"]).groupby(["Haplotype", "Mutation type"]).agg(sum).reset_index()
+    df_grouped = df.drop(columns=["sample"]).groupby(["Haplotypes", "Mutation type"]).agg(sum).reset_index()
 
     palette = dict(
         zip(
@@ -117,24 +120,24 @@ elif k == 1:
     phen = "Fraction"
     phen = "Rate"
 
-    f, ax = plt.subplots(figsize=(8, 6))
+    f, ax = plt.subplots(figsize=(14, 6))
     sns.boxplot(
-        data=df,#.sort_values("Mutation type", ascending=True),
+        data=df.sort_values(["Mutation type", "Haplotypes"], ascending=True),
         x="Mutation type",
         y=phen,
-        hue="Haplotype",
+        hue="Haplotypes",
         ax=ax,
         color="white",
         fliersize=0,
     )
     sns.stripplot(
-        data=df,#.sort_values("Mutation type", ascending=True),
+        data=df.sort_values(["Mutation type", "Haplotypes"], ascending=True),
         x="Mutation type",
         y=phen,
         palette=palette,
         ec='k',
         linewidth=0.75,
-        hue="Haplotype",
+        hue="Haplotypes",
         dodge=True,
         ax=ax,
     )
@@ -145,15 +148,15 @@ elif k == 1:
     # increase tick width
     ax.tick_params(width=1.5)
 
-    #ax.set_ylim(0, 0.6)
+    #ax.set_ylim(0, 0.5)
     mutation_type = r"$\rightarrow$".join(["C", "A"])
-    pairs = [
-    ((mutation_type, "B-B"), (mutation_type, "B-D")),
-    ((mutation_type, "B-D"), (mutation_type, "D-D")),
-    ((mutation_type, "D-B"), (mutation_type, "D-D")),
-    #((mutation_type, "B-B"), (mutation_type, "D-B")),
-    #((mutation_type, "B-B"), (mutation_type, "D-D")),
 
+    pairs = [
+        ((mutation_type, "B-B"), (mutation_type, "B-D")),
+        ((mutation_type, "B-D"), (mutation_type, "D-D")),
+        ((mutation_type, "D-B"), (mutation_type, "D-D")),
+        #((mutation_type, "B-B"), (mutation_type, "D-B")),
+        #((mutation_type, "B-B"), (mutation_type, "D-D")),
     ]
 
     annotator = Annotator(
@@ -162,7 +165,7 @@ elif k == 1:
         data=df,
         x="Mutation type",
         y=phen,
-        hue="Haplotype",
+        hue="Haplotypes",
     )
 
     annotator.configure(
@@ -171,14 +174,13 @@ elif k == 1:
         #comparisons_correction="BH",
         text_format='full',
     )
-    annotator.apply_and_annotate()
+    #annotator.apply_and_annotate()
 
     handles, labels = ax.get_legend_handles_labels()
-    print (handles, labels)
     l = plt.legend(
         handles[4:],
         labels[4:],
-        title="Haplotypes at chr4 and chr6 peaks",
+        title="Genotypes at chr4 and chr6 peaks",
         frameon=False,
     )
     f.tight_layout()
@@ -193,8 +195,8 @@ elif k == 1:
     for comparison_mut in df_grouped["Mutation type"].unique():
 
         for a_hap, b_hap in comparisons:
-            a_hap_df = df_grouped[df_grouped["Haplotype"] == a_hap]
-            b_hap_df = df_grouped[df_grouped["Haplotype"] == b_hap]
+            a_hap_df = df_grouped[df_grouped["Haplotypes"] == a_hap]
+            b_hap_df = df_grouped[df_grouped["Haplotypes"] == b_hap]
             # is focal mut and A hap
             a_fore = a_hap_df[a_hap_df["Mutation type"] == comparison_mut]["Count"].values[0]
             # is focal mut and B hap
@@ -232,7 +234,7 @@ elif k == 1:
         data=df_grouped,
         x="Mutation type",
         y="Aggregate fraction",
-        hue="Haplotype",
+        hue="Haplotypes",
         #ax=ax,
         palette=palette,
         ec='k',
@@ -244,7 +246,7 @@ elif k == 1:
         data=df_grouped,
         x="Mutation type",
         y="Rate",
-        hue="Haplotype",
+        hue="Haplotypes",
     )
 
     annotator.configure(
