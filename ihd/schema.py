@@ -3,7 +3,7 @@ from pandera import Column, Check, DataFrameSchema
 
 IHDResultSchema = DataFrameSchema({
     "marker": Column(str),
-    "Distance": Column(float),#, Check.in_range(min_value=0)),#, max_value=2)),
+    "Distance": Column(float),
     "k": Column(int, Check.isin([1, 3])),
 })
 
@@ -15,6 +15,7 @@ MutationSchema = DataFrameSchema({
 
 MarkerMetadataSchema = DataFrameSchema({
     "marker": Column(str),
+    "chromosome": Column(str, required=False, coerce=True),
     "cM": Column(float, required=False),
     "Mb": Column(float, required=False),
 })

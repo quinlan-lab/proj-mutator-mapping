@@ -51,7 +51,6 @@ def main(args):
     # for the null permutation test, shuffle the rows of the spectra
     # dataframe every time. otherwise keep it the same.
     samples, _, spectra = compute_spectra(mutations_filtered, k=args.k)
-
     print(f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
     total mutations.""")
 
@@ -72,7 +71,6 @@ def main(args):
 
     # compute similarity between allele frequencies at each marker 
     genotype_similarity = compute_genotype_similarity(geno_filtered)
-    
     distance_method = compute_manual_chisquare
     if args.distance_method == "cosine":
         distance_method = compute_manual_cosine_distance
@@ -100,7 +98,7 @@ def main(args):
     )
     X, y = new_df["Genotype correlation"].values, new_df["Spectra distance"].values
     lr = sm.OLS(y, sm.add_constant(X)).fit()
-    print (lr.summary())
+    #print (lr.summary())
     f.savefig("o.png", dpi=200)
 
 

@@ -217,8 +217,8 @@ def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
         b_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
         # compute allele frequencies in each haplotype group
         a_afs, b_afs = (
-            compute_allele_frequency(genotype_matrix[:, a_hap_idxs]),
-            compute_allele_frequency(genotype_matrix[:, b_hap_idxs]),
+            compute_allele_frequency(genotype_matrix[::100, a_hap_idxs]),
+            compute_allele_frequency(genotype_matrix[::100, b_hap_idxs]),
         )
         # compute Pearson correlation between allele frequencies
         af_corr = np.corrcoef(a_afs, b_afs)[0][1]
@@ -385,6 +385,18 @@ def perform_permutation_test(
 
     return null_distances
 
+def find_central_mut(kmer: str) -> str:
+    orig, new = kmer.split('>')
+    fp, tp = orig[0], orig[2]
+    central_orig = orig[1]
+    central_new = new[1]
+
+    if central_orig == "C" and tp == "G" and central_new == "T":
+        return f"{central_orig}p{tp}>{central_new}p{tp}"
+    else:
+        return ">".join([central_orig, central_new])
+
+
 
 def compute_spectra(
     mutations: pd.DataFrame,
@@ -431,7 +443,7 @@ def compute_spectra(
     if k == 1:
         # add base mutation type
         hap_spectra_agg['base_mut'] = hap_spectra_agg['kmer'].apply(
-            lambda k: ">".join([k[1], k[5]]))
+            lambda k: find_central_mut(k))
         hap_spectra_agg = hap_spectra_agg.groupby(['sample', 'base_mut']).agg({
             'count':
             sum
