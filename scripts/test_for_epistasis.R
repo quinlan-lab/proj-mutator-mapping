@@ -44,13 +44,16 @@ rownames(kinship) <- phen_df$sample
 
 # https://sahirbhatnagar.com/blog/2017/10/12/mixed-models-with-kinship-in-r/
 
-gfit1 <- lm(CLR_Fraction ~ Epoch + Haplotype_A * Haplotype_B, data = phen_df)
-gfit2 <- lmekin(CLR_Fraction ~ Epoch + Haplotype_A * Haplotype_B + (1 | sample),
+gfit1 <- lm(Fraction ~ Epoch + Haplotype_A * Haplotype_B, data = phen_df)
+gfit1 <- lmekin(Fraction ~ Epoch + Haplotype_A + Haplotype_B + (1 | sample),
+                 data = phen_df,
+                 varlist = kinship)
+gfit2 <- lmekin(Fraction ~ Haplotype_A * Haplotype_B + (1 | sample),
                  data = phen_df,
                  varlist = kinship)
 
-print(summary(gfit1))
 print(gfit2)
+#print (anova(gfit2, gfit1))
 
 m1 <- glm(Count ~ offset(log(ADJ_AGE)) + Haplotype_A + Haplotype_B,
             data = df,
