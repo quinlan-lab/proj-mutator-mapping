@@ -3,7 +3,6 @@ from ihd.utils import (
     compute_haplotype_distance,
     perform_ihd_scan,
     perform_permutation_test,
-    compute_mean,
     compute_spectra,
     shuffle_spectra,
     compute_nansum,
@@ -41,20 +40,6 @@ def test_compute_haplotype_distance(
         ),
         exp,
     )
-
-
-def test_compute_mean(
-    wt_haplotype_array: np.ndarray,
-    mut_haplotype_array: np.ndarray,
-):
-    assert np.all(np.isclose(
-        compute_mean(wt_haplotype_array, row=False),
-        np.array([2., 3., 3., 3., 2., 1.]),
-    ))
-    assert np.all(np.isclose(
-        compute_mean(mut_haplotype_array, row=False),
-        np.array([2., 2., 5., 3., 4., 3.]),
-    ))
 
 
 @pytest.mark.parametrize("a,b", [

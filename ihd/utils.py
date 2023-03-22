@@ -101,30 +101,6 @@ def compute_manual_cosine_distance(a: np.ndarray, b: np.ndarray) -> np.float64:
 
 
 @numba.njit
-def compute_mean(a: np.ndarray, row = True) -> np.ndarray:
-    """Compute the mean of a 2D numpy array
-    on either a per-column or per-row basis. Since `numba` does not
-    support kwargs in the `np.mean` function, it's
-    necessary to piece this out into its own function
-    so that it can be decorated with `numba.njit`.
-
-    Args:
-        a (np.ndarray): A 2D numpy array of size (N, M).
-
-        row (bool, optional): Whether to calculate means by row or column. Defaults to True.
-
-    Returns:
-        colmeans (np.ndarray): A 1D numpy array of size (M, ) or size (N, ) \
-             containing column-wise or row-wise means of the input.
-    """
-    idx = 0 if row else 1
-    empty_a = np.zeros(a.shape[idx])
-    for i in range(a.shape[1]):
-        empty_a[i] = np.mean(a[i]) if row else np.mean(a[:, i])
-    return empty_a
-
-
-@numba.njit
 def compute_haplotype_distance(
     a_haps: np.ndarray,
     b_haps: np.ndarray,
