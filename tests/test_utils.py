@@ -11,6 +11,7 @@ from ihd.utils import (
     compute_genotype_similarity,
     compute_residuals,
     compute_manual_chisquare,
+    find_central_mut,
 )
 import pytest
 import scipy.stats as ss
@@ -64,7 +65,6 @@ def test_compute_manual_chisquare(a, b):
     assert np.isclose(compute_manual_chisquare(a, b), exp_stat)
 
 
-
 @pytest.mark.xfail
 def test_compute_spectra(bad_mutation_dataframe):
     _, _, _ = compute_spectra(bad_mutation_dataframe, k=1)
@@ -74,9 +74,11 @@ def test_compute_nansum(genotype_array):
     rowsums = compute_nansum(genotype_array, row=True)
     assert np.array_equal(np.array([4., 3., 2.]), rowsums,)
 
+
 def test_compute_nansum_nans(genotype_array_nans):
     rowsums = compute_nansum(genotype_array_nans, row=True)
     assert np.array_equal(np.array([4., 2., 0.]), rowsums,)
+
 
 def test_compute_allele_frequency_nans(genotype_array_nans):
     af = compute_allele_frequency(genotype_array_nans)
@@ -105,9 +107,11 @@ def test_compute_spectra(good_mutation_dataframe):
         ]),
     )
 
+
 @pytest.mark.parametrize("X,y", [(np.arange(5).astype(np.float64), np.arange(5).astype(np.float64)),])
 def test_compute_residuals(X, y):
     assert np.allclose(compute_residuals(X, y), np.zeros(5))
+
 
 def test_perform_ihd_scan(spectra_array, genotype_array, genotype_similarity):
     focal_dists = perform_ihd_scan(
@@ -148,3 +152,15 @@ def test_perform_ihd_permutation_test(
         assert perm_res.shape[0] == n_permutations and perm_res.shape[1] == genotype_array.shape[0]
     else:
         assert perm_res.shape[0] == n_permutations
+
+
+@pytest.mark.parametrize("kmer,exp", [
+    ("CCT>CAT", "C>A"),
+    ("CCG>CTG", "CpG>TpG"),
+    ("ATN>NCG", "T>C"),
+    pytest.param("A>G", "A>G", marks=pytest.mark.xfail(reason='input kmer is not a 3-mer')),
+    pytest.param("ACG>ATG", "C>T", marks=pytest.mark.xfail(reason='should treat as CpG')),
+])
+def test_find_central_mut(kmer, exp):
+    assert find_central_mut(kmer) == exp
+    
