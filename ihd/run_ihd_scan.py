@@ -48,8 +48,7 @@ def main(args):
 
     mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
 
-    # for the null permutation test, shuffle the rows of the spectra
-    # dataframe every time. otherwise keep it the same.
+    # get a list of samples and their corresponding mutation spectra
     samples, _, spectra = compute_spectra(mutations_filtered, k=args.k)
     print(f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
     total mutations.""")
@@ -69,7 +68,7 @@ def main(args):
     geno_filtered = geno_asint.iloc[idxs2keep][samples].values
     markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
 
-    # compute similarity between allele frequencies at each marker 
+    # compute similarity between allele frequencies at each marker
     genotype_similarity = compute_genotype_similarity(geno_filtered)
     distance_method = compute_manual_chisquare
     if args.distance_method == "cosine":
@@ -83,24 +82,6 @@ def main(args):
         genotype_similarity,
         distance_method=distance_method,
     )
-    
-    f, ax = plt.subplots()
-    new_df = pd.DataFrame({
-        "Genotype correlation": genotype_similarity,
-        "Spectra distance": focal_dists,
-    })
-    sns.regplot(
-        data=new_df,
-        x="Genotype correlation",
-        y="Spectra distance",
-        ax=ax,
-        scatter_kws={"alpha": 0.25}
-    )
-    X, y = new_df["Genotype correlation"].values, new_df["Spectra distance"].values
-    lr = sm.OLS(y, sm.add_constant(X)).fit()
-    #print (lr.summary())
-    f.savefig("o.png", dpi=200)
-
 
     res_df = pd.DataFrame({
         'marker': markers_filtered,
@@ -119,9 +100,8 @@ def main(args):
         comparison_wide=args.comparison_wide,
     )
 
-    # compute the 95th percentile of the maximum distance
-    # distribution to figure out the distance corresponding to an alpha
-    # of 0.05
+    # compute the Nth percentile of the maximum distance
+    # distribution to figure out the distance thresholds
     for pctile in (20, 5, 1):
         score_pctile = np.percentile(null_distances, 100 - pctile, axis=0)
         if not args.comparison_wide: score_pctile = score_pctile[0]
@@ -163,9 +143,13 @@ if __name__ == "__main__":
         action="store_true",
         help="Use per-marker instead of genome-wide distance thresholds.",
     )
-    p.add_argument("-adj_column", default=None)
-    p.add_argument("-chrom", default=None)
-    p.add_argument("-distance_method", default="chisquare", type=str)
+    p.add_argument(
+        "-distance_method",
+        default="chisquare",
+        type=str,
+        help=
+        """Method to use for calculating distance between aggregate spectra. Options are 'cosine' and 'chisquare', default is 'chisquare'.""",
+    )
     args = p.parse_args()
 
     main(args)

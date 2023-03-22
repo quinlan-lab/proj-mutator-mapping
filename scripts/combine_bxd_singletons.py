@@ -3,26 +3,6 @@ import argparse
 import re
 from collections import Counter
 import json
-from schema import MarkerMetadataSchema
-
-
-def find_haplotype(genos: pd.DataFrame, sample: str) -> str:
-    """
-    figure out whether each strain has a B or D haplotype,
-    or is heterozygous, at the genotype marker at the peak
-    of the QTL on chromosome 4
-    """
-
-    genos_in_smp = genos[sample].values
-    geno_freq = Counter(genos_in_smp)
-    total = sum([i[1] for i in geno_freq.items()])
-    most_freq_geno = "H"
-    for g in ["B", "D"]:
-        if geno_freq[g] > (total * 0.5):
-            most_freq_geno = g[0]
-        else: continue
-
-    return most_freq_geno
 
 
 def get_generation(gen: str) -> int:
@@ -60,6 +40,9 @@ def get_generation(gen: str) -> int:
 
 
 def main(args):
+
+    # read in the singleton files and combine into
+    # a single dataframe
     combined = []
     for fh in args.singletons:
         df = pd.read_csv(fh)
@@ -74,14 +57,9 @@ def main(args):
 
     geno_raw = pd.read_csv(config_dict['geno'])
     marker_info = pd.read_csv(config_dict['markers'])
-    MarkerMetadataSchema.validate(marker_info)
 
     # merge genotype and marker information
     geno = geno_raw.merge(marker_info, on="marker")
-
-    # get genotypes at top marker at chr4 eQTL
-    rsids = ["rs52263933"]
-    genos_at_markers = geno[geno['marker'].isin(rsids)]
 
     metadata = pd.read_excel(args.metadata)
     metadata['n_generations'] = metadata['Generation at sequencing'].apply(lambda g: get_generation(g))
@@ -93,6 +71,7 @@ def main(args):
     ]].dropna()
     metadata = metadata[metadata['n_generations'] != "NA"].astype({'n_generations': int})
 
+    # merge the singleton data with relevant metadata
     combined_merged = combined.merge(
         metadata,
         left_on="bxd_strain",
@@ -100,24 +79,49 @@ def main(args):
     )
     combined_merged['sample'] = combined_merged['GeneNetwork name']
 
-    combined_merged['haplotype_at_qtl'] = combined_merged['sample'].apply(
-    lambda s: find_haplotype(genos_at_markers, s)
-    if s in genos_at_markers.columns else "NA")
+    # if desired, only output data for samples that have D genotypes
+    # at the chr4 QTL we identified previously
+    if args.condition_on_mutator:
+        geno_at_marker = geno[geno['marker'] == "rs52263933"]
+        smp2geno = geno_at_marker.to_dict(orient="list")
+        filtered_samples = [s for s,g in smp2geno.items() if g[0] == "D"]
+        combined_merged = combined_merged[combined_merged["sample"].isin(filtered_samples)]
 
-    # combined_merged = combined_merged[combined_merged['n_generations'] >= 20]
-    # combined_merged = combined_merged[combined_merged['true_epoch'].isin([2, 4])]
-    # combined_merged = combined_merged[combined_merged['haplotype_at_qtl'] == "D"]
-
-    combined_merged = combined_merged[combined_merged['sample'] != "BXD68"]
+    # remove strains that haven't been inbred for a sufficient number of generations
+    # and remove the BXD68 outlier
+    combined_merged = combined_merged[(combined_merged['n_generations'] > 20)
+                                      & (combined_merged["sample"] != "BXD68")]
     combined_merged['count'] = 1
     combined_merged.to_csv(args.out, index=False)
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--singletons", nargs="+")
-    p.add_argument("--metadata")
-    p.add_argument("--config")
-    p.add_argument("--out")
+    p.add_argument(
+        "--singletons",
+        nargs="+",
+        help=
+        """paths to each of the files containing per-chromosome singleton mutation info from Sasani et al. 2022""",
+    )
+    p.add_argument(
+        "--metadata",
+        help="""path to Excel file containing metadata about each BXD line""",
+    )
+    p.add_argument(
+        "--config",
+        help=
+        """path to config JSON file containing paths to genotype and marker files for BXDs.""",
+    )
+    p.add_argument(
+        "--out",
+        help=
+        """name of output file in which we'll store aggregate singleton mutation data""",
+    )
+    p.add_argument(
+        "-condition_on_mutator",
+        action="store_true",
+        help=
+        """if specified, only generate a combined singleton file using BXDs with D alleles at the chromosome 4 mutator locus discovered in Sasani et al. 2022""",
+    )
     args = p.parse_args()
     main(args)

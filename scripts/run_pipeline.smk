@@ -3,11 +3,13 @@ PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
  
-crosses = ["bxd", "cc"]
+crosses = ["bxd"]
+samples = ["all", "conditioned"]
+kmer_sizes = [1, 3]
+
 rule all:
     input:
-        expand(PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv", cross=crosses, k=[1,3]),
-        expand(PROJDIR + "/csv/{cross}/k{k}.genome.{chrom}.manhattan_plot.png", cross=crosses, k = [1,3], chrom=["4", "6", "7"])
+        expand(PROJDIR + "/csv/{cross}/k{k}.genome.{samples}_samples.significant_markers.csv", cross=crosses, k=kmer_sizes, samples=samples,),
 
 rule download_cc_geno:
     input:
@@ -64,6 +66,7 @@ rule format_cc_mutations:
         df["count"] = 1
         df[["sample", "kmer", "count"]].to_csv(output.formatted, index=False)
 
+
 rule fix_cc_markers:
     input:
         orig = PROJDIR + "/data/genotypes/cc.markers.tmp"
@@ -75,6 +78,7 @@ rule fix_cc_markers:
         df["Mb"] = df["position(b38)"] / 1_000_000
         df.to_csv(output.new, index=False)
 
+
 rule download_singletons:
     input:
     output:
@@ -84,14 +88,6 @@ rule download_singletons:
         wget -O {output} https://raw.githubusercontent.com/tomsasani/bxd_mutator_manuscript/main/data/singleton_vars/{wildcards.chrom}_singleton_vars.exclude.csv
         """
 
-rule download_shared:
-    input:
-    output:
-        temp(PROJDIR + "/data/mutations/{chrom}.shared.csv")
-    shell:
-        """
-        wget -O {output} https://raw.githubusercontent.com/tomsasani/bxd_mutator_manuscript/main/data/shared_vars/{wildcards.chrom}_shared_vars.exclude.csv
-        """
 
 rule combine_bxd_singletons:
     input:
@@ -100,7 +96,7 @@ rule combine_bxd_singletons:
         metadata = PROJDIR + "/data/bam_names_to_metadata.xlsx",
         config = PROJDIR + "/data/json/{cross}.json",
     output:
-        PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.csv"
+        PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.all_samples.csv"
     shell:
         """
         python {input.py_script} \
@@ -110,65 +106,52 @@ rule combine_bxd_singletons:
                         --out {output}
         """
 
-rule combine_bxd_shared:
+rule combine_bxd_singletons_conditional:
     input:
-        singletons = expand(PROJDIR + "/data/mutations/{chrom}.shared.csv", chrom=chroms),
+        singletons = expand(PROJDIR + "/data/mutations/{chrom}.singletons.csv", chrom=chroms),
         py_script = PROJDIR + "/scripts/combine_bxd_singletons.py",
         metadata = PROJDIR + "/data/bam_names_to_metadata.xlsx",
         config = PROJDIR + "/data/json/{cross}.json",
     output:
-        PROJDIR + "/data/mutations/{cross}/annotated_filtered_shared.csv"
+        PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.conditioned_samples.csv"
     shell:
         """
         python {input.py_script} \
                         --metadata {input.metadata} \
                         --singletons {input.singletons} \
                         --config {input.config} \
-                        --out {output}
+                        --out {output} \
+                        -condition_on_mutator
         """
 
-rule run_manhattan:
+
+rule run_ihd:
     input:
-        singletons = PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.csv",
+        singletons = PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.{samples}_samples.csv",
         geno = PROJDIR + "/data/genotypes/{cross}.geno",
         config = PROJDIR + "/data/json/{cross}.json",
         py_script = PROJDIR + "/ihd/run_ihd_scan.py"
     output:
-        PROJDIR + "/csv/{cross}.k{k}.genome.results.csv"
+        PROJDIR + "/csv/{cross}.k{k}.genome.{samples}_samples.results.csv"
     shell:
         """
         python {input.py_script} --mutations {input.singletons} \
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
-                                 -permutations 1000 
+                                 -permutations 1000 \
         """
 
-rule plot_manhattan:
+rule plot_ihd:
     input:
-        results = PROJDIR + "/csv/{cross}.k{k}.genome.results.csv",
+        results = PROJDIR + "/csv/{cross}.k{k}.genome.{samples}_samples.results.csv",
         markers = PROJDIR + "/data/genotypes/{cross}.markers",
         py_script = PROJDIR + "/ihd/plot_ihd_results.py"
     output:
-        PROJDIR + "/csv/{cross}/k{k}.genome.significant_markers.csv"
+        PROJDIR + "/csv/{cross}/k{k}.genome.{samples}_samples.significant_markers.csv"
     shell:
         """
         python {input.py_script} --markers {input.markers} \
                                  --results {input.results} \
-                                 --outpref /Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome \
-        """
-
-rule plot_manhattan_chrom:
-    input:
-        results = PROJDIR + "/csv/{cross}.k{k}.genome.results.csv",
-        markers = PROJDIR + "/data/genotypes/{cross}.markers",
-        py_script = PROJDIR + "/ihd/plot_ihd_results.py"
-    output:
-        PROJDIR + "/csv/{cross}/k{k}.genome.{chrom}.manhattan_plot.png"
-    shell:
-        """
-        python {input.py_script} --markers {input.markers} \
-                                 --results {input.results} \
-                                 --outpref /Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome \
-                                 -chrom {wildcards.chrom}
+                                 --outpref /Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome.{wildcards.samples}_samples \
         """
