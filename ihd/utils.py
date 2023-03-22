@@ -191,7 +191,7 @@ def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
     return shuffled_spectra
 
 
-@numba.njit()
+@numba.njit
 def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
     """Compute the genetic similarity between groups of haplotypes
     at every genotyped marker. At each marker, divide the haplotypes into
@@ -227,7 +227,7 @@ def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
     return genotype_sims
 
 
-@numba.njit()
+@numba.njit
 def perform_ihd_scan(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
@@ -305,7 +305,7 @@ def compute_residuals(
     return resids
 
 
-@numba.njit()
+@numba.njit
 def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
@@ -385,6 +385,7 @@ def perform_permutation_test(
 
     return null_distances
 
+
 def find_central_mut(kmer: str) -> str:
     orig, new = kmer.split('>')
     fp, tp = orig[0], orig[2]
@@ -395,7 +396,6 @@ def find_central_mut(kmer: str) -> str:
         return f"{central_orig}p{tp}>{central_new}p{tp}"
     else:
         return ">".join([central_orig, central_new])
-
 
 
 def compute_spectra(
