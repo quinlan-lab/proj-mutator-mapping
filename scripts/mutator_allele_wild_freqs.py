@@ -15,12 +15,14 @@ candidate_mutators = [
     "chr6:113328509-113328510",
     "chr6:108075852-108075853",
     "chr6:108076364-108076365",
+    "chr6:115849643-115849644"
 ]
 
 candidate_names = [
     "Ogg1\n(p.Thr95Ala)",
     "Setmar\n(p.Leu103Phe)",
     "Setmar\n(p.Ser273Arg)",
+    "Mbd4\n(p.Asp129Asn)"
 ]
 
 res = []
@@ -40,12 +42,13 @@ for region, name in zip(candidate_mutators, candidate_names):
 
 res_df = pd.DataFrame(res)
 
+
 res_df['Subspecies'] = res_df['sample'].apply(lambda s: s.split('_')[0])
 res_df_grouped = res_df.groupby(['Mutation', 'Subspecies']).agg({
     'genotype':
     lambda g: sum(g) / (len(g) * 2)
 }).reset_index().rename(columns={'genotype': "Allele frequency"}, )
-
+print (res_df_grouped)
 palette = ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"]
 
 f, ax = plt.subplots(figsize=(10, 6))
