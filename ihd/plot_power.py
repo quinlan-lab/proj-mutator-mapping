@@ -17,13 +17,14 @@ replace_dict = {
     "effect_size": "Mutator effect size",
     "n_mutations": "# mutations",
     "n_markers": "# markers",
+    "tag_strength": "Tag strength",
 }
 df.rename(columns=replace_dict, inplace=True)
 
 
-g = sns.FacetGrid(df, row="# mutations", col="# haplotypes", aspect=1.5)
-g.map(sns.lineplot, "Mutator effect size", "Power", "# markers")
-g.add_legend(title = "# of genotyped markers")
+g = sns.FacetGrid(data=df, row="Tag strength", col="# haplotypes", aspect=1.5)
+g.map(sns.lineplot, "Mutator effect size", "Power", "# mutations")
+g.add_legend(title = "# of mutations\nper haplotype")
 g.tight_layout()
 
 

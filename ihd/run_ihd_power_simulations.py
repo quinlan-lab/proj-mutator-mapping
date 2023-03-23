@@ -179,15 +179,15 @@ def run_simulation_trials(
 def main():
 
     # define parameter space for simulations
-    number_of_markers = [100, 1_000, 10_000]
-    number_of_haplotypes = [1_000]
-    number_of_mutations = [10]
+    number_of_markers = [100]
+    number_of_haplotypes = [100, 1_000]
+    number_of_mutations = [5, 10, 50]
     number_of_permutations = [100]
     mutation_types = ["C>T"]
     effect_sizes = list(np.arange(1, 1.5, 0.1))
     expected_marker_afs = [0.5]
-    number_of_trials = 20
-    tag_strength = 1.
+    number_of_trials = 100
+    tag_strengths = [0.25, 0.5, 1.]
 
     base_mutations = ["C>T", "CpG>TpG", "C>A", "C>G", "A>T", "A>C", "A>G"]
     base_lambdas = np.array([0.29, 0.17, 0.12, 0.075, 0.1, 0.075, 0.17])
@@ -195,15 +195,26 @@ def main():
 
     res_df = []
 
-    for n_markers, n_haplotypes, n_mutations, n_permutations, mutation_type, effect_size, exp_af in tqdm.tqdm(itertools.product(
-            number_of_markers,
-            number_of_haplotypes,
-            number_of_mutations,
-            number_of_permutations,
-            mutation_types,
-            effect_sizes,
-            expected_marker_afs,
-    )):
+    for (
+            n_markers,
+            n_haplotypes,
+            n_mutations,
+            n_permutations,
+            mutation_type,
+            effect_size,
+            exp_af,
+            tag_strength,
+    ) in tqdm.tqdm(
+            itertools.product(
+                number_of_markers,
+                number_of_haplotypes,
+                number_of_mutations,
+                number_of_permutations,
+                mutation_types,
+                effect_sizes,
+                expected_marker_afs,
+                tag_strengths,
+            )):
 
         mutation_type_idx = mut2idx[mutation_type]
 
@@ -233,6 +244,7 @@ def main():
                 "effect_size": effect_size,
                 "mutation_type": mutation_type,
                 "exp_af": exp_af,
+                "tag_strength": tag_strength,
                 "trial": i,
                 "pval": pval,
             })
