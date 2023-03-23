@@ -9,14 +9,17 @@ smp2idx = dict(zip(vcf.samples, range(len(vcf.samples))))
 DBA = "sample_4512-JFI-0334_DBA_2J_three_lanes_phased_possorted_bam"
 C57 = "sample_4512-JFI-0333_C57BL_6J_two_lanes_phased_possorted_bam"
 
+outfh = open(f"{PROJDIR}/data/vcf/ns.vcf", "w")
+print (vcf.raw_header.rstrip(), file=outfh)
+
 for v in vcf:
     if v.POS < 109_000_000: continue 
     if v.POS > 119_000_000: break
     if len(v.ALT) > 1: continue
     annotations = v.INFO.get("ANN").split(';')
     rel_ann = [a for a in annotations if a.split('|')[7] == "protein_coding"]
-    if not any([a.split('|')[2] in ("MODERATE", "HIGH") for a in rel_ann]):
-        continue
+    #if not any([a.split('|')[2] in ("MODERATE", "HIGH") for a in rel_ann]):
+    #    continue
 
     gts = v.gt_types
     gqs = v.gt_quals
@@ -46,4 +49,6 @@ for v in vcf:
     for a in rel_ann:
         alt, cons, impact, gene = a.split('|')[:4]
         change = a.split('|')[10]
+        #if gene in ("Ogg1", "Mbd4"):
+        print (str(v).rstrip(), file=outfh)
         print ('\t'.join(list(map(str, [v.CHROM, v.start, v.end, ac, an, cons, impact, gene, change]))))
