@@ -13,7 +13,7 @@ rule all:
 rule download_ref:
     input:
     output:
-        PROJDIR + "/data/ref/mm10.fa.gz"
+        temp(PROJDIR + "/data/ref/mm10.fa.gz")
     shell:
         """
         wget -O {output} \
@@ -24,7 +24,7 @@ rule unzip_ref:
     input:
         PROJDIR + "/data/ref/mm10.fa.gz"
     output:
-        PROJDIR + "/data/ref/mm10.fa"
+        temp(PROJDIR + "/data/ref/mm10.fa")
     shell:
         """
         gzip -d {input}
@@ -44,7 +44,7 @@ rule download_exclude:
 rule download_coverage:
     input:
     output:
-        PROJDIR + "/data/coverage/{sample}.bam.thresholds.bed"
+        temp(PROJDIR + "/data/coverage/{sample}.bam.thresholds.bed")
     shell:
         """
         wget -O {output} https://raw.githubusercontent.com/tomsasani/bxd_mutator_manuscript/main/data/coverage_files/{wildcards.sample}.bam.thresholds.bed
@@ -69,15 +69,24 @@ rule calculate_kmer_content:
 rule combine_kmer_content:
     input:
         fhs = expand(PROJDIR + "/data/coverage/per-sample/{sample}.callable_kmer_content.csv", sample=samples),
-        script = PROJDIR + "/scripts/combine_kmer_content.py",
         metadata = PROJDIR + "/data/bam_names_to_metadata.xlsx",
     output:
-        PROJDIR + "/data/coverage/combined.callable_kmer_content.csv"
-    shell:
-        """
-        python {input.script} --csvs {input.fhs} \
-                              --metadata {input.metadata} \
-                              --out {output}
-        """
+        kmer_content = PROJDIR + "/data/coverage/combined.callable_kmer_content.csv"
+    run:
+        res = []
+        for fh in {input.fhs}:
+            df = pd.read_csv(fh)
+            res.append(df)
+        res_df = pd.concat(res)
+
+        metadata = pd.read_excel({input.metadata}).dropna()
+
+        res_df_merged = res_df.merge(
+            metadata,
+            left_on="sample",
+            right_on="bam_name",
+        )
+
+        res_df_merged.to_csv({output.kmer_content}, index=False)
 
     

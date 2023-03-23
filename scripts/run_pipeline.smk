@@ -1,5 +1,8 @@
 PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
 
+BCFTOOLS = "/Users/tomsasani/bin/bin/bcftools"
+TABIX = "/Users/tomsasani/bin/bin/tabix"
+
 chroms_ = list(map(str, range(1, 20)))
 chroms = ['chr' + c for c in chroms_]
  
@@ -9,7 +12,8 @@ kmer_sizes = [1, 3]
 
 rule all:
     input:
-        expand(PROJDIR + "/csv/{cross}/k{k}.genome.{samples}_samples.significant_markers.csv", cross=crosses, k=kmer_sizes, samples=samples,),
+        #expand(PROJDIR + "/csv/{cross}/k{k}.genome.{samples}_samples.significant_markers.csv", cross=crosses, k=kmer_sizes, samples=samples,),
+        PROJDIR + "/img/mgp_spectra_comparison.png"
 
 rule download_cc_geno:
     input:
@@ -124,7 +128,6 @@ rule combine_bxd_singletons_conditional:
                         -condition_on_mutator
         """
 
-
 rule run_ihd:
     input:
         singletons = PROJDIR + "/data/mutations/{cross}/annotated_filtered_singletons.{samples}_samples.csv",
@@ -154,4 +157,42 @@ rule plot_ihd:
         python {input.py_script} --markers {input.markers} \
                                  --results {input.results} \
                                  --outpref /Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/{wildcards.cross}/k{wildcards.k}.genome.{wildcards.samples}_samples \
+        """
+
+rule download_mgp_vcf:
+    input:
+        BCFTOOLS_PATH = BCFTOOLS,
+
+    output:
+        PROJDIR + "/data/vcf/mgp.regions.vcf.gz"
+    shell:
+        """
+        {input.BCFTOOLS_PATH} view -Oz -o {output} -r 4:100000000-120000000,6:100000000-120000000 \
+            ftp://ftp.ebi.ac.uk/pub/databases/mousegenomes/REL-1505-SNPs_Indels/mgp.v5.merged.snps_all.dbSNP142.vcf.gz
+        """
+
+rule tabix_mgp_vcf:
+    input:
+        vcf = PROJDIR + "/data/vcf/mgp.regions.vcf.gz",
+        TABIX_PATH = TABIX,
+    output:
+        PROJDIR + "/data/vcf/mgp.regions.vcf.gz.tbi"
+    shell:
+        """
+        {input.TABIX_PATH} -p vcf {input.vcf}
+        """
+
+rule compare_mgp_spectra:
+    input:
+        dumont_data = PROJDIR + "/data/SuppTables_concat.xlsx",
+        mgp_vcf = PROJDIR + "/data/vcf/mgp.regions.vcf.gz",
+        mgp_idx = PROJDIR + "/data/vcf/mgp.regions.vcf.gz.tbi",
+        py_script = PROJDIR + "/scripts/make_tidy_df_mgp.py",
+    output:
+        PROJDIR + "/img/mgp_spectra_comparison.png"
+    shell:
+        """
+        python {input.py_script} --dumont_xls {input.dumont_data} \
+                                 --vcf {input.mgp_vcf} \
+                                 --out {output}
         """
