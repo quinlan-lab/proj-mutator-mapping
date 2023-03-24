@@ -9,6 +9,7 @@ from utils import (
     perform_permutation_test,
     compute_genotype_similarity,
 )
+import argparse
 
 @numba.njit
 def simulate_genotypes(
@@ -176,18 +177,18 @@ def run_simulation_trials(
     return pvals
 
 
-def main():
+def main(args):
 
     # define parameter space for simulations
-    number_of_markers = [100]
-    number_of_haplotypes = [100, 1_000]
-    number_of_mutations = [5, 10, 50]
+    number_of_markers = [1_000]
+    number_of_haplotypes = [50, 100]
+    number_of_mutations = [20, 100, 500]
     number_of_permutations = [100]
-    mutation_types = ["C>T"]
+    mutation_types = ["C>T", "C>A", "C>G"]
     effect_sizes = list(np.arange(1, 1.5, 0.1))
     expected_marker_afs = [0.5]
     number_of_trials = 100
-    tag_strengths = [0.25, 0.5, 1.]
+    tag_strengths = [1.]
 
     base_mutations = ["C>T", "CpG>TpG", "C>A", "C>G", "A>T", "A>C", "A>G"]
     base_lambdas = np.array([0.29, 0.17, 0.12, 0.075, 0.1, 0.075, 0.17])
@@ -250,7 +251,10 @@ def main():
             })
 
     res_df = pd.DataFrame(res_df)
-    res_df.to_csv("results.csv", index=False)
+    res_df.to_csv(args.out, index=False)
 
 if __name__ == "__main__":
-    main()
+    p = argparse.ArgumentParser()
+    p.add_argument("--out", help="""path to output file""")
+    args = p.parse_args()
+    main(args)
