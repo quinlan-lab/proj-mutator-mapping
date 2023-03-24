@@ -193,8 +193,8 @@ def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
         b_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
         # compute allele frequencies in each haplotype group
         a_afs, b_afs = (
-            compute_allele_frequency(genotype_matrix[::100, a_hap_idxs]),
-            compute_allele_frequency(genotype_matrix[::100, b_hap_idxs]),
+            compute_allele_frequency(genotype_matrix[:, a_hap_idxs]),
+            compute_allele_frequency(genotype_matrix[:, b_hap_idxs]),
         )
         # compute Pearson correlation between allele frequencies
         af_corr = np.corrcoef(a_afs, b_afs)[0][1]
@@ -289,6 +289,7 @@ def perform_permutation_test(
     distance_method: Callable = compute_manual_chisquare,
     n_permutations: int = 1_000,
     comparison_wide: bool = False,
+    progress: bool = False,
 ) -> np.ndarray:
     """Conduct a permutation test to assess the significance of 
     any observed IHD peaks. In each of the `n_permutations` trials, 
@@ -322,7 +323,11 @@ def perform_permutation_test(
             each marker). Defaults to 1_000.
 
         comparison_wide (bool, optional): Whether to output null distances \
-            for each individual marker, as opposed to a genome-wide maximum.
+            for each individual marker, as opposed to a genome-wide maximum. Defaults \
+            to False.
+        
+        progress (bool, optional): Whether to output a count of how many permutations \
+            have completed. Defaults to False.
               
 
     Returns:
@@ -342,7 +347,7 @@ def perform_permutation_test(
     ))
 
     for pi in range(n_permutations):
-        if pi > 0 and pi % 100 == 0: print(pi)
+        if pi > 0 and pi % 100 == 0 and progress: print(pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)
 
