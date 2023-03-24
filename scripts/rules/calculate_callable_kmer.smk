@@ -1,19 +1,12 @@
 import pandas as pd
 
-PROJDIR = "/Users/tomsasani/quinlanlab/proj-mutator-mapping"
-
-meta = pd.read_excel(f"{PROJDIR}/data/bam_names_to_metadata.xlsx").dropna()
+meta = pd.read_excel("data/bam_names_to_metadata.xlsx").dropna()
 samples = meta["bam_name"].unique()
-
-rule all:
-    input:
-        PROJDIR + "/data/coverage/combined.callable_kmer_content.csv"
-
 
 rule download_ref:
     input:
     output:
-        temp(PROJDIR + "/data/ref/mm10.fa.gz")
+        temp("data/ref/mm10.fa.gz")
     shell:
         """
         wget -O {output} \
@@ -22,9 +15,9 @@ rule download_ref:
 
 rule unzip_ref:
     input:
-        PROJDIR + "/data/ref/mm10.fa.gz"
+        "data/ref/mm10.fa.gz"
     output:
-        temp(PROJDIR + "/data/ref/mm10.fa")
+        temp("data/ref/mm10.fa")
     shell:
         """
         gzip -d {input}
@@ -34,7 +27,7 @@ rule unzip_ref:
 rule download_exclude:
     input:
     output:
-        PROJDIR + "/data/exclude/mm10.seg_dups.simple_repeats.merged.bed.gz"
+        "data/exclude/mm10.seg_dups.simple_repeats.merged.bed.gz"
     shell:
         """
         wget -O {output} \
@@ -44,7 +37,7 @@ rule download_exclude:
 rule download_coverage:
     input:
     output:
-        temp(PROJDIR + "/data/coverage/{sample}.bam.thresholds.bed")
+        temp("data/coverage/{sample}.bam.thresholds.bed")
     shell:
         """
         wget -O {output} https://raw.githubusercontent.com/tomsasani/bxd_mutator_manuscript/main/data/coverage_files/{wildcards.sample}.bam.thresholds.bed
@@ -52,12 +45,12 @@ rule download_coverage:
 
 rule calculate_kmer_content:
     input:
-        coverage = PROJDIR + "/data/coverage/{sample}.bam.thresholds.bed",
-        ref = PROJDIR + "/data/ref/mm10.fa",
-        exclude = PROJDIR + "/data/exclude/mm10.seg_dups.simple_repeats.merged.bed.gz",
-        script = PROJDIR + "/scripts/calculate_callable_kmer_content.py"
+        coverage = "data/coverage/{sample}.bam.thresholds.bed",
+        ref = "data/ref/mm10.fa",
+        exclude = "data/exclude/mm10.seg_dups.simple_repeats.merged.bed.gz",
+        script = "scripts/calculate_callable_kmer_content.py"
     output:
-        temp(PROJDIR + "/data/coverage/per-sample/{sample}.callable_kmer_content.csv")
+        temp("data/coverage/per-sample/{sample}.callable_kmer_content.csv")
     shell:
         """
         python {input.script} --coverage {input.coverage} \
@@ -68,10 +61,10 @@ rule calculate_kmer_content:
 
 rule combine_kmer_content:
     input:
-        fhs = expand(PROJDIR + "/data/coverage/per-sample/{sample}.callable_kmer_content.csv", sample=samples),
-        metadata = PROJDIR + "/data/bam_names_to_metadata.xlsx",
+        fhs = expand("data/coverage/per-sample/{sample}.callable_kmer_content.csv", sample=samples),
+        metadata = "data/bam_names_to_metadata.xlsx",
     output:
-        kmer_content = PROJDIR + "/data/coverage/combined.callable_kmer_content.csv"
+        kmer_content = "data/combined.callable_kmer_content.csv"
     run:
         res = []
         for fh in {input.fhs}:
