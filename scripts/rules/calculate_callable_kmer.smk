@@ -67,12 +67,12 @@ rule combine_kmer_content:
         kmer_content = "data/combined.callable_kmer_content.csv"
     run:
         res = []
-        for fh in {input.fhs}:
+        for fh in input.fhs:
             df = pd.read_csv(fh)
             res.append(df)
         res_df = pd.concat(res)
 
-        metadata = pd.read_excel({input.metadata}).dropna()
+        metadata = pd.read_excel(input.metadata).dropna()
 
         res_df_merged = res_df.merge(
             metadata,
@@ -80,6 +80,6 @@ rule combine_kmer_content:
             right_on="bam_name",
         )
 
-        res_df_merged.to_csv({output.kmer_content}, index=False)
+        res_df_merged.to_csv(output.kmer_content, index=False)
 
     
