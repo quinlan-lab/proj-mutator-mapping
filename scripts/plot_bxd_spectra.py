@@ -3,6 +3,7 @@ import numpy as np
 from compare_mutation_spectra import mutation_comparison
 import matplotlib.pyplot as plt
 import seaborn as sns
+import argparse 
 
 
 plt.rc("font", size=20)
@@ -10,17 +11,20 @@ plt.rc("font", size=20)
 def main(args):
 
     spectra_df = pd.read_csv(args.spectra)
-    print (spectra_df)
 
-    # if args.k == 3:
-    #     a_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v == "D-B"])
-    #     b_smp_i = np.array([smp2idx[s] for s,v in smp2genotype.items() if v == "D-D"])
+    if args.k == 3:
 
+        grouped_spectra_df = spectra_df.groupby(["Mutation type", "Haplotypes"]).agg({"Count": sum}).reset_index()
 
-    #     a_spectra_sum = np.sum(spectra[a_smp_i], axis=0)
-    #     b_spectra_sum = np.sum(spectra[b_smp_i], axis=0)
-    #     mutation_comparison(b_spectra_sum, a_spectra_sum, mut2idx, outname="heatmap.png")#, vmin=-1, vmax=1, )
-    if args.k == 1:
+        grouped_spectra_df = grouped_spectra_df.pivot(index="Haplotypes", columns="Mutation type")
+        mutation_types = [c[1].replace(r"$\rightarrow$", ">") for c in grouped_spectra_df.columns]
+        mut2idx = dict(zip(mutation_types, range(len(mutation_types))))
+
+        a_spectra_sum = grouped_spectra_df.loc["D-B"].values
+        b_spectra_sum = grouped_spectra_df.loc["D-D"].values
+        mutation_comparison(b_spectra_sum, a_spectra_sum, mut2idx, outname=args.out)
+
+    elif args.k == 1:
 
         palette = dict(
         zip(
@@ -66,3 +70,27 @@ def main(args):
         )
         f.tight_layout()
         f.savefig(args.out, dpi=300)
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "--spectra",
+        help="""tidy dataframe of mutation spectra in BXDs""",
+    )
+    p.add_argument(
+        "--out",
+        help="""name of output file with tidy mutation spectra""",
+    )
+    p.add_argument(
+        "-phenotype",
+        help="phenotype to use for the plot (options are Fraction or Rate). Default is Fraction,",
+        default="Fraction",
+    )
+    p.add_argument(
+        "-k",
+        help="""kmer context in which to compute mutation spectra""",
+        type=int,
+        default=1,
+    )
+    args = p.parse_args()
+    main(args)

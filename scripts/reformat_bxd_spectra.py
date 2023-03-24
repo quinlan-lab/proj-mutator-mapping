@@ -20,6 +20,14 @@ def main(args):
     # read in annotated mutation data
     mutations = pd.read_csv(args.mutations)
 
+    # compute mutation spectra in each sample using the specified k-mer context
+    samples, mutation_types, spectra = compute_spectra(mutations, k=args.k)
+
+    # map samples and mutation types to their indices in the mutation spectrum array
+    smp2idx = dict(zip(samples, range(len(samples))))
+    mut2idx = dict(zip(mutation_types, range(len(mutation_types))))
+    samples_shared = list(set(samples).intersection(set(genos.columns)))
+
     # map samples to relevant metadata
     smp2generations = dict(zip(mutations['sample'], mutations['n_generations']))
     smp2epoch = dict(zip(mutations['sample'], mutations['true_epoch']))
@@ -30,14 +38,6 @@ def main(args):
         sorted_markers = sorted(geno_at_marker[s].items(), key=lambda t: t[0])[::-1]
         marker_genos = "-".join([v for k,v in sorted_markers])
         smp2genotype[s] = marker_genos
-
-    # compute mutation spectra in each sample using the specified k-mer context
-    samples, mutation_types, spectra = compute_spectra(mutations, k=args.k)
-
-    # map samples and mutation types to their indices in the mutation spectrum array
-    smp2idx = dict(zip(samples, range(len(samples))))
-    mut2idx = dict(zip(mutation_types, range(len(mutation_types))))
-    samples_shared = list(set(samples).intersection(set(genos.columns)))
 
     # convert counts of each mutation type to fractions
     spectra_fracs = spectra / np.sum(spectra, axis=1)[:, np.newaxis]
@@ -59,7 +59,9 @@ def main(args):
             base_nuc = m.split(">")[0]
             if base_nuc == "CpG": base_nuc = "C"
             # figure out the number of callable "base" nucleotides in that strain
-            n_callable_bp = callable_kmers[callable_kmers["nucleotide"] == base_nuc]["count"].values[0]
+            n_callable_bp = 1
+            if args.k == 1:
+                n_callable_bp = callable_kmers[callable_kmers["nucleotide"] == base_nuc]["count"].values[0]
             # convert counts of mutations to a rate
             rate = spectra[si, mi] / smp2generations[s] / n_callable_bp
             # append a bunch of info to the tidy dataframe
@@ -78,8 +80,8 @@ def main(args):
                 'Haplotype_B': smp_geno.split('-')[1],
             })
 
-    df = pd.DataFrame(df)
-    df.to_csv(args.out, index=False)
+    tidy_df = pd.DataFrame(tidy_df)
+    tidy_df.to_csv(args.out, index=False)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
@@ -103,6 +105,7 @@ if __name__ == "__main__":
         "-k",
         help="""kmer context in which to compute mutation spectra""",
         default=1,
+        type=int,
     )
     args = p.parse_args()
     main(args)
