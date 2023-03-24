@@ -21,7 +21,7 @@ rule plot_ihd:
         markers = "data/genotypes/{cross}.markers",
         py_script = "ihd/plot_ihd_results.py"
     output:
-        "figs/{cross}/k{k}.genome.{samples}_samples.png"
+        "figs/{cross}.k{k}.genome.{samples}_samples.png"
     shell:
         """
         python {input.py_script} --markers {input.markers} \
