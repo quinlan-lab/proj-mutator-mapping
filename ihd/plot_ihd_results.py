@@ -29,7 +29,7 @@ def main(args):
 
     # get significant markers
     signif = results_merged[results_merged["Distance"] >= results_merged[pctile_label]]
-    signif.to_csv(f"{args.outpref}.significant_markers.csv", index=False)
+    #signif.to_csv(f"{args.outpref}.significant_markers.csv", index=False)
 
     chrom_order = list(map(str, range(1, 23)))
     chrom_order.append("X")
@@ -116,8 +116,8 @@ def main(args):
     ax.set_ylabel("Adjusted " + r"$\chi^2$ " + "statistic")
     ax.legend(frameon=False)
     f.tight_layout()
-    f.savefig(f"{args.outpref}.manhattan_plot.png", dpi=300)
-    f.savefig(f"{args.outpref}.manhattan_plot.eps")
+    f.savefig(args.out, dpi=300)
+    #f.savefig(f"{args.outpref}.manhattan_plot.eps")
 
     if args.chrom is not None:
         f, ax = plt.subplots(figsize=(10, 5))
@@ -164,11 +164,11 @@ if __name__ == "__main__":
         "File containing metadata (cM position, Mb position, or both) about each genotyped marker.",
     )
     p.add_argument(
-        "--outpref",
+        "--out",
         type=str,
-        default=".",
+        default="ihd.png",
         help=
-        "Prefix that will be prepended to output files and plots. Default is '.'",
+        "Name of output plot. Default is 'ihd.png'",
     )
     p.add_argument(
         "-colname",
