@@ -95,21 +95,22 @@ small number of input files.
 
 ## Usage
 
-### Running the full pipeline on BXD data
+### Reproducing all figures from the manuscript
 
-Using *de novo* germline mutation data from the BXD recombinant inbred mouse lines (originally generated in [Sasani et al. [2022]](https://www.nature.com/articles/s41586-022-04701-5)), the IHD scan and plotting scripts can be run in a single command using `snakemake` as follows:
+Every figure from the manuscript describing the IHD method () can be reproduced in a single command using `snakemake`:
 
 ```
-snakemake -j1 -s scripts/run_pipeline.smk
+snakemake -j1 -s scripts/make_figures.smk
 ```
 
 If desired, the  `-j` parameter can be used to set the number of jobs that should be executed in parallel when running the pipeline. 
 
-This pipeline will download *de novo* germline mutation data for the BXDs, annotate it with relevant metadata, run a genome-wide IHD scan, find any significant markers, and plot the results of the scan.
+
+> IMPORTANT: you'll need to have both `tabix` and `bcftools` in your system path to reproduce the figures. You can get both [here](http://www.htslib.org/download/).
 
 ### Running an inter-haplotype distance scan
 
-Once you have assembled the input files above, a scan can be performed as follows:
+If you don't want to reproduce the manuscript figures, a single IHD scan can be performed as follows:
 
 ```
 python scripts/run_ihd_scan.py \
@@ -143,7 +144,7 @@ Tests can be run using `pytest` from the root level of the project directory as:
 pytest .
 ```
 
-These tests are run automatically via GitHub actions after each commit to this repository, as well. See the badge at the top of the README for the status (pass/fail) of those tests.
+These tests are run automatically via GitHub actions (for Python versions 3.8, 3.9 and 3.10) after each push to this repository, as well. See the badge at the top of the README for the status (pass/fail) of those tests.
 
 ## Project layout
 
@@ -152,6 +153,8 @@ These tests are run automatically via GitHub actions after each commit to this r
         run_ihd_scan.py                 # wrapper that calls utilities for computing IHD
         plot_ihd_results.py             # script for plotting Manhattan-esque results
         schema.py                       # pandera schema used to validate input/output dataframes
+        run_ihd_power_simulations.py    # code for running power simulations
+        plot_power.py                   # plotting scripts for power simulations
 
     scripts/                            # various scripts for analyses presented in paper
         combine_bxd_singletons.py       # combine and reformat the downloaded BXD singleton data
