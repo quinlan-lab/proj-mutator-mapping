@@ -165,12 +165,10 @@ def mutation_comparison(
 
     # plot "dots" in heatmap where the ratio is significant
     for (x, y) in zip(sig_pvals[0], sig_pvals[1]):
-        
         ax.scatter(x + 0.5, y + 0.5, c='w', edgecolor='k')
 
     # add boundary lines between each block of 16 mutations
     for x in np.arange(0, out_shape[0], 4):
-        print (x)
         ax.axvline(x=x, ls=':', c='k')
 
     # add in y-axis labels
