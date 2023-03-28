@@ -26,7 +26,6 @@ def main(args):
     g.add_legend(title = "# of mutations\nper haplotype")
     g.tight_layout()
 
-
     g.savefig(args.out, dpi=300)
 
 if __name__ == "__main__":
@@ -34,3 +33,4 @@ if __name__ == "__main__":
     p.add_argument("--results", help="""results of power simulation""")
     p.add_argument("--out", help="""name of output plot""")
     args = p.parse_args()
+    main(args)

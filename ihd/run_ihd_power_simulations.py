@@ -114,9 +114,11 @@ def run_simulation_trials(
         List[np.float64]: List of p-values from `number_of_trials` trials.
     """
 
-    pvals = []
+    pvals = np.ones(number_of_trials)
+    mutation_spectra_in_trials = np.zeros((number_of_trials, n_haplotypes, base_lambdas.shape[0]))
+    focal_markers = np.zeros(number_of_trials)
 
-    for _ in range(number_of_trials):
+    for trial_n in numba.prange(number_of_trials):
 
         # create a matrix of lambda values
         lambdas = np.broadcast_to(
@@ -130,6 +132,7 @@ def run_simulation_trials(
         # pick a marker at which we'll artificially put an
         # "association" between genotypes and mutation spectra.
         focal_marker = np.random.randint(0, n_markers)
+        focal_markers[trial_n] = focal_marker
         # at that marker, get the haplotype indices with alt alleles
         alt_haplotypes = np.where(genotype_matrix[focal_marker] == 2)[0]
 
@@ -144,7 +147,7 @@ def run_simulation_trials(
         # ensure that at least one haplotype at this site has the
         # alternate allele. otherwise, return a p-value of 1.
         if alt_haplotypes.shape[0] < 1:
-            pvals.append(1.)
+            pvals[trial_n]
             continue
 
         # augment the lambda on the alt haplotypes by an effect size
@@ -153,6 +156,7 @@ def run_simulation_trials(
 
         # simulate mutation spectra using new lambdas
         mutation_spectra = poisson_from_arr(lambdas)
+        mutation_spectra_in_trials[trial_n] = mutation_spectra
 
         genotype_similarity = compute_genotype_similarity(genotype_matrix)
 
@@ -172,23 +176,14 @@ def run_simulation_trials(
         )
 
         pval = np.sum(null_distances >= focal_dists[focal_marker]) / n_permutations
-        pvals.append(pval)
+        pvals[trial_n] = pval
 
-    return pvals
+    return pvals, mutation_spectra_in_trials, focal_markers
 
 
 def main(args):
 
-    # define parameter space for simulations
-    number_of_markers = [1_000]
-    number_of_haplotypes = [50, 100]
-    number_of_mutations = [20, 100, 500]
-    number_of_permutations = [100]
-    mutation_types = ["C>T", "C>A", "C>G"]
-    effect_sizes = list(np.arange(1, 1.5, 0.1))
-    expected_marker_afs = [0.5]
     number_of_trials = 100
-    tag_strengths = [1.]
 
     base_mutations = ["C>T", "CpG>TpG", "C>A", "C>G", "A>T", "A>C", "A>G"]
     base_lambdas = np.array([0.29, 0.17, 0.12, 0.075, 0.1, 0.075, 0.17])
@@ -196,65 +191,143 @@ def main(args):
 
     res_df = []
 
-    for (
-            n_markers,
-            n_haplotypes,
-            n_mutations,
-            n_permutations,
-            mutation_type,
-            effect_size,
-            exp_af,
-            tag_strength,
-    ) in tqdm.tqdm(
-            itertools.product(
-                number_of_markers,
-                number_of_haplotypes,
-                number_of_mutations,
-                number_of_permutations,
-                mutation_types,
-                effect_sizes,
-                expected_marker_afs,
-                tag_strengths,
-            )):
+    mutation_type_idx = mut2idx[args.mutation_type.replace("_", ">")]
 
-        mutation_type_idx = mut2idx[mutation_type]
+    # NOTE: simulate genotypes separately in each trial? or just
+    # simulate the mutation spectra independently?
+    genotype_matrix = simulate_genotypes(args.n_markers, args.n_haplotypes, exp_af=args.exp_af / 100.)
 
-        # NOTE: simulate genotypes separately in each trial? or just
-        # simulate the mutation spectra independently?
-        genotype_matrix = simulate_genotypes(n_markers, n_haplotypes, exp_af=exp_af)
+    # if desired, output the genotype matrix to a CSV
+    if args.raw_geno is not None:
+        columns = [f"S{i}" for i in range(args.n_haplotypes)]
+        genotype_matrix_df = pd.DataFrame(genotype_matrix, columns = columns)
+        genotype_matrix_df.replace({0: "B", 2: "D"}, inplace=True)
+        genotype_matrix_df["marker"] = [f"rs{i}" for i in range(args.n_markers)]
+        # swap column order 
+        new_columns = ["marker"]
+        new_columns.extend(columns)
+        genotype_matrix_df[new_columns].to_csv(args.raw_geno, index=False)
 
-        trial_pvals = run_simulation_trials(
-            base_lambdas,
-            genotype_matrix,
-            mutation_type_idx=mutation_type_idx,
-            effect_size=effect_size,
-            n_permutations=n_permutations,
-            n_mutations=n_mutations,
-            n_haplotypes=n_haplotypes,
-            n_markers=n_markers,
-            number_of_trials=number_of_trials,
-            f_with_mutator=tag_strength,
-        )
 
-        for i, pval in enumerate(trial_pvals):
-            res_df.append({
-                "n_markers": n_markers,
-                "n_haplotypes": n_haplotypes,
-                "n_permutations": n_permutations,
-                "n_mutations": n_mutations,
-                "effect_size": effect_size,
-                "mutation_type": mutation_type,
-                "exp_af": exp_af,
-                "tag_strength": tag_strength,
-                "trial": i,
-                "pval": pval,
-            })
+    trial_pvals, trial_mutation_spectra, focal_markers = run_simulation_trials(
+        base_lambdas,
+        genotype_matrix,
+        mutation_type_idx=mutation_type_idx,
+        effect_size=args.effect_size / 100.,
+        n_permutations=args.n_permutations,
+        n_mutations=args.n_mutations,
+        n_haplotypes=args.n_haplotypes,
+        n_markers=args.n_markers,
+        number_of_trials=number_of_trials,
+        f_with_mutator=args.tag_strength,
+    )
+
+    # if desired, output the simulated mutation spectra
+    if args.raw_spectra is not None:
+        raw_spectra_df = []
+        for trial_n in range(number_of_trials):
+            trial_spectra_df = pd.DataFrame(
+                trial_mutation_spectra[trial_n, :, :],
+                columns=base_mutations,
+            )
+            trial_spectra_df["trial"] = trial_n
+            trial_spectra_df["focal_marker"] = focal_markers[trial_n]
+            trial_spectra_df["sample"] = [f"S{i}" for i in range(args.n_haplotypes)]
+            raw_spectra_df.append(trial_spectra_df)
+        raw_spectra_df = pd.concat(raw_spectra_df)
+        raw_spectra_df.to_csv(args.raw_spectra, index=False)
+
+    for i, pval in enumerate(trial_pvals):
+        res_df.append({
+            "n_markers": args.n_markers,
+            "n_haplotypes": args.n_haplotypes,
+            "n_permutations": args.n_permutations,
+            "n_mutations": args.n_mutations,
+            "effect_size": args.effect_size,
+            "mutation_type": args.mutation_type,
+            "exp_af": args.exp_af,
+            "tag_strength": args.tag_strength,
+            "trial": i,
+            "pval": pval,
+        })
 
     res_df = pd.DataFrame(res_df)
-    res_df.to_csv(args.out, index=False)
+    res_df.to_csv(args.results, index=False)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
-    p.add_argument("--out", help="""path to output file""")
+    p.add_argument(
+        "--results",
+        help=
+        """Path to file containing summary results for each simulation trial.""",
+    )
+    p.add_argument(
+        "-n_markers",
+        type=int,
+        default=1_000,
+        help=
+        """Number of markers at which to simulate genotypes. Default is 1,000.""",
+    )
+    p.add_argument(
+        "-n_haplotypes",
+        type=int,
+        default=100,
+        help=
+        """Number of haplotypes on which to simulate genotypes/mutation spectra. Default is 100.""",
+    )
+    p.add_argument(
+        "-n_permutations",
+        type=int,
+        default=1_000,
+        help=
+        """Number of permutations to use for significance testing in each simulation. Default is 1,000.""",
+    )
+    p.add_argument(
+        "-n_mutations",
+        type=int,
+        default=100,
+        help=
+        """Number of mutations to simulate on each haplotype. Default is 100.""",
+    )
+    p.add_argument(
+        "-effect_size",
+        type=int,
+        default=110,
+        help=
+        """Effect size of simulated mutator allele, expressed as a percentage of the normal mutation rate. Default is 110.""",
+    )
+    p.add_argument(
+        "-mutation_type",
+        type=str,
+        default="C_T",
+        help=
+        """Mutation type affected by simulated mutator allele. Default is C_T.""",
+    )
+    p.add_argument(
+        "-exp_af",
+        type=float,
+        default=50,
+        help=
+        """Expected allele frequency at each simulated marker, expressed as a percentage. Default is 50.""",
+    )
+    p.add_argument(
+        "-tag_strength",
+        type=float,
+        default=1.,
+        help=
+        """Fraction of haplotypes with "A" alleles at the simulated mutator locus that actually carry the effects of the mutator on their mutation spectra. Default is 1.0.""",
+    )
+    p.add_argument(
+        "-raw_geno",
+        default=None,
+        help=
+        """Path to file containing the raw genotype data from each simulation.""",
+    )
+    p.add_argument(
+        "-raw_spectra",
+        default=None,
+        help=
+        """Path to file containing the raw mutation spectrum data from each simulation.""",
+    )
     args = p.parse_args()
     main(args)
