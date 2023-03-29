@@ -67,7 +67,7 @@ def main(args):
             # append a bunch of info to the tidy dataframe
             tidy_df.append({
                 'sample': s,
-                'Mutation type': r"$\rightarrow$".join(m.split('>')),
+                'Mutation type': m,
                 'Count': spectra[si, mi],
                 'Total': np.sum(spectra, axis=1)[si],
                 'Fraction': spectra_fracs[si, mi],

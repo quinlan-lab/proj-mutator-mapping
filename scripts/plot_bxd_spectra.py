@@ -34,8 +34,16 @@ def main(args):
 
         f, ax = plt.subplots(figsize=(14, 6))
 
+        # reformat mutation type
+        spectra_df["Mutation type"] = spectra_df["Mutation type"].apply(lambda m: m.replace(">", r"$\to$"))
+
+        # sort the spectra dataframe by mutation type and haplotype combination
+        spectra_df.sort_values(["Mutation type", "Haplotypes"], ascending=True, inplace=True)
+
+        spectra_df["ec"] = spectra_df["Mutation type"].apply(lambda m: "w" if m == "C>A" else "k")
+
         sns.boxplot(
-            data=spectra_df.sort_values(["Mutation type", "Haplotypes"], ascending=True),
+            data=spectra_df,
             x="Mutation type",
             y=args.phenotype,
             hue="Haplotypes",
@@ -44,11 +52,11 @@ def main(args):
             fliersize=0,
         )
         sns.stripplot(
-            data=spectra_df.sort_values(["Mutation type", "Haplotypes"], ascending=True),
+            data=spectra_df,
             x="Mutation type",
             y=args.phenotype,
             palette=palette,
-            ec='k',
+            ec="k",
             linewidth=0.75,
             hue="Haplotypes",
             dodge=True,
@@ -57,6 +65,10 @@ def main(args):
         sns.despine(ax=ax, top=True, right=True)
         for axis in ['top','bottom','left','right']:
             ax.spines[axis].set_linewidth(1.5)
+        # bold the C>A mutation type
+        for label in ax.get_xticklabels():
+            if label.get_text() == r"C$\to$A": 
+                label.set_fontweight('bold') 
 
         # increase tick width
         ax.tick_params(width=1.5)

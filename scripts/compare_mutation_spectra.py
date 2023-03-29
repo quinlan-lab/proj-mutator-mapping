@@ -110,7 +110,14 @@ def mutation_comparison(
         # get that mutation's total in sub_1
         y = sub_1_counts[mut_idx]
 
-        if any([c == 0 for c in [x, np.sum(sub_0_counts), y, np.sum(sub_1_counts)]]): 
+        if any([
+                c == 0 for c in [
+                    x,
+                    np.sum(sub_0_counts),
+                    y,
+                    np.sum(sub_1_counts),
+                ]
+        ]):
             stat, p = 0, 1
         else:
             # chi2 contingency table to compare mutation
@@ -124,8 +131,10 @@ def mutation_comparison(
         # and 3' flanking nucleotides
         base_mut = orig_mut.split('>')[0][1] + '>' + orig_mut.split('>')[1][1]
 
-        five_pr, three_pr = orig_mut.split('>')[0][0], orig_mut.split(
-            '>')[0][-1]
+        five_pr, three_pr = (
+            orig_mut.split('>')[0][0],
+            orig_mut.split('>')[0][-1],
+        )
 
         # calculate the index of this particular 3-mer
         # in the output (16 * 4) array
@@ -179,7 +188,7 @@ def mutation_comparison(
         xlab = None
         if i == 0: xlab = "5'-" + m_split[0][0]
         else:
-            
+
             xlab = m_split[0][0]
         xlabs.append(xlab)
 
