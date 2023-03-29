@@ -142,18 +142,16 @@ def run_simulation_trials(
         # locus? such that 1/2 of haplotypes carry the marker, but only a fraction of those
         # actually carry the true mutator allele.
         n_true_alt_haplotypes = int(alt_haplotypes.shape[0] * f_with_mutator)
-        alt_haplotypes = np.random.choice(alt_haplotypes, n_true_alt_haplotypes)
+        alt_haplotypes = np.random.choice(alt_haplotypes, n_true_alt_haplotypes, replace=False)
 
         # ensure that at least one haplotype at this site has the
         # alternate allele. otherwise, return a p-value of 1.
         if alt_haplotypes.shape[0] < 1:
             pvals[trial_n]
             continue
-
         # augment the lambda on the alt haplotypes by an effect size
         for ai in alt_haplotypes:
             lambdas[ai, mutation_type_idx] *= effect_size
-
         # simulate mutation spectra using new lambdas
         mutation_spectra = poisson_from_arr(lambdas)
         mutation_spectra_in_trials[trial_n] = mutation_spectra
