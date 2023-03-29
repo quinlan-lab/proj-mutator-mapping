@@ -7,7 +7,7 @@ include: "rules/run_simulations.smk"
 
 rule all:
     input:
-        "figs/power_simulations.png", # Figure 1
+        #"figs/power_simulations.png", # Figure 1
         "figs/bxd.k1.genome.all_samples.png", # Figure 2a
         "figs/bxd.k1.genome.conditioned_samples.png", # Figure 2b
         "figs/bxd_spectra_1mer.png", # Figure 3a
@@ -15,6 +15,7 @@ rule all:
         "figs/bxd.k3.genome.all_samples.png", # Figure 2-supplement 1a
         "figs/bxd.k3.genome.conditioned_samples.png", # Figure 2-supplement 1b
         "figs/mgp_spectra_1mer.png", # Figure 3-supplement 1
+        "figs/power_comparison.png"
 
 
 

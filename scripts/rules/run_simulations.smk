@@ -3,10 +3,10 @@ import numpy as np
 # define parameter space for simulations
 number_of_markers = [1_000]
 number_of_haplotypes = [50, 100]
-number_of_mutations = [20, 100, 500]
+number_of_mutations = [100, 500]
 number_of_permutations = [100]
-mutation_types = ["C_A"]
-effect_sizes = list(range(110, 160, 10))
+mutation_types = ["C_A", "C_T"]
+effect_sizes = list(range(100, 160, 10))
 expected_marker_afs = [50]
 
 
@@ -66,16 +66,16 @@ rule generate_simulation_comp_data:
     input:
         py_script = "ihd/run_ihd_power_simulations.py"
     output:
-        results = temp("data/Rqtl_sim/power_ind.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.csv"),
-        genos = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.geno"),
-        spectra = temp("data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.csv"),
+        results = temp("data/Rqtl_sim/power_ind.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.csv"),
+        genos = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.geno"),
+        spectra = temp("data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.csv")
     shell:
         """
         python {input.py_script} --results {output.results} \
                                  -n_markers {wildcards.n_markers} \
                                  -n_haplotypes {wildcards.n_haplotypes} \
                                  -n_mutations {wildcards.n_mutations} \
-                                 -n_permutations {wildcards.n_permutations} \
+                                 -n_permutations 1 \
                                  -effect_size {wildcards.effect_size} \
                                  -exp_af {wildcards.exp_af} \
                                  -mutation_type {wildcards.mutation_type} \
@@ -115,17 +115,21 @@ rule make_simulated_gmap:
 
 rule reformat_simulated_spectra:
     input:
-        spectra = "data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.csv"
+        spectra = "data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.csv"
     output:
-        spectra = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.pheno")
+        spectra = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.pheno")
     run:
         import pandas as pd
         spectra_df = pd.read_csv(input.spectra)
         group_cols = ["sample", "trial", "focal_marker"]
+        # convert spectra df to tidy format
         spectra_df_tidy = spectra_df.melt(id_vars=group_cols)
-        spectra_df_grouped = spectra_df_tidy.groupby(group_cols).agg(sum).reset_index().rename(columns={"value": "total"})
+        # calculate total sums of each mutation type
+        spectra_df_grouped = spectra_df_tidy.groupby(group_cols).agg({"value": sum}).reset_index().rename(columns={"value": "total"})
         spectra_df_combined = spectra_df_tidy.merge(spectra_df_grouped, on=group_cols)
+        # convert counts to fractions
         spectra_df_combined["fraction"] = spectra_df_combined["value"] / spectra_df_combined["total"]
+        # pivot df back to long-form
         spectra_df_long = spectra_df_combined.drop(columns=["total", "value"]).pivot(index=group_cols, columns="variable").reset_index()
         new_cols = ["sample", "trial", "focal_marker"]
         new_cols.extend([c[1].replace(">", "_") for c in spectra_df_long.columns if c[0] == "fraction"])
@@ -136,7 +140,7 @@ rule reformat_simulated_spectra:
 rule make_simulated_json:
     input:
     output:
-        out_json = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.json")
+        out_json = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.json")
     run:
         import json 
 
@@ -146,7 +150,7 @@ rule make_simulated_json:
             "sep": ",",
             "na.strings": ["-", "NA"],
             "comment.char": "#",
-            "geno": f"sim.{wildcards.n_markers}.{wildcards.n_haplotypes}.{wildcards.n_mutations}.{wildcards.n_permutations}.{wildcards.effect_size}.{wildcards.exp_af}.{wildcards.mutation_type}.geno",
+            "geno": f"sim.{wildcards.n_markers}.{wildcards.n_haplotypes}.{wildcards.n_mutations}.1.{wildcards.effect_size}.{wildcards.exp_af}.{wildcards.mutation_type}.geno",
             "pmap": f"sim.{wildcards.n_markers}.{wildcards.exp_af}.pmap",
             "gmap": f"sim.{wildcards.n_markers}.{wildcards.exp_af}.gmap",
             "alleles": ["B", "D"],
@@ -161,26 +165,25 @@ rule make_simulated_json:
 
 rule map_simulated_qtl:
     input:
-        genotypes = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.geno",
-        spectra = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.pheno",
+        genotypes = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.geno",
+        spectra = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.pheno",
         pmap = "data/Rqtl_sim/sim.{n_markers}.{exp_af}.pmap",
         gmap = "data/Rqtl_sim/sim.{n_markers}.{exp_af}.gmap",
-        json = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.json",
+        json = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.json",
         Rscript = "scripts/map_qtl.R",
     output:
-        power = temp("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.csv")
+        power = temp("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.csv")
     shell: 
         """
-        Rscript {input.Rscript} -j {input.json} -p {input.spectra} -o {output.power}
+        Rscript {input.Rscript} -j {input.json} -p {input.spectra} -o {output.power} -m {wildcards.mutation_type}
         """
 
 rule combine_rqtl_simulation_results:
     input: 
-        power = expand("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{exp_af}.{mutation_type}.csv", 
+        power = expand("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{exp_af}.{mutation_type}.csv", 
                 n_markers = number_of_markers,
                 n_haplotypes = number_of_haplotypes,
                 n_mutations = number_of_mutations,
-                n_permutations = number_of_permutations,
                 effect_size = effect_sizes,
                 exp_af = expected_marker_afs,
                 mutation_type = mutation_types)
