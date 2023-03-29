@@ -13,6 +13,8 @@ rule run_ihd:
                                  --out {output} \
                                  -k {wildcards.k} \
                                  -permutations 1000 \
+                                 -progress \
+                                 -threads 4
         """
 
 rule plot_ihd:
