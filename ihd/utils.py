@@ -281,7 +281,7 @@ def compute_residuals(
     return resids
 
 
-@numba.njit
+@numba.njit(parallel=True)
 def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
@@ -346,7 +346,7 @@ def perform_permutation_test(
         n_markers if comparison_wide else 1,
     ))
 
-    for pi in range(n_permutations):
+    for pi in numba.prange(n_permutations):
         if pi > 0 and pi % 100 == 0 and progress: print(pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra)

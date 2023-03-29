@@ -90,6 +90,8 @@ def main(args):
     })
     IHDResultSchema.validate(res_df)
 
+    numba.set_num_threads(args.threads)
+
     # then do permutations
     null_distances = perform_permutation_test(
         spectra,
@@ -98,6 +100,7 @@ def main(args):
         distance_method=distance_method,
         n_permutations=args.permutations,
         comparison_wide=args.comparison_wide,
+        progress=args.progress,
     )
 
     # compute the Nth percentile of the maximum distance
@@ -129,14 +132,14 @@ if __name__ == "__main__":
         "-k",
         type=int,
         default=1,
-        help="kmer size used for grouping mutations",
+        help="k-mer context used to classify mutations. Default is 1.",
     )
     p.add_argument(
         "-permutations",
         type=int,
         default=1_000,
         help=
-        "Number of permutations to perform when calculating significance thresholds.",
+        "Number of permutations to perform when calculating significance thresholds. Default is 1,000.",
     )
     p.add_argument(
         "-comparison_wide",
@@ -149,6 +152,19 @@ if __name__ == "__main__":
         type=str,
         help=
         """Method to use for calculating distance between aggregate spectra. Options are 'cosine' and 'chisquare', default is 'chisquare'.""",
+    )
+    p.add_argument(
+        "-threads",
+        default=1,
+        type=int,
+        help=
+        """Number of threads to use during permutation testing step. Default is 1.""",
+    )
+    p.add_argument(
+        "-progress",
+        action="store_true",
+        help=
+        """Whether to output the progress of the permutation testing step (i.e., the number of completed permutations).""",
     )
     args = p.parse_args()
 
