@@ -13,8 +13,8 @@ outfh = open(f"{PROJDIR}/data/vcf/ns.vcf", "w")
 print (vcf.raw_header.rstrip(), file=outfh)
 
 for v in vcf:
-    if v.POS < 109_000_000: continue 
-    if v.POS > 119_000_000: break
+    if v.POS < 106_000_000: continue 
+    if v.POS > 116_000_000: break
     if len(v.ALT) > 1: continue
     annotations = v.INFO.get("ANN").split(';')
     rel_ann = [a for a in annotations if a.split('|')[7] == "protein_coding"]
@@ -50,5 +50,7 @@ for v in vcf:
         alt, cons, impact, gene = a.split('|')[:4]
         change = a.split('|')[10]
         #if gene in ("Ogg1", "Mbd4"):
-        print (str(v).rstrip(), file=outfh)
-        print ('\t'.join(list(map(str, [v.CHROM, v.start, v.end, ac, an, cons, impact, gene, change]))))
+        
+        if impact in ("MODERATE", "HIGH"):
+            print (str(v).rstrip(), file=outfh)
+            print ('\t'.join(list(map(str, [v.CHROM, v.start, v.end, v.REF, v.ALT, ac, an, cons, impact, gene, change]))))
