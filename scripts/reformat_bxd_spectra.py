@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import sys
 import argparse
+from skbio.stats.composition import clr
 
 sys.path.insert(0, '/Users/tomsasani/quinlanlab/proj-mutator-mapping/')
 from ihd.utils import compute_spectra
@@ -41,6 +42,7 @@ def main(args):
 
     # convert counts of each mutation type to fractions
     spectra_fracs = spectra / np.sum(spectra, axis=1)[:, np.newaxis]
+    spectra_clr = clr(spectra_fracs)
 
     tidy_df = []
     # loop over strains
@@ -67,11 +69,14 @@ def main(args):
             # append a bunch of info to the tidy dataframe
             tidy_df.append({
                 'sample': s,
+                'mut': m,
                 'Mutation type': m,
                 'Count': spectra[si, mi],
                 'Total': np.sum(spectra, axis=1)[si],
                 'Fraction': spectra_fracs[si, mi],
+                'CLR_fraction': spectra_clr[si, mi],
                 'Epoch': smp2epoch[s],
+                "Generations": smp2generations[s],
                 'ADJ_AGE': n_callable_bp * smp2generations[s],
                 'Rate': rate,
                 "is_ca": 1 if m == "C>A" else 0,
