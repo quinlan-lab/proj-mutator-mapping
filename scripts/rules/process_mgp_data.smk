@@ -37,8 +37,7 @@ rule plot_mgp_spectra:
     input:
         spectra = "csv/mgp_spectra.csv",
         py_script = "scripts/plot_mgp_spectra.py"
-    output:
-        "figs/mgp_spectra_1mer.png"
+    output: "figs/mgp_spectra_1mer.{ext}"
     shell:
         """
         python {input.py_script} --spectra {input.spectra} \

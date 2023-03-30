@@ -7,7 +7,7 @@ option_list <- list(
   make_option(c("-o", "--output_file"), type="character", default=NULL),
   make_option(c("-m", "--mutation_type", type="character", default=NULL)))
 
-opt_parser = OptionParser(option_list=option_list)
+opt_parser <- OptionParser(option_list = option_list)
 opt = parse_args(opt_parser)
 
 # read in the JSON that directs R/qtl2 to sample genotypes,
@@ -15,14 +15,10 @@ opt = parse_args(opt_parser)
 sim_bxd <- read_cross2(opt$json)
 
 # read in the phenotype values for each BXD strain
-phen_df <- read.csv(opt$phenotype_file, header=T)
+phen_df <- read.csv(opt$phenotype_file, header = T)
 
 # calculate QTL genotype probabilities
-pr <- calc_genoprob(sim_bxd, sim_bxd$pmap, error_prob = 0.002, map_function = "c-f")
-
-# calculate kinship between strains using the
-# "overall" method
-k <- calc_kinship(pr, "overall")
+pr <- calc_genoprob(sim_bxd, sim_bxd$pmap, error_prob = 0, map_function = "c-f")
 
 # store results of simulated QTL scans
 res_df <- data.frame(trial = 0,
@@ -49,10 +45,11 @@ for (trial_n in 1:trials) {
     # perform a permutation test to assess significance
     operm <- scan1perm(pr, phen_matrix, n_perm=1000)
 
-    for (bc in c(1, 7)) {
+    for (bc in c(1, 7, 96)) {
 
         # get the LOD threshold for a < 0.05
-        lod_cutoff = summary(operm, alpha=0.05 / bc)[1]
+        alpha = 0.05 / bc
+        lod_cutoff = summary(operm, alpha=alpha)[1]
 
         # print LOD peaks
         peaks = find_peaks(out, sim_bxd$pmap, threshold=lod_cutoff)

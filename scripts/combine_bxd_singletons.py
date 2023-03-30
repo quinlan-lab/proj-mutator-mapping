@@ -91,6 +91,7 @@ def main(args):
     # and remove the BXD68 outlier
     combined_merged = combined_merged[(combined_merged['n_generations'] > 20)
                                       & (combined_merged["sample"] != "BXD68")]
+    #combined_merged = combined_merged[(combined_merged['n_generations'] > 20)]
     combined_merged['count'] = 1
     combined_merged.to_csv(args.out, index=False)
 

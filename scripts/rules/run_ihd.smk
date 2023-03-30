@@ -12,6 +12,7 @@ rule run_ihd:
                                  --config {input.config} \
                                  --out {output} \
                                  -k {wildcards.k} \
+                                 -distance_method cosine \
                                  -permutations 1000 \
                                  -progress \
                                  -threads 4
@@ -22,8 +23,7 @@ rule plot_ihd:
         results = "csv/{cross}.k{k}.genome.{samples}_samples.results.csv",
         markers = "data/genotypes/{cross}.markers",
         py_script = "ihd/plot_ihd_results.py"
-    output:
-        "figs/{cross}.k{k}.genome.{samples}_samples.png"
+    output: "figs/{cross}.k{k}.genome.{samples}_samples.{ext}"
     shell:
         """
         python {input.py_script} --markers {input.markers} \
