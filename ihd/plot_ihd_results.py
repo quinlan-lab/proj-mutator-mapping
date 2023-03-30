@@ -113,11 +113,10 @@ def main(args):
     #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
-    ax.set_ylabel("Adjusted " + r"$\chi^2$ " + "statistic")
+    ax.set_ylabel("Adjusted cosine distance")
     ax.legend(frameon=False)
     f.tight_layout()
     f.savefig(args.out, dpi=300)
-    #f.savefig(f"{args.outpref}.manhattan_plot.eps")
 
     if args.chrom is not None:
         f, ax = plt.subplots(figsize=(10, 5))

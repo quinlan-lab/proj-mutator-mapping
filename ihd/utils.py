@@ -209,6 +209,7 @@ def perform_ihd_scan(
     genotype_matrix: np.ndarray,
     genotype_similarity: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
+    adjust_statistics: bool = True,
 ) -> np.ndarray:
     """Iterate over every genotyped marker in the `genotype_matrix`, 
     divide the haplotypes into two groups based on sample genotypes at the 
@@ -229,6 +230,10 @@ def perform_ihd_scan(
             distance between aggregate mutation spectra. Must accept two 1D numpy \
             arrays and return a single floating point value. Defaults to \
             `compute_manual_chisquare`.
+
+        adjust_statistics (bool, optional): Whether to compute adjusted statistics \
+            at each marker by regressing genotype similarity against statistics. \
+            Defaults to True.
 
     Returns:
         distances (List[np.float64]): List of inter-haplotype \
@@ -254,8 +259,9 @@ def perform_ihd_scan(
         )
         focal_dist[ni] = cur_dist
 
-    resids = compute_residuals(genotype_similarity, focal_dist)
-    return resids
+    if adjust_statistics:
+        return compute_residuals(genotype_similarity, focal_dist)
+    else: return focal_dist
 
 
 @numba.njit
@@ -290,6 +296,7 @@ def perform_permutation_test(
     n_permutations: int = 1_000,
     comparison_wide: bool = False,
     progress: bool = False,
+    adjust_statistics: bool = True,
 ) -> np.ndarray:
     """Conduct a permutation test to assess the significance of 
     any observed IHD peaks. In each of the `n_permutations` trials, 
@@ -328,6 +335,10 @@ def perform_permutation_test(
         
         progress (bool, optional): Whether to output a count of how many permutations \
             have completed. Defaults to False.
+        
+        adjust_statistics (bool, optional): Whether to compute adjusted statistics \
+            at each marker by regressing genotype similarity against statistics. \
+            Defaults to True.
               
 
     Returns:
@@ -357,6 +368,7 @@ def perform_permutation_test(
             genotype_matrix,
             genotype_similarity,
             distance_method = distance_method,
+            adjust_statistics=adjust_statistics,
         )
 
         if comparison_wide:
@@ -367,14 +379,15 @@ def perform_permutation_test(
     return null_distances
 
 
-def find_central_mut(kmer: str) -> str:
+def find_central_mut(kmer: str, cpg: bool = True) -> str:
     orig, new = kmer.split('>')
     fp, tp = orig[0], orig[2]
     central_orig = orig[1]
     central_new = new[1]
-
     if central_orig == "C" and tp == "G" and central_new == "T":
-        return f"{central_orig}p{tp}>{central_new}p{tp}"
+        if cpg:
+            return f"{central_orig}p{tp}>{central_new}p{tp}"
+        else: return f"{central_orig}>{central_new}"
     else:
         return ">".join([central_orig, central_new])
 

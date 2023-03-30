@@ -3,11 +3,13 @@ import tqdm
 import itertools
 import pandas as pd
 import numba
-from typing import List
+from typing import List, Tuple, Callable
 from utils import (
     perform_ihd_scan,
     perform_permutation_test,
     compute_genotype_similarity,
+    compute_manual_chisquare,
+    compute_manual_cosine_distance,
 )
 import argparse
 
@@ -78,7 +80,8 @@ def run_simulation_trials(
     n_markers: int = 1000,
     number_of_trials: int = 100,
     f_with_mutator: float = 1.,
-) -> List[np.float64]:
+    distance_method: Callable = compute_manual_chisquare,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Run a selected number of simulation trials.
 
     Args:
@@ -111,7 +114,14 @@ def run_simulation_trials(
             the mutator allele. Defaults to 1..
 
     Returns:
-        List[np.float64]: List of p-values from `number_of_trials` trials.
+        pvals (np.ndarray): 1D numpy array of p-values from `number_of_trials` trials.
+
+        mutation_spectra_in_trials (np.ndarray): 3D numpy array of size (T, H, M), where T \
+            is the number of trials, H is the number of haplotypes, and M is the number of \
+            k-mer mutation types. Contains simulated mutation spectra for every haplotype.
+        
+        focal_markers (np.ndarray): 1D numpy array containing the marker at which we simulate \
+            the mutator allele in every trial.
     """
 
     pvals = np.ones(number_of_trials)
@@ -157,12 +167,15 @@ def run_simulation_trials(
         mutation_spectra_in_trials[trial_n] = mutation_spectra
 
         genotype_similarity = compute_genotype_similarity(genotype_matrix)
-
+        
         # run an IHD scan
         focal_dists = perform_ihd_scan(
             mutation_spectra,
             genotype_matrix,
             genotype_similarity,
+            adjust_statistics=False,
+            distance_method=distance_method,
+
         )
 
         # and get null
@@ -171,6 +184,8 @@ def run_simulation_trials(
             genotype_matrix,
             genotype_similarity,
             n_permutations=n_permutations,
+            distance_method=distance_method,
+            adjust_statistics=False,
         )
 
         pval = np.sum(null_distances >= focal_dists[focal_marker]) / n_permutations
@@ -185,7 +200,37 @@ def main(args):
 
     base_mutations = ["C>T", "CpG>TpG", "C>A", "C>G", "A>T", "A>C", "A>G"]
     base_lambdas = np.array([0.29, 0.17, 0.12, 0.075, 0.1, 0.075, 0.17])
-    mut2idx = dict(zip(base_mutations, range(len(base_mutations))))
+
+    nucs = ["A", "T", "C", "G"]
+
+    distance_method = compute_manual_cosine_distance
+    if args.distance_method == "cosine": distance_method = compute_manual_cosine_distance
+    else: distance_method = compute_manual_chisquare
+
+    kmer_size = len(args.mutation_type.split('_')[0])
+
+    if kmer_size == 1:
+        mutations, lambdas = base_mutations.copy(), base_lambdas.copy()
+    else:
+        # if we want to do the 3-mer spectrum, we'll just parcel out
+        # mutation probabilities equally to every 3-mer associated with
+        # a particular "base" mutation type
+        mutations, lambdas = [], []
+        for m, l in zip(base_mutations, base_lambdas):
+            if m == "CpG>TpG": continue
+            per_k_l = l / 16
+            if m == "C>T":
+                per_k_l = 0.46 / 16
+            orig, new = m.split('>')
+            for fp in nucs:
+                for tp in nucs:
+                    kmer = f"{fp}{orig}{tp}>{fp}{new}{tp}"
+                    mutations.append(kmer)
+                    lambdas.append(per_k_l)
+        lambdas = np.array(lambdas)
+
+
+    mut2idx = dict(zip(mutations, range(len(lambdas))))
 
     res_df = []
 
@@ -193,7 +238,11 @@ def main(args):
 
     # NOTE: simulate genotypes separately in each trial? or just
     # simulate the mutation spectra independently?
-    genotype_matrix = simulate_genotypes(args.n_markers, args.n_haplotypes, exp_af=args.exp_af / 100.)
+    genotype_matrix = simulate_genotypes(
+        args.n_markers,
+        args.n_haplotypes,
+        exp_af=args.exp_af / 100.,
+    )
 
     # if desired, output the genotype matrix to a CSV
     if args.raw_geno is not None:
@@ -201,14 +250,13 @@ def main(args):
         genotype_matrix_df = pd.DataFrame(genotype_matrix, columns = columns)
         genotype_matrix_df.replace({0: "B", 2: "D"}, inplace=True)
         genotype_matrix_df["marker"] = [f"rs{i}" for i in range(args.n_markers)]
-        # swap column order 
+        # swap column order
         new_columns = ["marker"]
         new_columns.extend(columns)
         genotype_matrix_df[new_columns].to_csv(args.raw_geno, index=False)
 
-
     trial_pvals, trial_mutation_spectra, focal_markers = run_simulation_trials(
-        base_lambdas,
+        lambdas,
         genotype_matrix,
         mutation_type_idx=mutation_type_idx,
         effect_size=args.effect_size / 100.,
@@ -218,6 +266,7 @@ def main(args):
         n_markers=args.n_markers,
         number_of_trials=number_of_trials,
         f_with_mutator=args.tag_strength,
+        distance_method=distance_method,
     )
 
     # if desired, output the simulated mutation spectra
@@ -226,7 +275,7 @@ def main(args):
         for trial_n in range(number_of_trials):
             trial_spectra_df = pd.DataFrame(
                 trial_mutation_spectra[trial_n, :, :],
-                columns=base_mutations,
+                columns=mutations,
             )
             trial_spectra_df["trial"] = trial_n
             trial_spectra_df["focal_marker"] = focal_markers[trial_n]
@@ -245,6 +294,7 @@ def main(args):
             "mutation_type": args.mutation_type,
             "exp_af": args.exp_af,
             "tag_strength": args.tag_strength,
+            "distance_method": args.distance_method,
             "trial": i,
             "pval": pval,
         })
@@ -314,6 +364,10 @@ if __name__ == "__main__":
         default=1.,
         help=
         """Fraction of haplotypes with "A" alleles at the simulated mutator locus that actually carry the effects of the mutator on their mutation spectra. Default is 1.0.""",
+    )
+    p.add_argument(
+        "-distance_method",
+        default="chisquare",
     )
     p.add_argument(
         "-raw_geno",
