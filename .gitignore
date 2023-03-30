@@ -4,6 +4,7 @@
 *.csv 
 *.eps
 *.pyc
+data/Rqtl_sim/
 vcf/
 data/genotypes/cemee/
 .snakemake/
