@@ -18,7 +18,7 @@ def main(args):
     ihd_power["bonferroni_corr"] = correction
 
     combined_power = pd.concat([qtl_power, ihd_power]).reset_index()
-    combined_power = combined_power[combined_power["mutation_type"].isin(["C_A", "C_T"])]
+    combined_power = combined_power[(combined_power["mutation_type"].isin(["C_A", "C_T"])) & (combined_power["n_haplotypes"] == 100)]
 
     combined_power = combined_power[combined_power["bonferroni_corr"] == correction]
 

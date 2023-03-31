@@ -14,7 +14,7 @@ def main(args):
     # read in sample genotypes at each marker
     genos = pd.read_csv(args.genos).set_index("marker")
     # define markers to use for the chr6 and chr4 mutator loci
-    markers = np.array(["rs31001331", "rs52263933"]) 
+    markers = np.array(["rs31001331", "rs52263933"])
     # map sample names to genotypes at each marker
     geno_at_marker = genos.loc[markers].to_dict()
 
@@ -67,7 +67,7 @@ def main(args):
             # convert counts of mutations to a rate
             rate = spectra[si, mi] / smp2generations[s] / n_callable_bp
             # append a bunch of info to the tidy dataframe
-            tidy_df.append({
+            vals = {
                 'sample': s,
                 'mut': m,
                 'Mutation type': m,
@@ -83,7 +83,9 @@ def main(args):
                 "Haplotypes": smp_geno,
                 'Haplotype_A': smp_geno.split('-')[0],
                 'Haplotype_B': smp_geno.split('-')[1],
-            })
+            }
+            tidy_df.append(vals)
+                
 
     tidy_df = pd.DataFrame(tidy_df)
     tidy_df.to_csv(args.out, index=False)

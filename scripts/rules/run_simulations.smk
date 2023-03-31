@@ -5,7 +5,7 @@ number_of_markers = [100]
 number_of_haplotypes = [50, 100]
 number_of_mutations = [20, 100, 500]
 number_of_permutations = [100]
-mutation_types = ["C_A", "C_G", "C_T", "TCC_TTC"]
+mutation_types = ["C_A", "C_G", "C_T"]
 effect_sizes = list(range(100, 160, 10))
 distance_methods = ["cosine"]
 
