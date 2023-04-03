@@ -5,6 +5,7 @@
 *.eps
 *.pyc
 data/Rqtl_sim/
+data/sig_profiler_results/
 vcf/
 data/genotypes/cemee/
 .snakemake/
