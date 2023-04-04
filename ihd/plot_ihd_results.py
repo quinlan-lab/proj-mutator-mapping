@@ -88,29 +88,11 @@ def main(args):
 
     # change all spines
     for axis in ['top','bottom','left','right']:
-        ax.spines[axis].set_linewidth(2.)
+        ax.spines[axis].set_linewidth(1.5)
 
     # increase tick width
     ax.tick_params(width=2.)
 
-    max_yval = max([
-        max(results_merged["Distance"]) * 1.05,
-        max_threshold_dist,
-    ])
-
-    min_yval = min([
-        min(results_merged["Distance"]) * 1.05,
-        max_threshold_dist,
-    ])
-
-    yticks = np.linspace(min_yval, max_yval, num=8)
-    ytick_labels = [f"{x:.1e}" for x in yticks]
-    ytick_labels = [round(x, 1) for x in yticks]
-
-    #ytick_labels[0] = "0"
-    #ax.set_yticks(yticks[1:])
-    #ax.set_yticklabels(ytick_labels[1:])
-    #sns.set_style('ticks')
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
     ax.set_ylabel("Adjusted cosine distance")

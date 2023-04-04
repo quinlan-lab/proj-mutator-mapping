@@ -13,7 +13,7 @@ def main(args):
                 ["B-B", "B-D", "D-B", "D-D"],
                 ["#398D84", "#E67F3A", "#EBBC2C", "#2F294A"],
             ))
-    
+
     sig_dict = {"SBS1": r"$\bf{SBS1}$" + " (Spontaneous deamination of 5-mC)",
                 "SBS5": r"$\bf{SBS5}$" + " (Unknown clock-like)",
                 "SBS18": r"$\bf{SBS18}$" + " (Damage by ROS)",
@@ -46,8 +46,15 @@ def main(args):
     per_sig_fracs_wide = per_sig_fracs.drop(columns=["Count", "Total"]).pivot(index="Haplotypes", columns="Signature")
     new_cols = [c[1] for c in per_sig_fracs_wide.columns]
     per_sig_fracs_wide.columns = new_cols
-    per_sig_fracs_wide.loc[["D-D", "D-B", "B-D", "B-B"]].plot.barh(color=color_dict, ax=ax, stacked=True, ec="k", lw=2,)
     
+    per_sig_fracs_wide.loc[["D-D", "D-B", "B-D", "B-B"]].plot.barh(
+        color=color_dict,
+        ax=ax,
+        stacked=True,
+        ec="k",
+        lw=1.5,
+    )
+
 
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Fraction of mutations attributed to signature")

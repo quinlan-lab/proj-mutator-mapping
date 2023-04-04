@@ -18,7 +18,7 @@ def main(args):
     ihd_power["bonferroni_corr"] = correction
 
     combined_power = pd.concat([qtl_power, ihd_power]).reset_index()
-    combined_power = combined_power[(combined_power["mutation_type"].isin(["C_A", "C_T"])) & (combined_power["n_haplotypes"] == 100)]
+    combined_power = combined_power[(combined_power["mutation_type"].isin(["C_A", "C_T"])) & (combined_power["n_haplotypes"] == 50)]
 
     combined_power = combined_power[combined_power["bonferroni_corr"] == correction]
 
@@ -38,8 +38,6 @@ def main(args):
     g = sns.FacetGrid(data=combined_power, row="# mutations", col="Mutation type", aspect=1.5)
     g.map(sns.lineplot, "Mutator effect size", "Power", "Method", palette="colorblind")
     g.add_legend(title = "Method")
-    #g.fig.subplots_adjust(top=0.9)
-    #g.fig.suptitle('TITLE!')
     g.tight_layout()
 
     g.savefig(args.out, dpi=300)

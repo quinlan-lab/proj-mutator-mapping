@@ -7,6 +7,7 @@ include: "rules/run_simulations.smk"
 include: "rules/run_qtl_scans.smk"
 include: "rules/run_sigprofiler.smk"
 
+
 rule all:
     input:
         "figs/power_simulations.png", # Figure 1
@@ -26,6 +27,7 @@ rule all:
         "figs/mgp_spectra_1mer.eps", # Figure 3-supplement 2
         #"figs/power_comparison.TCC_TTC.png",
         "figs/power_comparison.png",
+        "figs/power_comparison_distance_methods.png"
 
 
 

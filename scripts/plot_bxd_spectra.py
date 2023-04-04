@@ -81,12 +81,11 @@ def main(args):
             x=xval,
             y=args.phenotype,
             palette=palette,
-            ec="k",
+            edgecolor="black",
             linewidth=lw,
             hue=hue,
             size=size,
             dodge=True if args.mutation_type is None else False,
-            #jitter=0.4,
             ax=ax,
         )
         sns.despine(ax=ax, top=True, right=True)
