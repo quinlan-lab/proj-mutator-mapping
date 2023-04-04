@@ -1,13 +1,13 @@
 import numpy as np
 
 # define parameter space for simulations
-number_of_markers = [100]
+number_of_markers = [1000]
 number_of_haplotypes = [50, 100]
 number_of_mutations = [20, 100, 500]
 number_of_permutations = [100]
-mutation_types = ["C_A", "C_G", "C_T"]
+mutation_types = ["C_A", "C_G", "C_T", "TCC_TTC"]
 effect_sizes = list(range(100, 160, 10))
-distance_methods = ["cosine"]
+distance_methods = ["cosine", "chisquare"]
 
 
 rule run_ind_simulation:
@@ -216,4 +216,13 @@ rule plot_power_comparison:
         python {input.py_script} --qtl_power {input.qtl_power} --ihd_power {input.ihd_power} --out {output}
         """
 
-    
+
+rule plot_cosine_vs_chisquare:
+    input:
+        ihd_power = "csv/ihd_power.csv",
+        py_script = "scripts/compare_cosine_chisquare_power.py"
+    output: "figs/power_comparison_distance_methods.png"
+    shell:
+        """
+        python {input.py_script} --ihd_power {input.ihd_power} --out {output}
+        """
