@@ -7,3 +7,5 @@ pandera==0.13.4
 seaborn==0.12.2
 pytest==7.2.1
 openpyxl==3.1.0
+SigProfilerExtractor==1.1.21
+scikit-bio==0.5.8
