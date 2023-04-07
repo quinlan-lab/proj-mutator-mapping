@@ -6,28 +6,39 @@ include: "rules/calculate_callable_kmer.smk"
 include: "rules/run_simulations.smk"
 include: "rules/run_qtl_scans.smk"
 include: "rules/run_sigprofiler.smk"
+include: "rules/intersect_svs.smk"
 
+mutations = ["C_T", "C_A", "C_G", "CpG_TpG", "A_T", "A_G", "A_C"]
+
+###
+# Rule below generates all figures/CSV output using the rules 
+# that are imported above!
+###
+# FIGURE 1
+        #"figs/power_simulations.png", # supplement 1
+        #"figs/power_comparison.png", # supplement 2 
+        #"figs/power_comparison_distance_methods.png", # supplement 3
 
 rule all:
     input:
-        "figs/power_simulations.png", # Figure 1
-        "figs/bxd.k1.genome.all_samples.eps", # Figure 2a
-        "figs/bxd.k1.genome.conditioned_samples.eps", # Figure 2b
+        "figs/bxd.k1.genome.condition_on_N.eps", # panel A
+        "figs/bxd.k1.genome.condition_on_D.eps", # panel B
 
-        "figs/bxd_spectra_1mer.C_A.eps", # Figure 3a
-                "figs/bxd_spectra_1mer.C_A.png", # Figure 3a
+        "figs/bxd.k1.genome.condition_on_B.eps", # supplement 1
+        expand("figs/qtl_scans/{mutation_type}.png", 
+                    mutation_type = mutations),  # supplement 2
 
-        "figs/bxd_spectra_vs_age.png", # Figure 3b
-        "figs/bxd_spectra_3mer_all.eps", # Figure 3c
-        "figs/signature_activity.eps",
-        "figs/bxd_spectra_1mer_all.eps", # Figure 3-supplement 1
+        # FIGURE 3
+        "figs/bxd_spectra_1mer.C_A.eps", # panel A
+        "figs/bxd_spectra_vs_age.png", # panel B
+        "figs/signature_activity.eps", # panel C
 
-        expand("figs/qtl_scans/{mutation_type}.png", mutation_type = ["C_T", "C_A", "C_G", "CpG_TpG", "A_T", "A_G", "A_C"]),
+        "figs/bxd_spectra_1mer_all.eps", # supplement 1
+        "figs/mgp_spectra_1mer.eps",     # supplement 2
 
-        "figs/mgp_spectra_1mer.eps", # Figure 3-supplement 2
-        #"figs/power_comparison.TCC_TTC.png",
-        "figs/power_comparison.png",
-        "figs/power_comparison_distance_methods.png"
+        # ANALYSIS OUTPUTS
+        "csv/sv_gene_overlap.summary.csv" # SV overlaps with genes
+
 
 
 

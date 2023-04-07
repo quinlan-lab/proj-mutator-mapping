@@ -2,7 +2,7 @@ rule make_tidy_bxd_spectra_df:
     input:
         kmer_content = "data/combined.callable_kmer_content.csv",
         genos = "data/genotypes/bxd.geno",
-        mutations = "data/mutations/bxd/annotated_filtered_singletons.all_samples.csv",
+        mutations = "data/mutations/bxd/annotated_filtered_singletons.condition_on_N.csv",
         py_script = "scripts/reformat_bxd_spectra.py"
     output: "csv/bxd_spectra_{k}mer.csv"
     shell:
@@ -25,7 +25,8 @@ rule plot_bxd_spectra_ca:
         python {input.py_script} --spectra {input.spectra} \
                                  --out {output} \
                                  -k {wildcards.k} \
-                                 -mutation_type {wildcards.mutation_type}
+                                 -mutation_type {wildcards.mutation_type} \
+                                 -phenotype Fraction
         """
 
 rule plot_bxd_spectra_all:

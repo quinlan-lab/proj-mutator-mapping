@@ -12,7 +12,7 @@ rule tabix_mgp_vcf:
     input:
         vcf = "data/vcf/mgp.regions.vcf.gz",
     output:
-        "data/vcf/mgp.regions.vcf.gz.tbi"
+        temp("data/vcf/mgp.regions.vcf.gz.tbi")
     shell:
         """
         tabix -p vcf {input.vcf}

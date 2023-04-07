@@ -66,8 +66,8 @@ rule generate_simulation_comp_data:
         py_script = "ihd/run_ihd_power_simulations.py"
     output:
         results = temp("data/Rqtl_sim/power_ind.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv"),
-        genos = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.geno",
-        spectra = "data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv"
+        genos = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.geno"),
+        spectra = temp("data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv")
     shell:
         """
         python {input.py_script} --results {output.results} \
@@ -116,7 +116,7 @@ rule reformat_simulated_spectra:
     input:
         spectra = "data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv"
     output:
-        spectra = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.pheno"
+        spectra = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.pheno")
     run:
         import pandas as pd
         spectra_df = pd.read_csv(input.spectra)
