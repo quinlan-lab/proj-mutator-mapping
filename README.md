@@ -7,12 +7,17 @@
 
 Identify alleles that affect the mutation spectrum in bi-parental recombinant inbred crosses. 
 
-### Overview of method
+This repository includes the Python code underlying the inter-haplotype distance (IHD) method described in our [latest manuscript]().
+
+We also provide a [`snakemake`](https://snakemake.readthedocs.io/en/stable/index.html) pipeline that can be used to reproduce all figures and analyses from the manuscript in a single command.
+
+### Overview of inter-haplotype distance (IHD) method
 
 ![](img/fig-distance-method.png)
 
 > **Overview of inter-haplotype distance method.**
-> Figure 4: Overview of inter-haplotype distance method for discovering mutator alleles. **a)** A population of four haplotypes has been genotyped at three informative markers ($g_1$ through $g_3$); each haplotype also harbors private *de novo* germline mutations, which are denoted as triangles. *De novo* mutations are further classified into three possible mutation types, indicated by the color of each triangle. At each informative marker $g_n$, we calculate the total number of each mutation type observed on haplotypes that carry either parental allele (i.e., the aggregate mutation spectrum). We then calculate a $\chi^2$ statistic between the two aggregate mutation spectra. We repeat this process for every informative marker $g_n$. **b)** To assess the significance of any $\chi^2$ statistic peaks in a), we perform a permutation test by shuffling the haplotype labels associated with the *de novo* mutation data. In each of $N$ permutations, we record the maximum $\chi^2$ statistic encountered at any locus in the distance scan. Finally, we calculate the $1 - p$ percentile of the distribution of those maximum statistics to obtain a genome-wide $\chi^2$ statistic threshold at the specified value of $p$.
+> Figure 4: Overview of inter-haplotype distance method for discovering mutator alleles. **a)** A population of four haplotypes has been genotyped at three informative markers ($g_1$ through $g_3$); each haplotype also harbors private *de novo* germline mutations. In practice, *de novo* mutations are partitioned by $k$-mer context; for simplicity in this toy example, *de novo* mutations are simply classified into two possible mutation types (grey squares represent C>(A/T/G) mutations, while grey triangles represent A>(C/T/G) mutations). At each informative marker $g_n$, we calculate the total number of each mutation type observed on haplotypes that carry either parental allele (i.e., the aggregate mutation spectrum) using all genome-wide *de novo* mutations.  We then calculate the cosine distance between the two aggregate mutation spectra (the "inter-haplotype distance"). Cosine distance can be defined as $1 - \cos(\theta)$, where $\theta$ is the angle between two vectors; in this case, the two vectors are the two aggregate spectra. We repeat this process for every informative marker $g_n$. **b)** To assess the significance of any distance peaks in a), we perform permutation tests. In each of $N$ permutations, we shuffle the haplotype labels associated with the *de novo* mutation data, run a genome-wide distance scan, and record the maximum cosine distance encountered at any locus in the scan. Finally, we calculate the $1 - p$ percentile of the distribution of those maximum distances to obtain a genome-wide cosine distance threshold at the specified value of $p$.
+
 ## Requirements
 
 ### Python dependencies
@@ -23,9 +28,37 @@ Dependencies can be installed with `pip install -r requirements.txt`.
 
 > I recommend using [`pyenv`](https://github.com/pyenv/pyenv) and [`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv) to manage Python environments.
 
+## Reproducing analyses and figures from Sasani et al. (2023)
+
+To reproduce the full set of analyses and figures from our recent manuscript, you can run a single `snakemake` pipeline as follows.
+
+```
+# clone the repo
+git clone git@github.com:quinlan-lab/proj-mutator-mapping.git
+
+# enter the top-level repo directory 
+cd proj-mutator-mapping/
+
+# install python requirements
+pip install -r requirements.txt
+
+# run the pipeline
+snakemake -j1 -s scripts/make_figures.smk
+```
+
+All of the figures presented in the manuscript will be generated and added to a new directory called `figs/`.
+
+If desired, the  `-j` parameter can be used to set the number of jobs that should be executed in parallel when running the pipeline. 
+
+> IMPORTANT: you'll need to have `tabix`, `bcftools`, and `bedtools` in your system path to reproduce the figures. You can get the former two tools [here](http://www.htslib.org/download/), and the latter [here](https://github.com/arq5x/bedtools2/releases).
+
+## Running IHD
+
+If you want to use the inter-haplotype distance (IHD) method on your own data, you can follow the instructions below.
+
 ### Description of input files 
 
-Before running an inter-haplotype distance (IHD) scan, you'll need to prepare a
+Before running an IHD scan, you'll need to prepare a
 small number of input files.
 
 1. ***De novo* germline mutation data**
@@ -41,7 +74,7 @@ small number of input files.
 
     **Notes:**
 
-    > The `kmer` column *must* contain mutation types in the 3-mer format shown above -- the format will be validated at runtime.
+    > The `kmer` column *must* contain mutation types in the 3-mer format shown above -- this format will be validated at runtime.
 
     > The CSV file can contain either a) one row for every individual mutation observed in each sample, in which case the `count` column should always be set to 1 or b) the aggregate count of every mutation type observed in the sample, in which case the `count` column will reflect the total number of each mutation type observed in the sample.
 
@@ -53,9 +86,9 @@ small number of input files.
 
     | marker | sample_A | sample_B | sample_C |
     | - | - | - | - |
-    | rs001 | B | B | D |
-    | rs002 | H | D | B |
-    | rs003 | D | D | D |
+    | rs001 | A | A | B |
+    | rs002 | H | B | A |
+    | rs003 | B | B | B |
 
 
 3. **Marker information (optional)**
@@ -78,8 +111,8 @@ small number of input files.
     ```
     {
         "genotypes": {
-            "B": 0,
-            "D": 2,
+            "A": 0,
+            "B": 2,
             "H": 1
         },
         "geno": "path/to/geno/csv",
@@ -93,24 +126,9 @@ small number of input files.
 
     > The two parental alleles *must* be mapped to values of 0 and 2, respectively. Heterozygous and unknown genotypes *must* be mapped to values of 1.
 
-## Usage
-
-### Reproducing all figures from the manuscript
-
-Every figure from the manuscript describing the IHD method () can be reproduced in a single command using `snakemake`:
-
-```
-snakemake -j1 -s scripts/make_figures.smk
-```
-
-If desired, the  `-j` parameter can be used to set the number of jobs that should be executed in parallel when running the pipeline. 
-
-
-> IMPORTANT: you'll need to have both `tabix` and `bcftools` in your system path to reproduce the figures. You can get both [here](http://www.htslib.org/download/).
-
 ### Running an inter-haplotype distance scan
 
-If you don't want to reproduce the manuscript figures, a single IHD scan can be performed as follows:
+A single IHD scan can be performed as follows:
 
 ```
 python scripts/run_ihd_scan.py \
@@ -125,6 +143,10 @@ There are a small number of optional arguments:
 
 * `-permutations` sets the number of permutations to use when calculating significance thresholds for the IHD scan. Default value is 1,000.
 
+* `-distance_method` specifies the distance method to use when comparing aggregate mutation spectra. By default, the method is cosine distance (`-distance_method cosine`), but can also be a chi-square statistic (`distance_method chisquare`).
+
+* `-threads` specifies the number of threads to use during the permutation testing step. IHD used `numba` for multi-threading. Default value is 1.
+
 ### Plotting the results of an IHD scan
 
 ```
@@ -134,7 +156,11 @@ python scripts/plot_ihd_results.py \
         --outpref output_prefix
 ```
 
-There is one optional argument, `-colname`, that can be used to specify the name of the column in the marker metadata CSV that indicates the physical/genetic map position you wish to plot in the Manhattan plot. The argument defaults to "Mb."
+There are a small number of optional arguments:
+
+* `-colname` can be used to specify the name of the column in the marker metadata CSV that indicates the physical/genetic map position you wish to plot in the Manhattan plot. Default is "Mb."
+
+* `-chrom` can be used to generate a Manhattan plot for a single chromosome. Default is None.
 
 ## Running tests
 
@@ -157,20 +183,21 @@ These tests are run automatically via GitHub actions (for Python versions 3.8, 3
         plot_power.py                   # plotting scripts for power simulations
 
     scripts/                            # various scripts for analyses presented in paper
-        combine_bxd_singletons.py       # combine and reformat the downloaded BXD singleton data
-        compare_spectra_at_marker.py    # plot mutation spectra in BXDs that inherited either genotype at either of the two mutator loci
-        find_nonsynonymous.py           # find any nonsynonymous mutations that are fixed differences between the parental DBA/2J and C57BL/6J strains
-        compute_mutation_spectra.py     # generate heatmaps comparing 3-mer mutation spectra between two collections of mutations
-        compare_mgp_spectra.py          # plot mutation spectra in Sanger MGP strains that have either genotype at either of the two mutator loci
-        test_for_epistasis.R            # test for evidence of epistasis between mutator loci on C>A mutation counts using generalized linear models
-        run_pipeline.smk                # snakemake pipeline to generate manuscript figures
+        rules/                          # snakemake rules for individual processing steps
 
-    tests/
-        fixtures.py                     # fixtures used by `pytest`
-        test_utils.py                   # testing suite for methods in `utils.py`
+    tests/                              # pytest tests and fixtures
 
     data/
-        genotypes/                      # directory containing formatted `.geno` files for the BXDs that contain sample genotypes at every tested marker
-        json/                           # directory containing JSON configuration files for IHD scans using the BXDs
-        mutations/                      # directory containing per-sample *de novo* mutation data in the BXDs
+        genotypes/                      # contains formatted `.geno` files for the BXDs that contain sample genotypes at every tested marker
+        json/                           # contains JSON configuration files for IHD scans using the BXDs
+        mutations/                      # contains per-sample *de novo* mutation data in the BXDs
+        exclude/                        # contains an mm10 file containing problematic regions of the genome to avoid
+        Rqtl_data/                      # contains Rqtl data for QTL scans using BXD data
+        vcf/                            # VCF files included with repository for various queries
+            variants_freeze5_sv_insdel_sym.vcf.gz   # VCF from Ferraj et al. (2023) containing SV calls in inbred laboratory strains
         bam_names_to_metadata.xlsx      # Excel file with metadata about the BXD RILs
+        SuppTables_concat.xlsx          # supplementary excel file from Dumont (2019) that contains de novo mutation data from inbred laboratory strains
+        mm39.refseq.tsv.gz              # RefSeq transcripts downloaded from the UCSC table browser
+        combined.callable_kmer_content.csv # number of A or C nucleotides accessible to singleton calling and covered by >= 10 reads in the BXDs
+
+
