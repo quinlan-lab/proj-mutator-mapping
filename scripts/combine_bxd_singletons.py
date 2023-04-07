@@ -81,10 +81,10 @@ def main(args):
 
     # if desired, only output data for samples that have D genotypes
     # at the chr4 QTL we identified previously
-    if args.condition_on_mutator:
+    if args.condition_on_mutator != "N":
         geno_at_marker = geno[geno['marker'] == "rs52263933"]
         smp2geno = geno_at_marker.to_dict(orient="list")
-        filtered_samples = [s for s,g in smp2geno.items() if g[0] == "D"]
+        filtered_samples = [s for s,g in smp2geno.items() if g[0] == args.condition_on_mutator]
         combined_merged = combined_merged[combined_merged["sample"].isin(filtered_samples)]
 
     # remove strains that haven't been inbred for a sufficient number of generations
@@ -120,9 +120,9 @@ if __name__ == "__main__":
     )
     p.add_argument(
         "-condition_on_mutator",
-        action="store_true",
+        default="N",
         help=
-        """if specified, only generate a combined singleton file using BXDs with D alleles at the chromosome 4 mutator locus discovered in Sasani et al. 2022""",
+        """only generate a combined singleton file using BXDs with the specified allele at the chromosome 4 mutator locus discovered in Sasani et al. 2022. default is N, which will not condition on alleles at that locus.""",
     )
     args = p.parse_args()
     main(args)

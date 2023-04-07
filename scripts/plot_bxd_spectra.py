@@ -63,9 +63,9 @@ def main(args):
                                ascending=True,
                                inplace=True)
 
-        xval, hue = "Mutation type", "Haplotypes"
+        xval, hue, dodge = "Mutation type", "Haplotypes", True
         if args.mutation_type is not None:
-            xval, hue = "Haplotypes", None
+            xval, hue, dodge = "Haplotypes", None, False
 
         sns.boxplot(
             data=spectra_df,
@@ -85,7 +85,7 @@ def main(args):
             linewidth=lw,
             hue=hue,
             size=size,
-            dodge=True if args.mutation_type is None else False,
+            dodge=dodge,
             ax=ax,
         )
         sns.despine(ax=ax, top=True, right=True)

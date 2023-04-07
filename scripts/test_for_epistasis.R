@@ -15,13 +15,9 @@ bxd <- read_cross2("/Users/tomsasani/quinlanlab/proj-mutator-mapping/data/Rqtl_d
 # subset cross2 to relevant BXDs
 bxd <- bxd[df$sample, ]
 
-# insert pseudomarkers into the genotype map
-# following lines are from https://kbroman.org/pages/teaching.html
-gmap <- insert_pseudomarkers(bxd$gmap, step = 0.2, stepwidth = "max")
-
 # calculate QTL genotype probabilities
 # (error_prob taken directly from R/qtl2 user guide)
-pr <- calc_genoprob(bxd, gmap, error_prob = 0.002, map_function = "c-f")
+pr <- calc_genoprob(bxd, bxd$pmap, error_prob = 0.0, map_function = "c-f")
 
 # calculate kinship between strains using the
 # "overall" method
@@ -43,7 +39,8 @@ rownames(kinship) <- phen_df$sample
 
 # https://sahirbhatnagar.com/blog/2017/10/12/mixed-models-with-kinship-in-r/
 
-gfit1 <- lm(Fraction ~ Epoch + Haplotype_A * Haplotype_B, data = phen_df)
+# run lmekin to test for interaction effects between genotypes on
+# C>A mutation fractions
 gfit1 <- lmekin(Fraction ~ Epoch + Haplotype_A + Haplotype_B + (1 | sample),
     data = phen_df,
     varlist = kinship
@@ -52,8 +49,10 @@ gfit2 <- lmekin(Fraction ~ Haplotype_A * Haplotype_B + (1 | sample),
     data = phen_df,
     varlist = kinship
 )
-
 print(gfit2)
+
+# use a poisson model to test for interaction effects between genotypes
+# on C>A mutation counts, modeled as rates
 m1 <- glm(Count ~ offset(log(ADJ_AGE)) + Haplotype_A + Haplotype_B,
     data = df,
     family = poisson(link = "log")
@@ -64,9 +63,18 @@ m2 <- glm(Count ~ offset(log(ADJ_AGE)) + Haplotype_A * Haplotype_B,
 )
 print(anova(m2, m1, test = "Chisq"))
 
+# use the MGP data from dumont to test for interaction effects between
+# genotypes on C>A mutation counts, modeled as rates
 df <- read.csv("/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/mgp_spectra.csv")
 
 df <- subset(df, is_ca == 1)
-m1 <- glm(Count ~ offset(log(CALLABLE_C)) + Haplotype_A + Haplotype_B, data = df, family = poisson(link = "log"))
-m2 <- glm(Count ~ offset(log(CALLABLE_C)) + Haplotype_A * Haplotype_B, data = df, family = poisson(link = "log"))
+m1 <- glm(Count ~ offset(log(CALLABLE_C)) + Haplotype_A + Haplotype_B, 
+    data = df, 
+    family = poisson(link = "log")
+)
+m2 <- glm(Count ~ offset(log(CALLABLE_C)) + Haplotype_A * Haplotype_B, 
+    data = df, 
+    family = poisson(link = "log")
+)
+
 print(anova(m2, m1, test = "Chisq"))

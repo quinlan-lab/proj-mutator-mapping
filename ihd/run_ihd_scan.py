@@ -148,7 +148,7 @@ if __name__ == "__main__":
     )
     p.add_argument(
         "-distance_method",
-        default="chisquare",
+        default="cosine",
         type=str,
         help=
         """Method to use for calculating distance between aggregate spectra. Options are 'cosine' and 'chisquare', default is 'chisquare'.""",

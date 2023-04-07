@@ -3,7 +3,11 @@ from pandera import Column, Check, DataFrameSchema
 
 IHDResultSchema = DataFrameSchema({
     "marker": Column(str),
-    "Distance": Column(float),
+    # technically, cosine distance can only take a value from 0 to 2.
+    # since we adjust cosine distances and potentially even use chisquare
+    # statistics, we won't apply a strict check to the range of possible
+    # distance values.
+    "Distance": Column(float), 
     "k": Column(int, Check.isin([1, 3])),
 })
 
