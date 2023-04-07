@@ -7,22 +7,24 @@
 
 Identify alleles that affect the mutation spectrum in bi-parental recombinant inbred crosses. 
 
-This repository includes the Python code underlying the inter-haplotype distance (IHD) method described in our [latest manuscript]().
+This repository includes:
 
-We also provide a [`snakemake`](https://snakemake.readthedocs.io/en/stable/index.html) pipeline that can be used to reproduce all figures and analyses from the manuscript in a single command.
+1. Python code underlying the inter-haplotype distance (IHD) method described in our [latest manuscript]().
+
+2. A [`snakemake`](https://snakemake.readthedocs.io/en/stable/index.html) pipeline that can be used to reproduce all figures and analyses from the manuscript in a single command.
 
 ### Overview of inter-haplotype distance (IHD) method
 
 ![](img/fig-distance-method.png)
 
 > **Overview of inter-haplotype distance method.**
-> Figure 4: Overview of inter-haplotype distance method for discovering mutator alleles. **a)** A population of four haplotypes has been genotyped at three informative markers ($g_1$ through $g_3$); each haplotype also harbors private *de novo* germline mutations. In practice, *de novo* mutations are partitioned by $k$-mer context; for simplicity in this toy example, *de novo* mutations are simply classified into two possible mutation types (grey squares represent C>(A/T/G) mutations, while grey triangles represent A>(C/T/G) mutations). At each informative marker $g_n$, we calculate the total number of each mutation type observed on haplotypes that carry either parental allele (i.e., the aggregate mutation spectrum) using all genome-wide *de novo* mutations.  We then calculate the cosine distance between the two aggregate mutation spectra (the "inter-haplotype distance"). Cosine distance can be defined as $1 - \cos(\theta)$, where $\theta$ is the angle between two vectors; in this case, the two vectors are the two aggregate spectra. We repeat this process for every informative marker $g_n$. **b)** To assess the significance of any distance peaks in a), we perform permutation tests. In each of $N$ permutations, we shuffle the haplotype labels associated with the *de novo* mutation data, run a genome-wide distance scan, and record the maximum cosine distance encountered at any locus in the scan. Finally, we calculate the $1 - p$ percentile of the distribution of those maximum distances to obtain a genome-wide cosine distance threshold at the specified value of $p$.
+> **a)** A population of four haplotypes has been genotyped at three informative markers ($g_1$ through $g_3$); each haplotype also harbors private *de novo* germline mutations. In practice, *de novo* mutations are partitioned by $k$-mer context; for simplicity in this toy example, *de novo* mutations are simply classified into two possible mutation types (grey squares represent C>(A/T/G) mutations, while grey triangles represent A>(C/T/G) mutations). At each informative marker $g_n$, we calculate the total number of each mutation type observed on haplotypes that carry either parental allele (i.e., the aggregate mutation spectrum) using all genome-wide *de novo* mutations.  We then calculate the cosine distance between the two aggregate mutation spectra (the "inter-haplotype distance"). Cosine distance can be defined as $1 - \cos(\theta)$, where $\theta$ is the angle between two vectors; in this case, the two vectors are the two aggregate spectra. We repeat this process for every informative marker $g_n$. **b)** To assess the significance of any distance peaks in a), we perform permutation tests. In each of $N$ permutations, we shuffle the haplotype labels associated with the *de novo* mutation data, run a genome-wide distance scan, and record the maximum cosine distance encountered at any locus in the scan. Finally, we calculate the $1 - p$ percentile of the distribution of those maximum distances to obtain a genome-wide cosine distance threshold at the specified value of $p$.
 
 ## Requirements
 
 ### Python dependencies
 
-These methods were written in Python 3.9.6, and the full list of dependencies is provided in `requirements.txt`.
+All methods were written in Python 3.9.6, and the full list of dependencies is provided in `requirements.txt`.
 
 Dependencies can be installed with `pip install -r requirements.txt`.
 
@@ -134,7 +136,7 @@ A single IHD scan can be performed as follows:
 python scripts/run_ihd_scan.py \
         --singletons /path/to/mutation/csv \
         --config /path/to/config/json \
-        --out /name/of/output/csv \
+        --out /name/of/output/csv
 ```
 
 There are a small number of optional arguments:
