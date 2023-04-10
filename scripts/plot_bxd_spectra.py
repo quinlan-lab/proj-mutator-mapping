@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import argparse
 import sys
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
 
 plt.rc("font", size=18)
 
@@ -50,6 +52,19 @@ def main(args):
         if args.mutation_type is not None:
             spectra_df = spectra_df[spectra_df["Mutation type"] ==
                                     args.mutation_type.replace("_", ">")]
+            # fit linear model to get variance explained
+            Y = spectra_df[args.phenotype]
+            X = spectra_df["Haplotypes"]
+            X = sm.add_constant(X)
+            # predict C>A with just chr4 genotypes
+            model_1 = ols('Fraction ~ C(Haplotype_A)', data=spectra_df).fit()
+            # predict with both genotypes
+            model_2 = ols('Fraction ~ C(Haplotypes)', data=spectra_df).fit()
+            table_1 = sm.stats.anova_lm(model_1, typ=2)
+            table_2 = sm.stats.anova_lm(model_2, typ=2)
+            for table, label in zip([table_1, table_2], ["chromosome 4 only", "both markers"]):
+                var_exp = table["sum_sq"].values[0] / table["sum_sq"].sum()
+                print (f"{var_exp} explained using genotypes at {label}")
             f, ax = plt.subplots(figsize=(8, 6))
             lw *= 1.5
             size *= 2
