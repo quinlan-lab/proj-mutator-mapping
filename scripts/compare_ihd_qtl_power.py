@@ -13,6 +13,7 @@ def main(args):
     ihd_power = pd.read_csv(args.ihd_power)
     ihd_power['Power'] = ihd_power['pval'].apply(lambda p: p <= 0.05)
     ihd_power["Method"] = "IHD"
+    ihd_power = ihd_power[ihd_power["tag_strength"] == 1]
 
     correction = 7
     ihd_power["bonferroni_corr"] = correction

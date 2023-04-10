@@ -19,7 +19,7 @@ def main(args):
         "effect_size": "Mutator effect size",
         "n_mutations": "# mutations",
         "n_markers": "# markers",
-        "tag_strength": "Tag strength",
+        "tag_strength": "Linkage",
     }
     df.rename(columns=replace_dict, inplace=True)
 

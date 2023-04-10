@@ -265,7 +265,7 @@ def main(args):
         n_haplotypes=args.n_haplotypes,
         n_markers=args.n_markers,
         number_of_trials=number_of_trials,
-        f_with_mutator=args.tag_strength,
+        f_with_mutator=args.tag_strength / 100.,
         distance_method=distance_method,
     )
 
@@ -361,9 +361,9 @@ if __name__ == "__main__":
     p.add_argument(
         "-tag_strength",
         type=float,
-        default=1.,
+        default=100,
         help=
-        """Fraction of haplotypes with "A" alleles at the simulated mutator locus that actually carry the effects of the mutator on their mutation spectra. Default is 1.0.""",
+        """Percentage of haplotypes with "A" alleles at the simulated mutator locus that actually carry the effects of the mutator on their mutation spectra. Default is 100.""",
     )
     p.add_argument(
         "-distance_method",

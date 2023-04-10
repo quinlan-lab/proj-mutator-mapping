@@ -13,8 +13,6 @@ from utils import (
     compute_manual_cosine_distance,
 )
 from schema import IHDResultSchema, MutationSchema
-import seaborn as sns
-import statsmodels.api as sm
 import numba
 
 
@@ -81,6 +79,7 @@ def main(args):
         geno_filtered,
         genotype_similarity,
         distance_method=distance_method,
+        adjust_statistics=True,
     )
 
     res_df = pd.DataFrame({

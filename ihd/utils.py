@@ -367,7 +367,7 @@ def perform_permutation_test(
             shuffled_spectra,
             genotype_matrix,
             genotype_similarity,
-            distance_method = distance_method,
+            distance_method=distance_method,
             adjust_statistics=adjust_statistics,
         )
 

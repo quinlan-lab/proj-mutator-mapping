@@ -13,6 +13,7 @@ def main(args):
 
     ihd_power["mutation_type"] = ihd_power["mutation_type"].apply(lambda m: m.replace("_", r"$\to$"))
     ihd_power["effect_size"] = ihd_power["effect_size"] / 100.
+    ihd_power = ihd_power[ihd_power["tag_strength"] == 1]
 
     replace_dict = {
         "mutation_type": "Mutation type",
