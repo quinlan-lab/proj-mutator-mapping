@@ -7,4 +7,6 @@ from tests.fixtures import (
     genotype_array_nans,
     genotype_similarity,
     spectra_array,
+    callable_kmer_arr_mut,
+    callable_kmer_arr_wt,
 )

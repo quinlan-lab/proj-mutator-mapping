@@ -11,6 +11,7 @@ from ihd.utils import (
     compute_residuals,
     compute_manual_chisquare,
     find_central_mut,
+    adjust_spectra_for_nuccomp,
 )
 import pytest
 import scipy.stats as ss
@@ -148,4 +149,21 @@ def test_perform_ihd_permutation_test(
 ])
 def test_find_central_mut(kmer, exp):
     assert find_central_mut(kmer) == exp
-    
+
+
+def test_adjust_spectra_for_nuccomp(
+    wt_haplotype_array,
+    mut_haplotype_array,
+    callable_kmer_arr_mut,
+    callable_kmer_arr_wt,
+):
+    wt_adj, mut_adj = adjust_spectra_for_nuccomp(
+        np.sum(wt_haplotype_array, axis=0),
+        np.sum(mut_haplotype_array, axis=0),
+        np.sum(callable_kmer_arr_wt, axis=0),
+        np.sum(callable_kmer_arr_mut, axis=0),
+    )
+
+    assert np.array_equal(wt_adj, np.array([2, 3, 3, 9, 6, 3]))
+    assert np.array_equal(mut_adj, np.array([6, 6, 15, 6, 8, 6]))
+

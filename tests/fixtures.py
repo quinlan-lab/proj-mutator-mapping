@@ -35,6 +35,24 @@ def mut_haplotype_array() -> np.ndarray:
 
 
 @pytest.fixture
+def callable_kmer_arr_mut() -> np.ndarray:
+    return np.array([
+        [20, 20, 20, 70, 70, 70],
+        [20, 20, 20, 60, 60, 60],
+        [10, 10, 10, 50, 50, 50],
+    ])
+
+
+@pytest.fixture
+def callable_kmer_arr_wt() -> np.ndarray:
+    return np.array([
+        [75, 75, 75, 30, 30, 30],
+        [50, 50, 50, 50, 50, 50],
+        [25, 25, 25, 40, 40, 40],
+    ])
+
+
+@pytest.fixture
 def spectra_array() -> np.ndarray:
     return np.array([
         [1, 3, 4],

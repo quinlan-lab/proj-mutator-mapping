@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Callable
+from typing import Callable, Tuple
 import numba
 
 @numba.njit
@@ -202,6 +202,78 @@ def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
 
     return genotype_sims
 
+@numba.njit
+def adjust_spectra_for_nuccomp(
+    a_spectra: np.ndarray,
+    b_spectra: np.ndarray,
+    a_denom: np.ndarray,
+    b_denom: np.ndarray,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Scale the counts in the input mutation spectra
+    such that they are adjusted in terms of nucleotide context.
+    For a given mutation type (e.g., C>T), if the `a_spectra` 
+    contains more C>[A/T/G] mutations, it may simply be because
+    the samples represented in `a_spectra` had more cytosines 
+    that were accessible to variant calling. If `a_denom` contains
+    more C nucleotides than `b_denom`, we adjust the counts of the 
+    C>[A/T/G] mutations in `a_spectra` by a scaling factor 
+    (`b_denom` / `a_denom`). And vice versa.
+
+    Args:
+        a_spectra (np.ndarray): 1D numpy array containing the aggregate mutation \
+            spectrum in group "A."
+
+        b_spectra (np.ndarray): 1D numpy array containing the aggregate mutation \
+            spectrum in group "B."
+
+        a_denom (np.ndarray): 1D numpy array containing the aggregate number of \
+            callable base pairs in group "A." At each index i in this array, the \
+            total count of accessible nucleotides should correspond to the "reference" \
+            nucleotide of the corresponding mutation type in `a_spectra` at the same index. \
+            For example, if the first two entries of `a_spectra` corresponds to the aggregate count \
+            of C>T and C>A mutations, the first two entries of `a_denom` should both contain \
+            the aggregate counts of accessible C nucleotides in the group.
+
+        b_denom (np.ndarray): 1D numpy array containing the aggregate number of \
+            callable base pairs in group "B." At each index i in this array, the \
+            total count of accessible nucleotides should correspond to the "reference" \
+            nucleotide of the corresponding mutation type in `b_spectra` at the same index.
+            For example, if the first two entries of `b_spectra` corresponds to the aggregate count \
+            of C>T and C>A mutations, the first two entries of `b_denom` should both contain \
+            the aggregate counts of accessible C nucleotides in the group.
+
+    Returns:
+        (adj_a_spectra, adj_b_spectra) Tuple[np.ndarray, np.ndarray]: The input mutation spectra, \
+            adjusted for nucleotide context.
+    """
+    # store the adjusted mutation spectra in two new arrays
+    new_a_spectra, new_b_spectra = (
+        np.zeros(a_spectra.shape),
+        np.zeros(b_spectra.shape),
+    )
+
+    # loop over the indices of the input mutation spectra
+    for nuc_i in np.arange(a_spectra.shape[0]):
+        # get the aggregate count of the mutation type in either group
+        a_mut_count, b_mut_count = a_spectra[nuc_i], b_spectra[nuc_i]
+        # get the aggregate count of accessible nucleotides in either group
+        a_nuc_count, b_nuc_count = a_denom[nuc_i], b_denom[nuc_i]
+
+        # if the count of nucleotides in group A is larger than in group B,
+        # adjust group A down by the scaling factor
+        if a_nuc_count > b_nuc_count:
+            adj_factor = b_nuc_count / a_nuc_count
+            a_mut_count *= adj_factor
+        # and vice versa if group B > group A
+        elif b_nuc_count > a_nuc_count:
+            adj_factor = a_nuc_count / b_nuc_count
+            b_mut_count *= adj_factor
+
+        new_a_spectra[nuc_i] = a_mut_count
+        new_b_spectra[nuc_i] = b_mut_count
+
+    return new_a_spectra, new_b_spectra
+
 
 @numba.njit
 def perform_ihd_scan(
@@ -395,6 +467,7 @@ def find_central_mut(kmer: str, cpg: bool = True) -> str:
 def compute_spectra(
     mutations: pd.DataFrame,
     k: int = 1,
+    cpg: bool = True,
 ):
     """Compute the mutation spectrum of every sample in 
     the input pd.DataFrame of mutation data. The input
@@ -437,7 +510,7 @@ def compute_spectra(
     if k == 1:
         # add base mutation type
         hap_spectra_agg['base_mut'] = hap_spectra_agg['kmer'].apply(
-            lambda k: find_central_mut(k))
+            lambda k: find_central_mut(k, cpg=cpg))
         hap_spectra_agg = hap_spectra_agg.groupby(['sample', 'base_mut']).agg({
             'count':
             sum

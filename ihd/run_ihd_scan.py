@@ -47,9 +47,24 @@ def main(args):
     mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
 
     # get a list of samples and their corresponding mutation spectra
-    samples, _, spectra = compute_spectra(mutations_filtered, k=args.k)
+    samples, mutation_types, spectra = compute_spectra(mutations_filtered, k=args.k, cpg=False)
     print(f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
     total mutations.""")
+
+    callable_kmer_arr = np.ones(spectra.shape)
+
+    if args.callable_kmers and args.k == 1:
+        callable_kmers = pd.read_csv(args.callable_kmers)
+        # NOTE: need to check schema of df
+        for si, s in enumerate(samples):
+            for mi, m in enumerate(mutation_types):
+                base_nuc = m.split(">")[0] if m != "CpG>TpG" else "C"
+                callable_k = callable_kmers[
+                    (callable_kmers["GeneNetwork name"] == s)
+                    & (callable_kmers["nucleotide"] == base_nuc)]
+                if callable_k["count"].values.shape[0] == 0:
+                    print (s, m)
+                callable_kmer_arr[si, mi] = callable_k["count"].values[0]
 
     # convert string genotypes to integers based on config definition
     replace_dict = config_dict['genotypes']
@@ -164,6 +179,10 @@ if __name__ == "__main__":
         action="store_true",
         help=
         """Whether to output the progress of the permutation testing step (i.e., the number of completed permutations).""",
+    )
+    p.add_argument(
+        "-callable_kmers",
+        help="""Path to CSV file containing numbers of callable base pairs in each sample, stratified by nucleotide."""
     )
     args = p.parse_args()
 
