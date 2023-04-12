@@ -1,12 +1,13 @@
 library(MASS)
 library(ggplot2)
-
-df <- read.csv("/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/bxd_spectra_1mer.csv")
-
-df <- subset(df, is_ca == 1)
 library(qtl2)
 library(dplyr)
 library(coxme)
+
+df <- read.csv("/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/bxd_spectra_1mer.csv")
+
+# get C>A mutations only
+df <- subset(df, is_ca == 1)
 
 # read in the JSON that directs R/qtl2 to sample genotypes,
 # phenotypes, and covariates
@@ -17,7 +18,7 @@ bxd <- bxd[df$sample, ]
 
 # calculate QTL genotype probabilities
 # (error_prob taken directly from R/qtl2 user guide)
-pr <- calc_genoprob(bxd, bxd$pmap, error_prob = 0.0, map_function = "c-f")
+pr <- calc_genoprob(bxd, bxd$pmap, error_prob = 0.002, map_function = "c-f")
 
 # calculate kinship between strains using the
 # "overall" method
@@ -41,25 +42,25 @@ rownames(kinship) <- phen_df$sample
 
 # run lmekin to test for interaction effects between genotypes on
 # C>A mutation fractions
-gfit1 <- lmekin(Fraction ~ Epoch + Haplotype_A + Haplotype_B + (1 | sample),
+gfit1 <- lmekin(CLR_fraction ~ haplotype_at_mutyh_binary + haplotype_at_ogg1_binary + (1 | sample),
     data = phen_df,
     varlist = kinship
 )
-gfit2 <- lmekin(Fraction ~ Haplotype_A * Haplotype_B + (1 | sample),
+gfit2 <- lmekin(CLR_fraction ~ haplotype_at_mutyh_binary * haplotype_at_ogg1_binary + (1 | sample),
     data = phen_df,
     varlist = kinship
 )
-print(gfit2)
+print (gfit2)
 
 # use a poisson model to test for interaction effects between genotypes
 # on C>A mutation counts, modeled as rates
-m1 <- glm(Count ~ offset(log(ADJ_AGE)) + Haplotype_A + Haplotype_B,
-    data = df,
-    family = poisson(link = "log")
+m1 <- glm(Count ~ offset(log(ADJ_AGE)) + haplotype_at_mutyh_binary + haplotype_at_ogg1_binary,
+    data = phen_df,
+    family = poisson()
 )
-m2 <- glm(Count ~ offset(log(ADJ_AGE)) + Haplotype_A * Haplotype_B,
-    data = df,
-    family = poisson(link = "log")
+m2 <- glm(Count ~ offset(log(ADJ_AGE)) + haplotype_at_mutyh_binary * haplotype_at_ogg1_binary,
+    data = phen_df,
+    family = poisson()
 )
 print(anova(m2, m1, test = "Chisq"))
 
@@ -70,11 +71,11 @@ df <- read.csv("/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/mgp_spectra
 df <- subset(df, is_ca == 1)
 m1 <- glm(Count ~ offset(log(CALLABLE_C)) + Haplotype_A + Haplotype_B, 
     data = df, 
-    family = poisson(link = "log")
+    family = poisson()
 )
 m2 <- glm(Count ~ offset(log(CALLABLE_C)) + Haplotype_A * Haplotype_B, 
     data = df, 
-    family = poisson(link = "log")
+    family = poisson()
 )
 
 print(anova(m2, m1, test = "Chisq"))
