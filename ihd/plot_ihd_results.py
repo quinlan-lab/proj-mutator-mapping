@@ -29,7 +29,6 @@ def main(args):
 
     # get significant markers
     signif = results_merged[results_merged["Distance"] >= results_merged[pctile_label]]
-    #signif.to_csv(f"{args.outpref}.significant_markers.csv", index=False)
 
     chrom_order = list(map(str, range(1, 23)))
     chrom_order.append("X")
@@ -47,11 +46,11 @@ def main(args):
     max_threshold_dist = np.max(results_merged[pctile_label])
 
     ax.axhline(
-        y=max_threshold_dist,
+        y=max_threshold_dist * args.scale,
         ls=":",
         c="grey",
         label="Genome-wide significance threshold " +
-        r"$\left(p \leq 0.05\right)$",
+        r"$\left(p = 0.05\right)$",
         lw=2,
     )
 
@@ -67,7 +66,7 @@ def main(args):
 
         color_idx = i % 2
         xvals = chrom_df[args.colname].values + previous_max
-        yvals = chrom_df["Distance"].values
+        yvals = chrom_df["Distance"].values * args.scale
 
         ax.scatter(
             xvals,
@@ -107,7 +106,7 @@ def main(args):
         max_threshold_dist = np.max(results_merged_chr[pctile_label])
 
         ax.axhline(
-            y=max_threshold_dist,
+            y=max_threshold_dist * args.scale,
             ls=":",
             c="grey",
             label="Genome-wide significance threshold " +
@@ -116,7 +115,7 @@ def main(args):
         )
 
         xvals = results_merged_chr[args.colname].values
-        yvals = results_merged_chr["Distance"].values
+        yvals = results_merged_chr["Distance"].values * args.scale
 
         ax.scatter(
             xvals,
@@ -161,6 +160,12 @@ if __name__ == "__main__":
         "-chrom",
         default=None,
         help="Chromosome to display separately in its own Manhattan plot.",
+    )
+    p.add_argument(
+        "-scale",
+        type=int,
+        default=1_000,
+        help="""Scale the cosine distance values by the specified amount to make visualization a bit easier on the y-axis. Default is 1000."""
     )
     args = p.parse_args()
     main(args)

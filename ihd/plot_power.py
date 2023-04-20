@@ -8,7 +8,9 @@ plt.rc("font", size=12)
 def main(args):
     df = pd.read_csv(args.results)
     df['Power'] = df['pval'].apply(lambda p: p <= 0.05)
-    df = df[df["mutation_type"].isin(["C_G", "C_A", "C_T"])]
+
+    df = df[(df["mutation_type"].isin(["C_G", "C_A", "C_T"]))
+            & (df["distance_method"] == "cosine")]
 
     df["mutation_type"] = df["mutation_type"].apply(lambda m: m.replace("_", r"$\to$"))
     df["effect_size"] = df["effect_size"] / 100.
@@ -20,6 +22,7 @@ def main(args):
         "n_mutations": "# mutations",
         "n_markers": "# markers",
         "tag_strength": "Linkage",
+        "exp_af": "Allele frequency",
     }
     df.rename(columns=replace_dict, inplace=True)
 
