@@ -4,6 +4,14 @@ import pandas as pd
 
 rng = np.random.default_rng(seed = 42)
 
+@pytest.fixture 
+def haplotype_groups_ident() -> np.ndarray:
+    return np.array([1, 1, 1, 1, 1, 1])
+
+@pytest.fixture 
+def haplotype_groups_strat() -> np.ndarray:
+    return np.array([1, 1, 2, 2, 3, 4])
+
 @pytest.fixture
 def wt_haplotype_array() -> np.ndarray:
     """1-mer mutation counts 

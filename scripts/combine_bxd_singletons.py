@@ -82,16 +82,15 @@ def main(args):
     # if desired, only output data for samples that have D genotypes
     # at the chr4 QTL we identified previously
     if args.condition_on_mutator != "N":
-        geno_at_marker = geno[geno['marker'] == "rs52263933"]
+        geno_at_marker = geno[geno["marker"] == "rs27509845"]
         smp2geno = geno_at_marker.to_dict(orient="list")
         filtered_samples = [s for s,g in smp2geno.items() if g[0] == args.condition_on_mutator]
         combined_merged = combined_merged[combined_merged["sample"].isin(filtered_samples)]
 
     # remove strains that haven't been inbred for a sufficient number of generations
     # and remove the BXD68 outlier
-    combined_merged = combined_merged[(combined_merged['n_generations'] > 20)
+    combined_merged = combined_merged[(combined_merged['n_generations'] >= 1)
                                       & (combined_merged["sample"] != "BXD68")]
-    #combined_merged = combined_merged[(combined_merged['n_generations'] > 20)]
     combined_merged['count'] = 1
     combined_merged.to_csv(args.out, index=False)
 

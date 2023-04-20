@@ -46,10 +46,21 @@ def main(args):
 
     mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
 
+    
+
     # get a list of samples and their corresponding mutation spectra
-    samples, mutation_types, spectra = compute_spectra(mutations_filtered, k=args.k, cpg=False)
+    samples, mutation_types, spectra = compute_spectra(
+        mutations_filtered,
+        k=args.k,
+        cpg=True,
+    )
     print(f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
     total mutations.""")
+
+    strata = np.ones(len(samples))
+    if args.stratify_column is not None:
+        sample2strata = dict(zip(mutations_filtered["sample"], mutations_filtered[args.stratify_column]))
+        strata = np.array([sample2strata[s] for s in samples])
 
     callable_kmer_arr = np.ones(spectra.shape)
 
@@ -83,9 +94,9 @@ def main(args):
 
     # compute similarity between allele frequencies at each marker
     genotype_similarity = compute_genotype_similarity(geno_filtered)
-    distance_method = compute_manual_chisquare
-    if args.distance_method == "cosine":
-        distance_method = compute_manual_cosine_distance
+    distance_method = compute_manual_cosine_distance
+    if args.distance_method == "chisquare":
+        distance_method = compute_manual_chisquare
 
     # compute the maximum cosine distance between groups of
     # haplotypes at each site in the genotype matrix
@@ -111,6 +122,7 @@ def main(args):
         spectra,
         geno_filtered,
         genotype_similarity,
+        strata,
         distance_method=distance_method,
         n_permutations=args.permutations,
         comparison_wide=args.comparison_wide,
@@ -183,6 +195,12 @@ if __name__ == "__main__":
     p.add_argument(
         "-callable_kmers",
         help="""Path to CSV file containing numbers of callable base pairs in each sample, stratified by nucleotide."""
+    )
+    p.add_argument(
+        "-stratify_column",
+        default=None,
+        type=str,
+        help="""If specified, use this column to perform a stratified permutation test by only permuting BXDs within groups defined by the column to account for population structure."""
     )
     args = p.parse_args()
 

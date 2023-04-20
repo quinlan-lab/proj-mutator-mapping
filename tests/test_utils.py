@@ -16,15 +16,33 @@ from ihd.utils import (
 import pytest
 import scipy.stats as ss
 
-
 def test_shuffle_spectra(
-    wt_haplotype_array: np.ndarray,
-    mut_haplotype_array: np.ndarray,
+    wt_haplotype_array,
+    mut_haplotype_array,
+    haplotype_groups_ident,
 ):
     combined_spectra = np.concatenate(
         (wt_haplotype_array, mut_haplotype_array), )
-    shuffled_spectra = shuffle_spectra(combined_spectra)
+    shuffled_spectra = shuffle_spectra(combined_spectra, haplotype_groups_ident)
     assert np.array_equal(combined_spectra, shuffled_spectra) is False
+
+def test_shuffle_spectra_strat(
+    wt_haplotype_array,
+    mut_haplotype_array,
+    haplotype_groups_strat,
+):
+    combined_spectra = np.concatenate(
+        (wt_haplotype_array, mut_haplotype_array), )
+    shuffled_spectra = shuffle_spectra(combined_spectra, haplotype_groups_strat)
+
+    # ensure that shuffled array is different
+    assert np.array_equal(combined_spectra, shuffled_spectra) is False
+    # ensure that the final two rows of the shuffled array are identical
+    # to the input array, since they correspond to two unique groups that
+    # shouldn't be mixed and matched with the others
+    assert np.array_equal(combined_spectra[-2, :], shuffled_spectra[-2, :]) is True
+    assert np.array_equal(combined_spectra[-1, :], shuffled_spectra[-1, :]) is True
+
 
 
 def test_compute_haplotype_distance(
@@ -124,6 +142,7 @@ def test_perform_ihd_permutation_test(
     spectra_array,
     genotype_array,
     genotype_similarity,
+    haplotype_groups_ident,
     n_permutations,
     comparison_wide,
 ):
@@ -131,6 +150,7 @@ def test_perform_ihd_permutation_test(
         spectra_array,
         genotype_array,
         genotype_similarity,
+        haplotype_groups_ident,
         n_permutations=n_permutations,
         comparison_wide=comparison_wide,
     )

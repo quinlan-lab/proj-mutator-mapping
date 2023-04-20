@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Union
 import numba
 
 @numba.njit
@@ -144,26 +144,42 @@ def compute_haplotype_distance(
 
 
 @numba.njit
-def shuffle_spectra(spectra: np.ndarray) -> np.ndarray:
+def shuffle_spectra(spectra: np.ndarray, groups: np.ndarray = None) -> np.ndarray:
     """Randomly shuffle the rows of a 2D numpy array of 
     mutation spectrum data of size (N, M), where N is the number
     of samples and M is the number of mutation types. Shuffled array
     is returned such that sample mutation spectra no longer correspond to the
-    appropriate sample indices into the rows of the array.
+    appropriate sample indices into the rows of the array. Samples are also
+    shuffled within the specified `groups`. In other words, we only shuffle
+    the indices of samples that correspond to a unique value in the `groups` 
+    array.
 
     Args:
         spectra (np.ndarray): 2D numpy array of mutation spectrum data of \
         shape (N, M), where N is the number of samples and M is the number \
         of mutation types.
 
+        groups (np.ndarray): 1D numpy array of group labels (e.g., epochs) \
+            that each sample belongs to, of shape (N, ) where N is the number \
+            of samples. Mutation spectra will only be shuffled *within* \
+            their assigned group.
+
     Returns:
         shuffled_spectra (np.ndarray): The input array, but with shuffled rows.
     """
-    idxs = np.arange(spectra.shape[0])
-    # shuffle the spectra so that sample idxs no longer
-    # correspond to the appropriate spectrum
-    np.random.shuffle(idxs)
-    shuffled_spectra = spectra[idxs, :]
+    shuffled_spectra = np.zeros(spectra.shape)
+
+    uniq_groups = np.unique(groups)
+    for g in uniq_groups:
+        # get corresponding indices of samples in the 
+        # current group 
+        g_i_true = np.where(groups == g)[0]
+        g_i_shuffled = np.where(groups == g)[0]
+        # shuffle just the group indices so that sample labels
+        # in that group no longer correspond to the correct
+        # mutation spectra arrays
+        np.random.shuffle(g_i_shuffled)
+        shuffled_spectra[g_i_true, :] = spectra[g_i_shuffled, :]
     return shuffled_spectra
 
 
@@ -243,8 +259,8 @@ def adjust_spectra_for_nuccomp(
             the aggregate counts of accessible C nucleotides in the group.
 
     Returns:
-        (adj_a_spectra, adj_b_spectra) Tuple[np.ndarray, np.ndarray]: The input mutation spectra, \
-            adjusted for nucleotide context.
+        adj_a_spectra (np.ndarray): The first of the input mutation spectra, adjusted for nucleotide context.
+        adj_b_spectra (np.ndarray): The second of the input mutation spectra, adjusted for nucleotide context.
     """
     # store the adjusted mutation spectra in two new arrays
     new_a_spectra, new_b_spectra = (
@@ -364,6 +380,7 @@ def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
     genotype_similarity: np.ndarray,
+    strata: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
     n_permutations: int = 1_000,
     comparison_wide: bool = False,
@@ -391,6 +408,15 @@ def perform_permutation_test(
         genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every \
             genotyped marker, of size (G, N), where G is the number of genotyped \
             sites and N is the number of samples.
+
+        genotype_similarity (np.ndarray): A 1D numpy array of correlation coefficients \
+            of size (G, ), where G is the number of genotyped sites. At each element of \
+            the array, we store the correlation coefficient between genome-wide D allele \
+            frequencies calculated in samples with either allele at the corresponding site G_i.
+        
+        strata (np.ndarray): A 1D numpy array of "group labels" of size (N, ), where \
+            N is the number of samples. If samples are assigned different group labels, their \
+            spectra will be permuted *within* those groups during the permutation testing step.
 
         distance_method (Callable, optional): Callable method to compute the \
             distance between aggregate mutation spectra. Must accept two 1D numpy \
@@ -432,7 +458,7 @@ def perform_permutation_test(
     for pi in numba.prange(n_permutations):
         if pi > 0 and pi % 100 == 0 and progress: print(pi)
         # shuffle the mutation spectra by row
-        shuffled_spectra = shuffle_spectra(spectra)
+        shuffled_spectra = shuffle_spectra(spectra, strata)
 
         # perform the IHD scan
         perm_distances = perform_ihd_scan(
