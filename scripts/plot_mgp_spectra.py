@@ -22,7 +22,7 @@ def main(args):
     sns.boxplot(
         data=dumont_tidy.sort_values(["Mutation type", "Haplotypes"], ascending=True),
         x="Mutation type",
-        y="Fraction",
+        y=args.phenotype,
         hue="Haplotypes",
         ax=ax,
         color="w",
@@ -32,7 +32,7 @@ def main(args):
     sns.stripplot(
         data=dumont_tidy.sort_values(["Mutation type", "Haplotypes"], ascending=True),
         x="Mutation type",
-        y="Fraction",
+        y=args.phenotype,
         hue="Haplotypes",
         ax=ax,
         palette=palette,
@@ -41,8 +41,7 @@ def main(args):
         linewidth=1,
     )
 
-    ax.set_ylabel('')#'Mutation rate (per bp, per gen.)')
-    ax.set_ylim(0, 0.6)
+    ax.set_ylabel(args.phenotype)
     
     sns.despine(ax=ax, top=True, right=True)
 
@@ -72,6 +71,11 @@ if __name__ == "__main__":
     p.add_argument(
         "--out",
         help="""name of output plot""",
+    )
+    p.add_argument(
+        "-phenotype",
+        type=str,
+        default="Fraction",
     )
     args = p.parse_args()
     main(args)

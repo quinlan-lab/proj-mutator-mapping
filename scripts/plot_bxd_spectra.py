@@ -1,15 +1,12 @@
 import pandas as pd
-import numpy as np
 from compare_mutation_spectra import mutation_comparison
 import matplotlib.pyplot as plt
 import seaborn as sns
 import argparse
-import sys
 import statsmodels.api as sm
-from statsmodels.formula.api import ols
+from statannotations.Annotator import Annotator
 
 plt.rc("font", size=18)
-
 
 def main(args):
 
@@ -46,7 +43,7 @@ def main(args):
             ))
 
         f, ax = plt.subplots(figsize=(14, 6))
-        lw = 0.75
+        lw = 0.5
         size = 3.5
         # if desired, subset to a single mutation type
         if args.mutation_type is not None:
@@ -56,15 +53,6 @@ def main(args):
             Y = spectra_df[args.phenotype]
             X = spectra_df["Haplotypes"]
             X = sm.add_constant(X)
-            # predict C>A with just chr4 genotypes
-            model_1 = ols('Fraction ~ C(Haplotype_A)', data=spectra_df).fit()
-            # predict with both genotypes
-            model_2 = ols('Fraction ~ C(Haplotypes)', data=spectra_df).fit()
-            table_1 = sm.stats.anova_lm(model_1, typ=2)
-            table_2 = sm.stats.anova_lm(model_2, typ=2)
-            for table, label in zip([table_1, table_2], ["chromosome 4 only", "both markers"]):
-                var_exp = table["sum_sq"].values[0] / table["sum_sq"].sum()
-                print (f"{var_exp} explained using genotypes at {label}")
             f, ax = plt.subplots(figsize=(8, 6))
             lw *= 1.5
             size *= 2
@@ -81,6 +69,8 @@ def main(args):
         xval, hue, dodge = "Mutation type", "Haplotypes", True
         if args.mutation_type is not None:
             xval, hue, dodge = "Haplotypes", None, False
+
+        comparisons = [("B-D", "B-B"), ("D-D", "D-B"), ("D-D", "B-D")]
 
         sns.boxplot(
             data=spectra_df,
@@ -103,6 +93,25 @@ def main(args):
             dodge=dodge,
             ax=ax,
         )
+
+        if args.mutation_type is not None:
+            # annotate plot
+            annotator = Annotator(
+                    ax,
+                    comparisons,
+                    data=spectra_df,
+                    x=xval,
+                    y=args.phenotype,
+                    hue=hue,
+                )
+            annotator.configure(
+                test="Mann-Whitney",
+                show_test_name=False,
+                text_format="simple",
+                text_offset=10,
+                comparisons_correction=None,
+            ).apply_and_annotate()
+
         sns.despine(ax=ax, top=True, right=True)
         for axis in ['top', 'bottom', 'left', 'right']:
             ax.spines[axis].set_linewidth(1.5)
@@ -110,7 +119,7 @@ def main(args):
         # increase tick width
         ax.tick_params(width=1.5)
         if args.mutation_type is not None:
-            ax.set_ylabel(r"C$\to$A" + " mutation fraction")
+            ax.set_ylabel(r"C$\to$A" + f" mutation {args.phenotype.lower()}")
             ax.set_xlabel("Genotypes at chr4 and chr6 peaks")
 
         handles, labels = ax.get_legend_handles_labels()

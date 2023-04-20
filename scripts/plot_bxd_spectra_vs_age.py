@@ -2,8 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import argparse
-import sys
-from sklearn.linear_model import PoissonRegressor
 import statsmodels.api as sm
 import statsmodels
 
@@ -31,14 +29,25 @@ def main(args):
     for hap, hap_df in spectra_df.groupby("Haplotypes"):
         hap_df = hap_df.sort_values("Generations", ascending=True)
         X = hap_df["Generations"].values
-        y = hap_df[args.phenotype].values
+        y = hap_df["Count"].values
+        # if args.phenotype == "Count":
+        #     y /= hap_df["callable_nucleotides"]
         sm.add_constant(X)
         link_func = statsmodels.genmod.families.links.identity()
         model = sm.GLM(y, X, family=sm.families.Poisson(link=link_func))
         results = model.fit()
         predictions = results.get_prediction()
-        df_predictions = predictions.summary_frame()
+        df_predictions = predictions.summary_frame(alpha=0.05)
         df_predictions["X"] = X
+
+        muts_at_100 = results.get_prediction(100).summary_frame(alpha=0.05)
+        mean_, ci_lo, ci_hi = (
+            muts_at_100["mean"].values[0],
+            muts_at_100["mean_ci_lower"].values[0],
+            muts_at_100["mean_ci_upper"].values[0],
+        )
+        print (f"After 100 generations of inbreeding, {hap} \
+                BXDs have accumulated {mean_} C>A mutations ({ci_lo} - {ci_hi})."                                                                                 )
 
         ax.plot(
             df_predictions["X"],
@@ -61,14 +70,15 @@ def main(args):
             c=palette[hap],
             s=50,
         )
-        
+
 
     sns.despine(ax=ax, top=True, right=True)
     for axis in ['top','bottom','left','right']:
         ax.spines[axis].set_linewidth(1.5)
 
     # increase tick width
-    ax.set_ylabel(r"C$\to$A " + "mutations in strain")
+    ylabel = r"C$\to$A " + f"mutation {args.phenotype}"
+    ax.set_ylabel(ylabel)
     ax.set_xlabel("Number of generations of inbreeding")
     ax.tick_params(width=1.5)
     ax.legend(title="Genotypes at chr4 and chr6 peaks", frameon=False)
