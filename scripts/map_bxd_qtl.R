@@ -17,6 +17,8 @@ mutation_type <- gsub("_", ">", opt$mutation_type)
 # phenotypes, and covariates
 bxd <- read_cross2(opt$json)
 
+Xcovar <- get_x_covar(bxd)
+
 # insert pseudomarkers into the genotype map
 # following lines are from https://kbroman.org/pages/teaching.html
 gmap <- insert_pseudomarkers(bxd$gmap, step = 0.2, stepwidth = 'max')
@@ -44,7 +46,7 @@ k <- calc_kinship(pr, "loco")
 
 # subset the phenotype data for this trial and convert to matrix
 phen_df_sub <- subset(phen_df, mut == mutation_type & haplotype_at_mutyh_binary == 1)
-phen_matrix <- as.matrix(phen_df_sub["CLR_fraction"])
+phen_matrix <- as.matrix(phen_df_sub["Fraction"])
 
 strain_names <- phen_df_sub$sample
 rownames(phen_matrix) <- strain_names
@@ -54,13 +56,14 @@ rownames(covariate_matrix) <- strain_names
 
 # perform a genome scan, accounting for kinship and
 # epoch as an additive covarirate
-out <- scan1(pr, phen_matrix, kinship = k)
+out <- scan1(pr, phen_matrix, kinship = k, Xcovar = Xcovar)
 
 # perform a permutation test to assess significance
 operm <- scan1perm(pr,
                    phen_matrix,
                    n_perm = 1000,
-                   kinship = k)
+                   kinship = k,
+                   Xcovar = Xcovar)
 
 # get the LOD threshold for a < 0.05
 alpha <- 0.05 / 7
