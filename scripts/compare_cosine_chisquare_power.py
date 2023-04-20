@@ -8,12 +8,14 @@ plt.rc("font", size=12)
 def main(args):
     ihd_power = pd.read_csv(args.ihd_power)
     ihd_power['Power'] = ihd_power['pval'].apply(lambda p: p <= 0.05)
-
-    ihd_power = ihd_power[(ihd_power["mutation_type"].isin(["TCC_TTC", "C_T"])) & (ihd_power["n_haplotypes"] == 100)]
+    # make sure we're comparing the same simulation parameters between
+    # the two distance methods
+    ihd_power = ihd_power[(ihd_power["mutation_type"].isin(["TCC_TTC", "C_T"]))
+                          & (ihd_power["n_haplotypes"] == 100) &
+                          (ihd_power["tag_strength"] == 100)]
 
     ihd_power["mutation_type"] = ihd_power["mutation_type"].apply(lambda m: m.replace("_", r"$\to$"))
     ihd_power["effect_size"] = ihd_power["effect_size"] / 100.
-    ihd_power = ihd_power[ihd_power["tag_strength"] == 1]
 
     replace_dict = {
         "mutation_type": "Mutation type",

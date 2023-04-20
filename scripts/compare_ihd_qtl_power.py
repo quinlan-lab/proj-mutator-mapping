@@ -8,24 +8,31 @@ plt.rc("font", size=12)
 def main(args):
     qtl_power = pd.read_csv(args.qtl_power)
     qtl_power["Method"] = "QTL"
-    qtl_power = qtl_power[qtl_power["trial"] != 0]
 
     ihd_power = pd.read_csv(args.ihd_power)
     ihd_power['Power'] = ihd_power['pval'].apply(lambda p: p <= 0.05)
     ihd_power["Method"] = "IHD"
-    ihd_power = ihd_power[ihd_power["tag_strength"] == 1]
+    # use the cosine distance method in IHD to compare against QTL
+    ihd_power = ihd_power[ihd_power["distance_method"] == "cosine"]
 
     correction = 7
     ihd_power["bonferroni_corr"] = correction
 
     combined_power = pd.concat([qtl_power, ihd_power]).reset_index()
-    combined_power = combined_power[(combined_power["mutation_type"].isin(["C_A", "C_T"])) & (combined_power["n_haplotypes"] == 50)]
 
-    combined_power = combined_power[combined_power["bonferroni_corr"] == correction]
+    # ensure that we're comparing the same groups of simulations
+    # between IHD and QTL mapping
+    combined_power = combined_power[
+        (combined_power["mutation_type"].isin(["C_A", "C_T"])) &
+        (combined_power["n_haplotypes"] == 50) &
+        (combined_power["tag_strength"] == 100) &
+        (combined_power["exp_af"] == 50) &
+        (combined_power["bonferroni_corr"] == correction)]
+
 
     combined_power["mutation_type"] = combined_power["mutation_type"].apply(lambda m: m.replace("_", r"$\to$"))
     combined_power["effect_size"] = combined_power["effect_size"] / 100.
-
+        
     replace_dict = {
         "mutation_type": "Mutation type",
         "n_haplotypes": "# haplotypes",
@@ -33,9 +40,9 @@ def main(args):
         "n_mutations": "# mutations",
         "n_markers": "# markers",
         "tag_strength": "Tag strength",
+        "exp_af": "Allele frequency",
     }
     combined_power.rename(columns=replace_dict, inplace=True)
-
     g = sns.FacetGrid(data=combined_power, row="# mutations", col="Mutation type", aspect=1.5)
     g.map(sns.lineplot, "Mutator effect size", "Power", "Method", palette="colorblind")
     g.add_legend(title = "Method")

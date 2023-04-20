@@ -1,4 +1,5 @@
 import numpy as np
+from skbio.stats.composition import clr 
 
 # define parameter space for simulations
 number_of_markers = [1000]
@@ -8,14 +9,15 @@ number_of_permutations = [100]
 mutation_types = ["C_A", "C_G", "C_T", "TCC_TTC"]
 effect_sizes = list(range(100, 160, 10))
 distance_methods = ["cosine", "chisquare"]
-linkages = [100, 50, 25]
+linkages = [100]
+exp_afs = [50]
 
 
 rule run_ind_simulation:
     input:
         py_script = "ihd/run_ihd_power_simulations.py"
     output:
-        temp("csv/power.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{distance_method}.{mutation_type}.{linkage}.csv"),
+        temp("csv/power.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{distance_method}.{mutation_type}.{linkage}.{exp_af}.csv"),
     shell:
         """
         python {input.py_script} --results {output} \
@@ -26,12 +28,13 @@ rule run_ind_simulation:
                                  -effect_size {wildcards.effect_size} \
                                  -distance_method {wildcards.distance_method} \
                                  -mutation_type {wildcards.mutation_type} \
-                                 -tag_strength {wildcards.linkage}
+                                 -tag_strength {wildcards.linkage} \
+                                 -exp_af {wildcards.exp_af}
         """
 
 rule combine_ind_simulations:
     input:
-        results = expand("csv/power.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{distance_method}.{mutation_type}.{linkage}.csv", 
+        results = expand("csv/power.{n_markers}.{n_haplotypes}.{n_mutations}.{n_permutations}.{effect_size}.{distance_method}.{mutation_type}.{linkage}.{exp_af}.csv", 
                 n_markers = number_of_markers,
                 n_haplotypes = number_of_haplotypes,
                 n_mutations = number_of_mutations,
@@ -39,7 +42,8 @@ rule combine_ind_simulations:
                 effect_size = effect_sizes,
                 distance_method = distance_methods,
                 mutation_type = mutation_types,
-                linkage = linkages)
+                linkage = linkages,
+                exp_af = exp_afs)
     output:
         combined_results = "csv/ihd_power.csv"
     run:
@@ -68,9 +72,9 @@ rule generate_simulation_comp_data:
     input:
         py_script = "ihd/run_ihd_power_simulations.py"
     output:
-        results = temp("data/Rqtl_sim/power_ind.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv"),
-        genos = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.geno"),
-        spectra = temp("data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv")
+        results = temp("data/Rqtl_sim/power_ind.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.csv"),
+        genos = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.geno"),
+        spectra = temp("data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.csv")
     shell:
         """
         python {input.py_script} --results {output.results} \
@@ -79,8 +83,10 @@ rule generate_simulation_comp_data:
                                  -n_mutations {wildcards.n_mutations} \
                                  -n_permutations 1 \
                                  -effect_size {wildcards.effect_size} \
-                                 -distance_method {wildcards.distance_method} \
+                                 -distance_method cosine \
                                  -mutation_type {wildcards.mutation_type} \
+                                 -tag_strength 100 \
+                                 -exp_af {wildcards.exp_af} \
                                  -raw_geno {output.genos} \
                                  -raw_spectra {output.spectra} \
         """
@@ -117,9 +123,9 @@ rule make_simulated_gmap:
 
 rule reformat_simulated_spectra:
     input:
-        spectra = "data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv"
+        spectra = "data/Rqtl_sim/spectra.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.csv"
     output:
-        spectra = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.pheno")
+        spectra = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.pheno")
     run:
         import pandas as pd
         spectra_df = pd.read_csv(input.spectra)
@@ -134,15 +140,16 @@ rule reformat_simulated_spectra:
         # pivot df back to long-form
         spectra_df_long = spectra_df_combined.drop(columns=["total", "value"]).pivot(index=group_cols, columns="variable").reset_index()
         new_cols = ["sample", "trial", "focal_marker"]
-        new_cols.extend([c[1].replace(">", "_") for c in spectra_df_long.columns if c[0] == "fraction"])
-        spectra_df_long.columns = new_cols
+        mut_cols =[c[1].replace(">", "_") for c in spectra_df_long.columns if c[0] == "fraction"]
+        spectra_df_long.columns = new_cols + mut_cols
+
         spectra_df_long.to_csv(output.spectra, index=False)
 
 
 rule make_simulated_json:
     input:
     output:
-        out_json = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.json")
+        out_json = temp("data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.json")
     run:
         import json 
 
@@ -152,7 +159,7 @@ rule make_simulated_json:
             "sep": ",",
             "na.strings": ["-", "NA"],
             "comment.char": "#",
-            "geno": f"sim.{wildcards.n_markers}.{wildcards.n_haplotypes}.{wildcards.n_mutations}.1.{wildcards.effect_size}.{wildcards.distance_method}.{wildcards.mutation_type}.geno",
+            "geno": f"sim.{wildcards.n_markers}.{wildcards.n_haplotypes}.{wildcards.n_mutations}.1.{wildcards.effect_size}.cosine.{wildcards.mutation_type}.100.{wildcards.exp_af}.geno",
             "pmap": f"sim.{wildcards.n_markers}.pmap",
             "gmap": f"sim.{wildcards.n_markers}.gmap",
             "alleles": ["B", "D"],
@@ -167,14 +174,14 @@ rule make_simulated_json:
 
 rule map_simulated_qtl:
     input:
-        genotypes = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.geno",
-        spectra = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.pheno",
+        genotypes = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.geno",
+        spectra = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.pheno",
         pmap = "data/Rqtl_sim/sim.{n_markers}.pmap",
         gmap = "data/Rqtl_sim/sim.{n_markers}.gmap",
-        json = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.json",
+        json = "data/Rqtl_sim/sim.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.json",
         Rscript = "scripts/map_qtl.R",
     output:
-        power = temp("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv")
+        power = temp("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.csv")
     shell: 
         """
         Rscript {input.Rscript} -j {input.json} -p {input.spectra} -o {output.power} -m {wildcards.mutation_type}
@@ -182,19 +189,19 @@ rule map_simulated_qtl:
 
 rule combine_rqtl_simulation_results:
     input: 
-        power = expand("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.{distance_method}.{mutation_type}.csv", 
+        power = expand("csv/simulation_results_rqtl.{n_markers}.{n_haplotypes}.{n_mutations}.1.{effect_size}.cosine.{mutation_type}.100.{exp_af}.csv", 
                 n_markers = number_of_markers,
                 n_haplotypes = number_of_haplotypes,
                 n_mutations = number_of_mutations,
                 effect_size = effect_sizes,
-                distance_method = distance_methods,
-                mutation_type = mutation_types)
+                mutation_type = mutation_types,
+                exp_af = exp_afs,)
     output:
         results = "csv/rqtl_power.csv"
     run:
         dfs = []
         for fh in input.power:
-            (n_markers, n_haplotypes, n_mutations, n_permutations, effect_size, distance_method, mutation_type) = fh.split('/')[-1].split('.')[1:-1]
+            (n_markers, n_haplotypes, n_mutations, n_permutations, effect_size, distance_method, mutation_type, linkage, exp_af) = fh.split('/')[-1].split('.')[1:-1]
             df = pd.read_csv(fh)
             df["n_markers"] = n_markers 
             df["n_haplotypes"] = n_haplotypes
@@ -203,6 +210,8 @@ rule combine_rqtl_simulation_results:
             df["effect_size"] = effect_size 
             df["distance_method"] = distance_method 
             df["mutation_type"] = mutation_type
+            df["tag_strength"] = linkage
+            df["exp_af"] = exp_af
             dfs.append(df)
         dfs = pd.concat(dfs)
         dfs.to_csv(output.results, index=False)
