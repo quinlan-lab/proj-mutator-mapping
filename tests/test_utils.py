@@ -142,7 +142,6 @@ def test_perform_ihd_permutation_test(
     spectra_array,
     genotype_array,
     genotype_similarity,
-    haplotype_groups_ident,
     n_permutations,
     comparison_wide,
 ):
@@ -150,7 +149,7 @@ def test_perform_ihd_permutation_test(
         spectra_array,
         genotype_array,
         genotype_similarity,
-        haplotype_groups_ident,
+        np.ones(4),
         n_permutations=n_permutations,
         comparison_wide=comparison_wide,
     )
