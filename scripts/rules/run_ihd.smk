@@ -14,7 +14,8 @@ rule run_ihd:
                                  -distance_method cosine \
                                  -permutations 10000 \
                                  -progress \
-                                 -threads 4
+                                 -threads 4 \
+                                 -stratify_column true_epoch 
         """
 
 rule plot_ihd:
@@ -28,4 +29,5 @@ rule plot_ihd:
         python {input.py_script} --markers {input.markers} \
                                  --results {input.results} \
                                  --out {output} \
+                                 -scale 1
         """

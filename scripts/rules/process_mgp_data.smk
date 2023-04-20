@@ -41,5 +41,6 @@ rule plot_mgp_spectra:
     shell:
         """
         python {input.py_script} --spectra {input.spectra} \
-                                 --out {output}
+                                 --out {output} \
+                                 -phenotype Fraction
         """

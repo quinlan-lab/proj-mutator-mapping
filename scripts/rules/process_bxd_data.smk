@@ -26,7 +26,7 @@ rule plot_bxd_spectra_ca:
                                  --out {output} \
                                  -k {wildcards.k} \
                                  -mutation_type {wildcards.mutation_type} \
-                                 -phenotype Fraction
+                                 -phenotype Rate
         """
 
 rule plot_bxd_spectra_all:
@@ -39,6 +39,7 @@ rule plot_bxd_spectra_all:
         python {input.py_script} --spectra {input.spectra} \
                                  --out {output} \
                                  -k {wildcards.k} \
+                                 -phenotype Fraction
         """
 
 rule plot_bxd_spectra_vs_age:
@@ -51,4 +52,5 @@ rule plot_bxd_spectra_vs_age:
         python {input.py_script} --spectra {input.spectra} \
                                  --out {output} \
                                  --mutation_type C_A \
+                                 -phenotype Count
         """
