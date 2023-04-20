@@ -26,7 +26,7 @@ rule plot_bxd_spectra_ca:
                                  --out {output} \
                                  -k {wildcards.k} \
                                  -mutation_type {wildcards.mutation_type} \
-                                 -phenotype Rate
+                                 -phenotype Fraction
         """
 
 rule plot_bxd_spectra_all:

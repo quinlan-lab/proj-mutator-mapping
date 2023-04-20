@@ -3,6 +3,7 @@ library(ggplot2)
 library(qtl2)
 library(dplyr)
 library(coxme)
+library(interactions)
 
 df <- read.csv("/Users/tomsasani/quinlanlab/proj-mutator-mapping/csv/bxd_spectra_1mer.csv")
 
@@ -25,11 +26,11 @@ pr <- calc_genoprob(bxd, bxd$pmap, error_prob = 0.002, map_function = "c-f")
 k <- calc_kinship(pr, "overall")
 
 # convert haplotype column to binary
-phen_df <- df %>% mutate(haplotype_at_mutyh_binary = case_when(
+phen_df <- df %>% mutate(Genotype_A = case_when(
     Haplotype_A == "D" ~ 1,
     Haplotype_A == "B" ~ 0,
 ))
-phen_df <- phen_df %>% mutate(haplotype_at_ogg1_binary = case_when(
+phen_df <- phen_df %>% mutate(Genotype_B = case_when(
     Haplotype_B == "D" ~ 1,
     Haplotype_B == "B" ~ 0,
 ))
@@ -42,23 +43,22 @@ rownames(kinship) <- phen_df$sample
 
 # run lmekin to test for interaction effects between genotypes on
 # C>A mutation fractions
-gfit1 <- lmekin(CLR_fraction ~ haplotype_at_mutyh_binary + haplotype_at_ogg1_binary + (1 | sample),
+gfit1 <- lmekin(Fraction ~ Genotype_A + Genotype_B + (1 | sample),
     data = phen_df,
     varlist = kinship
 )
-gfit2 <- lmekin(CLR_fraction ~ haplotype_at_mutyh_binary * haplotype_at_ogg1_binary + (1 | sample),
+gfit2 <- lmekin(Fraction ~ Genotype_A * Genotype_B + (1 | sample),
     data = phen_df,
     varlist = kinship
 )
-print (gfit2)
 
 # use a poisson model to test for interaction effects between genotypes
 # on C>A mutation counts, modeled as rates
-m1 <- glm(Count ~ offset(log(ADJ_AGE)) + haplotype_at_mutyh_binary + haplotype_at_ogg1_binary,
+m1 <- glm(Count ~ offset(log(ADJ_AGE)) + Genotype_A + Genotype_B,
     data = phen_df,
     family = poisson()
 )
-m2 <- glm(Count ~ offset(log(ADJ_AGE)) + haplotype_at_mutyh_binary * haplotype_at_ogg1_binary,
+m2 <- glm(Count ~ offset(log(ADJ_AGE)) + Genotype_A * Genotype_B,
     data = phen_df,
     family = poisson()
 )
