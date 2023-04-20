@@ -9,4 +9,6 @@ from tests.fixtures import (
     spectra_array,
     callable_kmer_arr_mut,
     callable_kmer_arr_wt,
+    haplotype_groups_ident,
+    haplotype_groups_strat
 )
