@@ -24,7 +24,7 @@ if __name__ == "__main__":
         'matrix',
         args.outdir,
         args.spectra,
-        maximum_signatures=5,
-        nmf_replicates=50,
+        maximum_signatures=10,
+        nmf_replicates=100,
         opportunity_genome="mm10",
     )

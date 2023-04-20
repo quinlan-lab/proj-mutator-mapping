@@ -13,8 +13,8 @@ def main(args):
     kmer_content = pd.read_csv(args.kmer_content)
     # read in sample genotypes at each marker
     genos = pd.read_csv(args.genos).set_index("marker")
-    # define markers to use for the chr6 and chr4 mutator loci
-    markers = np.array(["rs31001331", "rs52263933"])
+    # define markers to use for the chr4 and chr6 mutator loci
+    markers = np.array(["rs27509845", "rs46276051"])
     # map sample names to genotypes at each marker
     geno_at_marker = genos.loc[markers].to_dict()
 
@@ -36,8 +36,10 @@ def main(args):
     # map samples to their genotypes at both of the mutator loci markers
     smp2genotype = {}
     for s in samples_shared:
-        sorted_markers = sorted(geno_at_marker[s].items(), key=lambda t: t[0])[::-1]
-        marker_genos = "-".join([v for k,v in sorted_markers])
+        sorted_markers = []
+        for m in markers:
+            sorted_markers.append(geno_at_marker[s][m])
+        marker_genos = "-".join(sorted_markers)
         smp2genotype[s] = marker_genos
 
     # convert counts of each mutation type to fractions
@@ -77,6 +79,7 @@ def main(args):
                 'CLR_fraction': spectra_clr[si, mi],
                 'Epoch': smp2epoch[s],
                 "Generations": smp2generations[s],
+                "callable_nucleotides": n_callable_bp,
                 'ADJ_AGE': n_callable_bp * smp2generations[s],
                 'Rate': rate,
                 "is_ca": 1 if m == "C>A" else 0,

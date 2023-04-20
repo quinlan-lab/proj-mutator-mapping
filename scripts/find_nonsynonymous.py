@@ -13,8 +13,8 @@ outfh = open(f"{PROJDIR}/data/vcf/ns.vcf", "w")
 print (vcf.raw_header.rstrip(), file=outfh)
 
 for v in vcf:
-    if v.POS < 106_000_000: continue 
-    if v.POS > 116_000_000: break
+    if v.POS < 111_270_000 - 5e6: continue 
+    if v.POS > 111_270_000 + 5e6: break
     if len(v.ALT) > 1: continue
     annotations = v.INFO.get("ANN").split(';')
     rel_ann = [a for a in annotations if a.split('|')[7] == "protein_coding"]
@@ -33,16 +33,19 @@ for v in vcf:
     founder_idxs = np.array([smp2idx[DBA], smp2idx[C57]])
     if np.intersect1d(good_idxs, founder_idxs).shape[0] != 2: continue
 
-    ac_in_founders = 0
+    ac_in_founders = []
     for fi in founder_idxs:
-        if gts[fi] == 0: continue
+        if gts[fi] == 0: 
+            ac_in_founders.append(0)
         elif gts[fi] == 1:
-            if ab[fi] >= 0.9: ac_in_founders += 2
+            if ab[fi] >= 0.8: ac_in_founders.append(2)
+            else: ac_in_founders.append(1)
         elif gts[fi] == 2:
-            ac_in_founders += 2
+            ac_in_founders.append(2)
         else: continue
 
-    if ac_in_founders != 2: continue
+    if sum(ac_in_founders) != 2: continue
+    if any([gt == 1 for gt in ac_in_founders]): continue
 
     ac = np.sum(gts[good_idxs])
     an = good_idxs.shape[0] * 2
