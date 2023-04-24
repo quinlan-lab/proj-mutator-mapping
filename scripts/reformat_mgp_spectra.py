@@ -141,7 +141,6 @@ def main(args):
     ]
     chr6_marker_pos = [
         "6:113328509-113328510",
-        "6:115849643-115849644",
     ]
 
     # since there are 5 possible missense mutations at the chromosome 4

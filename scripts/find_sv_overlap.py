@@ -7,7 +7,10 @@ def main(args):
 
     refseq = pd.read_csv(args.refseq, sep="\t")
 
-    chrom, start, end = "chr6", 107_000_000, 117_500_000
+    start = 111_270_000
+    buff = 5e6
+
+    chrom, start, end = "chr6", start - buff, start + buff
 
     refseq = refseq[(refseq["chrom"] == chrom) & (refseq["txStart"] > start)
                     & (refseq["txStart"] < end)]

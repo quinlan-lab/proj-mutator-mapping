@@ -46,8 +46,6 @@ def main(args):
 
     mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
 
-    
-
     # get a list of samples and their corresponding mutation spectra
     samples, mutation_types, spectra = compute_spectra(
         mutations_filtered,

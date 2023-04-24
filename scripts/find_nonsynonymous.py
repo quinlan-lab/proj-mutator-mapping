@@ -13,7 +13,7 @@ outfh = open(f"{PROJDIR}/data/vcf/ns.vcf", "w")
 print (vcf.raw_header.rstrip(), file=outfh)
 
 for v in vcf:
-    if v.POS < 111_270_000 - 5e6: continue 
+    if v.POS < 111_270_000 - 5e6: continue
     if v.POS > 111_270_000 + 5e6: break
     if len(v.ALT) > 1: continue
     annotations = v.INFO.get("ANN").split(';')
@@ -35,7 +35,7 @@ for v in vcf:
 
     ac_in_founders = []
     for fi in founder_idxs:
-        if gts[fi] == 0: 
+        if gts[fi] == 0:
             ac_in_founders.append(0)
         elif gts[fi] == 1:
             if ab[fi] >= 0.8: ac_in_founders.append(2)
@@ -52,8 +52,20 @@ for v in vcf:
     for a in rel_ann:
         alt, cons, impact, gene = a.split('|')[:4]
         change = a.split('|')[10]
-        #if gene in ("Ogg1", "Mbd4"):
-        
-        if impact in ("MODERATE", "HIGH"):
-            print (str(v).rstrip(), file=outfh)
-            print ('\t'.join(list(map(str, [v.CHROM, v.start, v.end, v.REF, v.ALT, ac, an, cons, impact, gene, change]))))
+        tx = a.split('|')[6]
+        print('\t'.join(
+            list(
+                map(str, [
+                    v.CHROM,
+                    v.start,
+                    v.end,
+                    v.REF,
+                    v.ALT,
+                    ac,
+                    an,
+                    cons,
+                    impact,
+                    gene,
+                    change,
+                    tx,
+                ]))))

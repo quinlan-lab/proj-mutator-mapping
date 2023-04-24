@@ -85,6 +85,16 @@ def main(args):
     ax.set_xticks(xtick_positions)
     ax.set_xticklabels(xticks)
 
+    n_yticks = 6
+    max_ypos = np.max([np.max(results_merged["Distance"].values), max_threshold_dist])
+    min_ypos = np.min([np.min(results_merged["Distance"].values), max_threshold_dist])
+
+    ytick_pos = np.linspace(min_ypos * 0.95, max_ypos * 1.05, n_yticks)
+    ytick_labs = [f"{yval:.3f}" for yval in ytick_pos]
+
+    ax.set_yticks(ytick_pos)
+    ax.set_yticklabels(ytick_labs)
+
     # change all spines
     for axis in ['top','bottom','left','right']:
         ax.spines[axis].set_linewidth(1.5)
@@ -110,7 +120,7 @@ def main(args):
             ls=":",
             c="grey",
             label="Genome-wide significance threshold " +
-            r"$\left(p \leq 0.05\right)$",
+            r"$\left(p = 0.05\right)$",
             lw=2,
         )
 
@@ -121,15 +131,16 @@ def main(args):
             xvals,
             yvals,
             s=75,
-            c=colors[0],
+            c=colors[1],
             ec=results_merged_chr["ec"].values,
             lw=results_merged_chr["lw"].values,
         )
 
-        ax.legend()
-        f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.png", dpi=300)
-        #f.savefig(f"{args.outpref}.{args.chrom}.manhattan_plot.eps")
+        ax.set_xlabel(f"Position on chr{args.chrom} (Mbp)")
+        ax.set_ylabel("Adjusted cosine distance")
+        f.tight_layout()
 
+        f.savefig(args.out, dpi=300)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()

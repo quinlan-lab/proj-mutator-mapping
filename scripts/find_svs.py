@@ -4,7 +4,10 @@ sv_fh = "ftp://ftp.ebi.ac.uk/pub/databases/mousegenomes//REL-1606-SV/REL-1606-SV
 sv_df = pd.read_csv(sv_fh, sep="\t", dtype={"#chr": str, "start": int, "end": int})
 
 
-sv_df = sv_df[(sv_df["#chr"] == "6") & ( (sv_df["start"] >= 109_000_000) & (sv_df["end"] <= 119_000_000) )]
+start = 111_270_000
+buff = 5e6
+
+sv_df = sv_df[(sv_df["#chr"] == "6") & ( (sv_df["start"] >= start - buff) & (sv_df["end"] <= start + buff) )]
 
 columns = ["chrom", "start", "end", "C57BL_6NJ", "DBA_2J"]
 

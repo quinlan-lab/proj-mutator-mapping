@@ -12,14 +12,16 @@ def main(args):
 
     spectra_df = pd.read_csv(args.spectra)
 
+    group_col = "Haplotypes"
+
     if args.k == 3:
 
         grouped_spectra_df = spectra_df.groupby(
-            ["Mutation type", "Haplotypes"]).agg({
+            ["Mutation type", group_col]).agg({
                 "Count": sum
             }).reset_index()
 
-        grouped_spectra_df = grouped_spectra_df.pivot(index="Haplotypes",
+        grouped_spectra_df = grouped_spectra_df.pivot(index=group_col,
                                                       columns="Mutation type")
         mutation_types = [
             c[1].replace(r"$\rightarrow$", ">")
@@ -51,7 +53,7 @@ def main(args):
                                     args.mutation_type.replace("_", ">")]
             # fit linear model to get variance explained
             Y = spectra_df[args.phenotype]
-            X = spectra_df["Haplotypes"]
+            X = spectra_df[group_col]
             X = sm.add_constant(X)
             f, ax = plt.subplots(figsize=(8, 6))
             lw *= 1.5
@@ -62,13 +64,13 @@ def main(args):
             lambda m: m.replace(">", r"$\to$"))
 
         # sort the spectra dataframe by mutation type and haplotype combination
-        spectra_df.sort_values(["Mutation type", "Haplotypes"],
+        spectra_df.sort_values(["Mutation type", group_col],
                                ascending=True,
                                inplace=True)
 
-        xval, hue, dodge = "Mutation type", "Haplotypes", True
+        xval, hue, dodge = "Mutation type", group_col, True
         if args.mutation_type is not None:
-            xval, hue, dodge = "Haplotypes", None, False
+            xval, hue, dodge = group_col, None, False
 
         comparisons = [("B-D", "B-B"), ("D-D", "D-B"), ("D-D", "B-D")]
 
@@ -119,7 +121,8 @@ def main(args):
         # increase tick width
         ax.tick_params(width=1.5)
         if args.mutation_type is not None:
-            ax.set_ylabel(r"C$\to$A" + f" mutation {args.phenotype.lower()}")
+            pheno = str(args.phenotype).lower()
+            ax.set_ylabel(r"C$\to$A" + f" mutation {pheno}")
             ax.set_xlabel("Genotypes at chr4 and chr6 peaks")
 
         handles, labels = ax.get_legend_handles_labels()
