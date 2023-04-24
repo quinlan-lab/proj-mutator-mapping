@@ -86,11 +86,17 @@ def main(args):
     ax.set_xticklabels(xticks)
 
     n_yticks = 6
-    max_ypos = np.max([np.max(results_merged["Distance"].values), max_threshold_dist])
-    min_ypos = np.min([np.min(results_merged["Distance"].values), max_threshold_dist])
+    max_ypos = np.max([
+        np.max(results_merged["Distance"].values * args.scale),
+        max_threshold_dist,
+    ])
+    min_ypos = np.min([
+        np.min(results_merged["Distance"].values * args.scale),
+        max_threshold_dist,
+    ])
 
     ytick_pos = np.linspace(min_ypos * 0.95, max_ypos * 1.05, n_yticks)
-    ytick_labs = [f"{yval:.3f}" for yval in ytick_pos]
+    ytick_labs = [f"{yval:.1e}" for yval in ytick_pos]
 
     ax.set_yticks(ytick_pos)
     ax.set_yticklabels(ytick_labs)
@@ -104,7 +110,7 @@ def main(args):
 
     sns.despine(ax=ax, top=True, right=True)
     ax.set_xlabel("Chromosome")
-    ax.set_ylabel("Adjusted cosine distance")
+    ax.set_ylabel(f"Adjusted cosine distance")
     ax.legend(frameon=False)
     f.tight_layout()
     f.savefig(args.out, dpi=300)
@@ -175,7 +181,7 @@ if __name__ == "__main__":
     p.add_argument(
         "-scale",
         type=int,
-        default=1_000,
+        default=1,
         help="""Scale the cosine distance values by the specified amount to make visualization a bit easier on the y-axis. Default is 1000."""
     )
     args = p.parse_args()

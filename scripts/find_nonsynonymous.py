@@ -61,6 +61,8 @@ for v in vcf:
                     v.end,
                     v.REF,
                     v.ALT,
+                    gts[smp2idx[C57]],
+                    gts[smp2idx[DBA]],
                     ac,
                     an,
                     cons,
