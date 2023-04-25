@@ -77,7 +77,7 @@ def main(args):
         ax.spines[axis].set_linewidth(1.5)
 
     # increase tick width
-    ylabel = r"C$\to$A " + f"mutation {args.phenotype}"
+    ylabel = r"C$\to$A " + f"mutation {args.phenotype.lower()}"
     ax.set_ylabel(ylabel)
     ax.set_xlabel("Number of generations of inbreeding")
     ax.tick_params(width=1.5)

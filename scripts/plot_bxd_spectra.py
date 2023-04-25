@@ -121,8 +121,7 @@ def main(args):
         # increase tick width
         ax.tick_params(width=1.5)
         if args.mutation_type is not None:
-            pheno = str(args.phenotype).lower()
-            ax.set_ylabel(r"C$\to$A" + f" mutation {pheno}")
+            ax.set_ylabel(r"C$\to$A" + f" mutation {args.phenotype.lower()}")
             ax.set_xlabel("Genotypes at chr4 and chr6 peaks")
 
         handles, labels = ax.get_legend_handles_labels()
