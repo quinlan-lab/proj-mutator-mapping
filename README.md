@@ -9,7 +9,7 @@ Identify alleles that affect the mutation spectrum in bi-parental recombinant in
 
 This repository includes:
 
-1. Python code underlying the inter-haplotype distance (IHD) method described in our [latest manuscript]().
+1. Python code underlying the inter-haplotype distance (IHD) method described in our [latest manuscript](https://www.biorxiv.org/content/10.1101/2023.04.25.537217v1).
 
 2. A [`snakemake`](https://snakemake.readthedocs.io/en/stable/index.html) pipeline that can be used to reproduce all figures and analyses from the manuscript in a single command.
 
