@@ -16,32 +16,38 @@ from ihd.utils import (
 import pytest
 import scipy.stats as ss
 
+
+@pytest.mark.parametrize("arr,groups", [(
+    np.random.randint(0, 100, size=(100, 6)),
+    np.ones(100),
+)])
 def test_shuffle_spectra(
-    wt_haplotype_array,
-    mut_haplotype_array,
-    haplotype_groups_ident,
+    arr,
+    groups,
 ):
-    combined_spectra = np.concatenate(
-        (wt_haplotype_array, mut_haplotype_array), )
-    shuffled_spectra = shuffle_spectra(combined_spectra, haplotype_groups_ident)
-    assert np.array_equal(combined_spectra, shuffled_spectra) is False
+    shuffled_spectra = shuffle_spectra(arr, groups)
+    assert np.array_equal(arr, shuffled_spectra) is False
 
-def test_shuffle_spectra_strat(
-    wt_haplotype_array,
-    mut_haplotype_array,
-    haplotype_groups_strat,
-):
-    combined_spectra = np.concatenate(
-        (wt_haplotype_array, mut_haplotype_array), )
-    shuffled_spectra = shuffle_spectra(combined_spectra, haplotype_groups_strat)
 
-    # ensure that shuffled array is different
-    assert np.array_equal(combined_spectra, shuffled_spectra) is False
+@pytest.mark.parametrize("arr,groups", [(
+    np.random.randint(0, 100, size=(100, 6)),
+    np.concatenate([
+        np.zeros(98),
+        np.array([1]),
+        np.array([2]),
+    ]),
+)])
+def test_shuffle_spectra_strat(arr, groups):
+    shuffled_spectra = shuffle_spectra(arr, groups)
+
+    # ensure that all but the final two rows of the shuffled array are different
+    assert np.array_equal(arr, shuffled_spectra) is False
+
     # ensure that the final two rows of the shuffled array are identical
     # to the input array, since they correspond to two unique groups that
     # shouldn't be mixed and matched with the others
-    assert np.array_equal(combined_spectra[-2, :], shuffled_spectra[-2, :]) is True
-    assert np.array_equal(combined_spectra[-1, :], shuffled_spectra[-1, :]) is True
+    assert np.array_equal(arr[-1, :], shuffled_spectra[-1, :]) is True
+    assert np.array_equal(arr[-2, :], shuffled_spectra[-2, :]) is True
 
 
 
@@ -185,4 +191,3 @@ def test_adjust_spectra_for_nuccomp(
 
     assert np.array_equal(wt_adj, np.array([2, 3, 3, 9, 6, 3]))
     assert np.array_equal(mut_adj, np.array([6, 6, 15, 6, 8, 6]))
-
