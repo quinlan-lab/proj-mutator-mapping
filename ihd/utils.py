@@ -171,8 +171,7 @@ def shuffle_spectra(spectra: np.ndarray, groups: np.ndarray = None) -> np.ndarra
 
     uniq_groups = np.unique(groups)
     for g in uniq_groups:
-        # get corresponding indices of samples in the 
-        # current group 
+        # get corresponding indices of samples in the current group
         g_i_true = np.where(groups == g)[0]
         g_i_shuffled = np.where(groups == g)[0]
         # shuffle just the group indices so that sample labels
@@ -383,7 +382,6 @@ def perform_permutation_test(
     strata: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
     n_permutations: int = 1_000,
-    comparison_wide: bool = False,
     progress: bool = False,
     adjust_statistics: bool = True,
 ) -> np.ndarray:
@@ -426,10 +424,6 @@ def perform_permutation_test(
         n_permutations (int, optional): Number of permutations to perform \
             (i.e., number of times to shuffle the spectra and compute IHDs at \
             each marker). Defaults to 1_000.
-
-        comparison_wide (bool, optional): Whether to output null distances \
-            for each individual marker, as opposed to a genome-wide maximum. Defaults \
-            to False.
         
         progress (bool, optional): Whether to output a count of how many permutations \
             have completed. Defaults to False.
@@ -447,13 +441,8 @@ def perform_permutation_test(
             at each individual marker).
     """
 
-    # store max distance encountered in each permutation, or if desired,
-    # per-marker null distances
-    n_markers = genotype_matrix.shape[0]
-    null_distances: np.ndarray = np.zeros((
-        n_permutations,
-        n_markers if comparison_wide else 1,
-    ))
+    # store max distance encountered in each permutation
+    null_distances: np.ndarray = np.zeros(n_permutations)
 
     for pi in numba.prange(n_permutations):
         if pi > 0 and pi % 100 == 0 and progress: print(pi)
@@ -469,13 +458,100 @@ def perform_permutation_test(
             adjust_statistics=adjust_statistics,
         )
 
-        if comparison_wide:
-            null_distances[pi] = perm_distances
-        else:
-            null_distances[pi] = np.max(perm_distances)
+        null_distances[pi] = np.max(perm_distances)
 
     return null_distances
 
+
+@numba.njit(parallel=True)
+def calculate_confint(
+    spectra: np.ndarray,
+    genotype_matrix: np.ndarray,
+    distance_method: Callable = compute_manual_chisquare,
+    n_permutations: int = 1_000,
+    progress: bool = False,
+    adjust_statistics: bool = True,
+    conf_int: float = 80.0,
+) -> Tuple[int, int]:
+    """Calculate a confidence interval around the maximum observed 
+    distance peak by performing bootstrap resampling.  In each of the 
+    `n_permutations` trials do the following: 1. resample the input mutation `spectra`
+    with replacement. 2. run an IHD scan by computing the distance between
+    the aggregate mutation spectrum of samples with either genotype
+    at every marker in the `genotype_matrix`. 3. record the maximum distance encountered 
+    at any marker, as well as the marker index at which that distance was observed.
+    We'll consider that marker to be the likely "peak."
+    Then, we return the bounds of the markers that contain 95% of all observed 
+    peaks.
+
+    Args:
+        spectra (np.ndarray): A 2D numpy array of mutation spectra in all \
+            genotyped samples, of size (N, M) where N is the number of samples \
+            and M is the number of mutation types.
+
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every \
+            genotyped marker, of size (G, N), where G is the number of genotyped \
+            sites and N is the number of samples.
+        
+        distance_method (Callable, optional): Callable method to compute the \
+            distance between aggregate mutation spectra. Must accept two 1D numpy \
+            arrays and return a single floating point value. Defaults to \
+            `compute_manual_chisquare`.
+
+        n_permutations (int, optional): Number of permutations to perform \
+            (i.e., number of times to resample the spectra with replacement. \
+            Defaults to 1_000.
+        
+        progress (bool, optional): Whether to output a count of how many permutations \
+            have completed. Defaults to False.
+        
+        adjust_statistics (bool, optional): Whether to compute adjusted statistics \
+            at each marker by regressing genotype similarity against statistics. \
+            Defaults to True.
+
+        conf_int (float, optional): The confidence interval to compute around the marker \
+            with the highest distance value. Defaults to 95.
+              
+
+    Returns:
+        conf_ints (Tuple): Tuple of two integers, corresponding to the lower \
+            and upper bound markers defining the specified confidence interval.
+    """
+
+    # store index of marker at max peak encountered in each permutation
+    peak_markers: np.ndarray = np.zeros(n_permutations)
+
+    for pi in numba.prange(n_permutations):
+        if pi > 0 and pi % 100 == 0 and progress: print(pi)
+        # resample the mutation spectra by bootstrapping
+        resampled_idxs = np.random.randint(0, spectra.shape[0], size=spectra.shape[0])
+        resampled_spectra = spectra[resampled_idxs, :]
+        # resample the corresponding genotype data using the indices
+        resampled_genotype_matrix = genotype_matrix[:, resampled_idxs]
+        # recalculate genotype similarities using the resampled genotype
+        # matrix. NOTE: this is slow!
+        resampled_genotype_similarity = compute_genotype_similarity(resampled_genotype_matrix)
+            
+        # perform the IHD scan
+        perm_distances = perform_ihd_scan(
+            resampled_spectra,
+            resampled_genotype_matrix,
+            resampled_genotype_similarity,
+            distance_method=distance_method,
+            adjust_statistics=adjust_statistics,
+        )
+        # figure out the marker at which the max distance
+        # was obserbed
+        peak_marker_i = np.argmax(perm_distances)
+        peak_markers[pi] = peak_marker_i
+
+    pctile_lo = (100 - conf_int) / 2.
+    pctile_hi = conf_int + pctile_lo
+
+    return (
+        int(np.percentile(peak_markers, q=pctile_lo)),
+        int(np.percentile(peak_markers, q=pctile_hi)),
+    )
 
 def find_central_mut(kmer: str, cpg: bool = True) -> str:
     orig, new = kmer.split('>')
