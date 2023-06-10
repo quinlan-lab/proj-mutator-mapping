@@ -14,7 +14,7 @@ IHDResultSchema = DataFrameSchema({
 MutationSchema = DataFrameSchema({
     "sample": Column(str),
     "kmer": Column(str, Check.str_matches(r"[ATCGN]{3}>[ATCGN]{3}")),
-    "count": Column(int, Check.greater_than_or_equal_to(1)),
+    "count": Column(int, Check.greater_than_or_equal_to(0)),
 })
 
 MarkerMetadataSchema = DataFrameSchema({

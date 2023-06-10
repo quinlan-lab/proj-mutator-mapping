@@ -116,7 +116,7 @@ def main(args):
     f.savefig(args.out, dpi=300)
 
     if args.chrom is not None:
-        f, ax = plt.subplots(figsize=(10, 5))
+        f, ax = plt.subplots(figsize=(8, 5))
 
         results_merged_chr = results_merged[results_merged["chromosome"] == args.chrom]
         max_threshold_dist = np.max(results_merged_chr[pctile_label])

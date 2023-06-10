@@ -127,9 +127,10 @@ def good_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
         tp = rng.choice(nucs, size=1)[0]
         kmer_mutations.append(f"{fp}{orig}{tp}>{fp}{new}{tp}")
 
+    total_muts = 30
 
     return pd.DataFrame({
-        'sample': np.repeat(['A', 'B', 'C'], repeats=50),
-        'kmer': rng.choice(kmer_mutations, size=150, replace=True),
-        'count': [1] * 150,
+        'sample': np.repeat(['B', 'A', 'C'], repeats=10),
+        'kmer': rng.choice(kmer_mutations, size=total_muts, replace=True),
+        'count': [1] * total_muts,
     })

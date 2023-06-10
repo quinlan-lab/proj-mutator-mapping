@@ -105,15 +105,15 @@ def test_compute_genotype_similarity(genotype_array):
 
 
 def test_compute_spectra(good_mutation_dataframe):
-    samples, mutations, spectra = compute_spectra(good_mutation_dataframe, k=1)
+    samples, mutations, spectra = compute_spectra(good_mutation_dataframe, k=1, cpg=True)
     assert samples == ["A", "B", "C"]
-    assert mutations == ["A>C", "A>G", "A>T", "C>A", "C>G", "C>T"]
+    assert mutations == ["A>C", "A>G", "A>T", "C>A", "C>G"]
     assert np.array_equal(
         spectra,
         np.array([
-            [11, 9, 7, 14, 9, 0],
-            [9, 11, 7, 10, 13, 0],
-            [11, 10, 4, 7, 14, 4],
+            [1, 1, 0, 5, 3],
+            [3, 1, 3, 1, 2],
+            [4, 4, 0, 2, 0],
         ]),
     )
 
