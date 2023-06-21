@@ -12,6 +12,8 @@ from ihd.utils import (
     compute_manual_chisquare,
     find_central_mut,
     adjust_spectra_for_nuccomp,
+    get_covariate_matrix,
+    calculate_covariate_by_marker,
 )
 import pytest
 import scipy.stats as ss
@@ -118,7 +120,7 @@ def test_compute_spectra(good_mutation_dataframe):
     )
 
 
-@pytest.mark.parametrize("X,y", [(np.arange(5).astype(np.float64), np.arange(5).astype(np.float64)),])
+@pytest.mark.parametrize("X,y", [(np.arange(5).reshape(5, 1).astype(np.float64), np.arange(5).astype(np.float64)),])
 def test_compute_residuals(X, y):
     assert np.allclose(compute_residuals(X, y), np.zeros(5))
 
@@ -128,6 +130,7 @@ def test_perform_ihd_scan(spectra_array, genotype_array, genotype_similarity):
         spectra_array,
         genotype_array,
         genotype_similarity,
+        np.ones(shape=(3, 1)),
     )
 
     exp_dists = np.array([
@@ -139,30 +142,23 @@ def test_perform_ihd_scan(spectra_array, genotype_array, genotype_similarity):
                        exp_dists)
 
 
-@pytest.mark.parametrize("n_permutations,comparison_wide", [
-    (100, False),
-    (1000, False),
-    (100, True),
-])
+@pytest.mark.parametrize("n_permutations", [(100), (1000), (100)])
 def test_perform_ihd_permutation_test(
     spectra_array,
     genotype_array,
     genotype_similarity,
     n_permutations,
-    comparison_wide,
 ):
     perm_res = perform_permutation_test(
         spectra_array,
         genotype_array,
         genotype_similarity,
+        np.ones(shape=(3, 1)),
         np.ones(4),
         n_permutations=n_permutations,
-        comparison_wide=comparison_wide,
     )
-    if comparison_wide:
-        assert perm_res.shape[0] == n_permutations and perm_res.shape[1] == genotype_array.shape[0]
-    else:
-        assert perm_res.shape[0] == n_permutations
+
+    assert perm_res.shape[0] == n_permutations
 
 
 @pytest.mark.parametrize("kmer,exp", [
@@ -191,3 +187,32 @@ def test_adjust_spectra_for_nuccomp(
 
     assert np.array_equal(wt_adj, np.array([2, 3, 3, 9, 6, 3]))
     assert np.array_equal(mut_adj, np.array([6, 6, 15, 6, 8, 6]))
+
+
+@pytest.mark.parametrize("sample_list", [(["A", "B", "C"]), (["C", "A", "B"]), (["A", "A", "C"])])
+def test_get_covariate_matrix(good_mutation_dataframe, sample_list):
+    # define expected mapping of samples to covariates
+    smp2covariate = {"A": 12, "B": 45, "C": 23}
+    # map samples to covariates
+    good_mutation_dataframe["covariate"] = good_mutation_dataframe["sample"].apply(lambda s: smp2covariate[s])
+
+    covar_mat = get_covariate_matrix(
+        good_mutation_dataframe,
+        sample_list,
+        covariate_cols=["covariate"],
+    )
+
+    exp_arr = np.array([smp2covariate[s] for s in sample_list]).reshape((1, len(sample_list)))
+    assert np.array_equal(exp_arr, covar_mat)
+
+
+def test_calculate_covariate_by_marker(covariate_matrix, genotype_array):
+    cov_by_marker = calculate_covariate_by_marker(covariate_matrix, genotype_array)
+
+    exp_arr = np.array([[
+        (12 + 39) / (45 + 23),
+        (23 + 39) / 12,
+        (12 + 45 + 39) / 23,
+    ]]).reshape(genotype_array.shape[0], 1)
+
+    assert np.array_equal(cov_by_marker, exp_arr)

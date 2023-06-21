@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, List
 import numba
 
 @numba.njit
@@ -139,7 +139,6 @@ def compute_haplotype_distance(
     b_hap_sums = np.sum(b_haps, axis=0)
 
     dist = distance_method(a_hap_sums, b_hap_sums)
-
     return dist
 
 
@@ -295,6 +294,7 @@ def perform_ihd_scan(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
     genotype_similarity: np.ndarray,
+    covariate_ratios: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
     adjust_statistics: bool = True,
 ) -> np.ndarray:
@@ -312,6 +312,15 @@ def perform_ihd_scan(
         genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
             every genotyped marker, of size (G, N), where G is the number \
             of genotyped sites and N is the number of samples.
+
+        genotype_similarity (np.ndarray): A 1D numpy array of size (G, ), where \
+            G is the number of genotyped sites. Contains the correlation coefficient \
+            between genome-wide allele frequencies of haplotypes with A vs. B genotypes \
+            at every site.
+
+        covariate_ratios (np.ndarray): A 1D numpy array of size (G, ), where \
+            G is the number of genotyped sites. Contains the ratio of covariate \
+            values between haplotypes with A vs. B genotypes at every site.
 
         distance_method (Callable, optional): Callable method to compute the \
             distance between aggregate mutation spectra. Must accept two 1D numpy \
@@ -347,8 +356,85 @@ def perform_ihd_scan(
         focal_dist[ni] = cur_dist
 
     if adjust_statistics:
-        return compute_residuals(genotype_similarity, focal_dist)
+        covariate_matrix_full = np.hstack((genotype_similarity.reshape(-1, 1), covariate_ratios))
+        return compute_residuals(covariate_matrix_full, focal_dist)
     else: return focal_dist
+
+
+def get_covariate_matrix(
+    pheno: pd.DataFrame,
+    samples: List[str],
+    covariate_cols: List[str] = ["n_generations"],
+) -> np.ndarray:
+    """Generate a matrix of covariate values for each sample. Returns
+    a 2D numpy array of size (C, N), where C is the number of covariates
+    specified in the `covariate_cols` argument, and N is the number of samples.
+
+    Args:
+        pheno (pd.DataFrame): Pandas dataframe containing metadata about each sample. \
+            This dataframe should have a "sample" column and should contain each of the columns \
+            specified in `covariate_cols`.
+
+        samples (List[str]): List of samples to subset the dataframe.
+
+        covariate_cols (List[str], optional): List of column names in `pheno` that should \
+            be used as covariates. Defaults to ["n_generations"].
+
+    Returns:
+        np.ndarray: A 2D numpy array of size (C, N), where C is the number of covariates \
+            and N is the number of samples.
+    """
+
+    cols = ["sample"] + covariate_cols
+    # subset pheno information to relevant samples
+    pheno_sub = pheno[pheno["sample"].isin(samples)].drop_duplicates(cols).set_index("sample")
+    covariate_matrix = pheno_sub.loc[samples][covariate_cols].values.T
+    print (covariate_matrix.shape)
+    return covariate_matrix
+
+
+@numba.njit
+def calculate_covariate_by_marker(
+    covariate_matrix: np.ndarray,
+    genotype_matrix: np.ndarray,
+) -> np.ndarray:
+    """For each covariate in the `covariate_matrix`, compute the ratio of
+        covariate values in samples with A or B genotypes at each marker in the
+        `genotype_matrix`.
+
+    Args:
+        covariate_matrix (np.ndarray): A 2D numpy array of size (C, N), where C is \
+            the number of covariates and N is the number of samples.
+
+        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \
+            every genotyped marker, of size (G, N), where G is the number \
+            of genotyped sites and N is the number of samples.
+
+    Returns:
+        np.ndarray: A 2D numpy array of size (G, C), where G is the number of \
+            genotyped sites and C is the number of covariates.
+    """
+    # store the ratio of covariate values between D and B haplotypes
+    # at every marker along the genome for each covariate
+    covariate_ratios: np.ndarray = np.zeros(
+        (genotype_matrix.shape[0], covariate_matrix.shape[0]),
+        dtype=np.float64,
+    )
+    # loop over every site in the genotype matrix
+    for ni in np.arange(genotype_matrix.shape[0]):
+        a_hap_idxs = np.where(genotype_matrix[ni] == 0)[0]
+        b_hap_idxs = np.where(genotype_matrix[ni] == 2)[0]
+        # loop over every covariate in the covariate matrix
+        for ci in np.arange(covariate_matrix.shape[0]):
+            # subset covariate matrix to the covariate of interest
+            covariate_matrix_sub = covariate_matrix[ci]
+            # compute ratio of covariate values between the two groups
+            a_sum = np.sum(covariate_matrix_sub[a_hap_idxs])
+            b_sum = np.sum(covariate_matrix_sub[b_hap_idxs])
+            ratio = a_sum / b_sum
+        covariate_ratios[ni, ci] = ratio
+
+    return covariate_ratios
 
 
 @numba.njit
@@ -361,15 +447,19 @@ def compute_residuals(
     between the predicted y-values and the true y-values.
 
     Args:
-        X (np.ndarray): 1D numpy array of size (M, ).
-        y (np.ndarray): 1D numpy array of size (M, ).
+        X (np.ndarray): 2D numpy array of size (M, N), where M is the number of \
+            observations and N is the number of independent variables.
+
+        y (np.ndarray): 1D numpy array of size (M, ), containing the dependent variables \
+            for all M observations.
 
     Returns:
         resids (np.ndarray): 1D numpy array of size (M, ) containing residuals.
     """
-    X = np.vstack((X, np.ones(X.shape[0]))).T
-    m, c = np.linalg.lstsq(X, y)[0]
-    y_ = (X[:, 0] * m) + c
+    ones = np.ones(X.shape[0]).reshape(-1, 1)
+    X = np.hstack((X, ones))
+    coefs = np.linalg.lstsq(X, y)[0]
+    y_ = np.sum(X[:, :-1] * coefs[:-1], axis=1) + coefs[-1]
     resids = y - y_
     return resids
 
@@ -379,6 +469,7 @@ def perform_permutation_test(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
     genotype_similarity: np.ndarray,
+    covariate_ratios: np.ndarray,
     strata: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
     n_permutations: int = 1_000,
@@ -411,6 +502,10 @@ def perform_permutation_test(
             of size (G, ), where G is the number of genotyped sites. At each element of \
             the array, we store the correlation coefficient between genome-wide D allele \
             frequencies calculated in samples with either allele at the corresponding site G_i.
+
+        covariate_ratios (np.ndarray): A 1D numpy array of size (G, ), where \
+            G is the number of genotyped sites. Contains the ratio of covariate \
+            values between haplotypes with A vs. B genotypes at every site.
         
         strata (np.ndarray): A 1D numpy array of "group labels" of size (N, ), where \
             N is the number of samples. If samples are assigned different group labels, their \
@@ -454,6 +549,7 @@ def perform_permutation_test(
             shuffled_spectra,
             genotype_matrix,
             genotype_similarity,
+            covariate_ratios,
             distance_method=distance_method,
             adjust_statistics=adjust_statistics,
         )
@@ -467,6 +563,7 @@ def perform_permutation_test(
 def calculate_confint(
     spectra: np.ndarray,
     genotype_matrix: np.ndarray,
+    covariate_matrix: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
     n_permutations: int = 1_000,
     progress: bool = False,
@@ -531,12 +628,19 @@ def calculate_confint(
         # recalculate genotype similarities using the resampled genotype
         # matrix. NOTE: this is slow!
         resampled_genotype_similarity = compute_genotype_similarity(resampled_genotype_matrix)
-            
+        # resample the covariate matrix to include the bootstrap resampled samples
+        resampled_covariate_matrix = covariate_matrix[:, resampled_idxs]
+        resampled_covariate_ratios = calculate_covariate_by_marker(
+            resampled_covariate_matrix,
+            resampled_genotype_matrix,
+        )
+
         # perform the IHD scan
         perm_distances = perform_ihd_scan(
             resampled_spectra,
             resampled_genotype_matrix,
             resampled_genotype_similarity,
+            resampled_covariate_ratios,
             distance_method=distance_method,
             adjust_statistics=adjust_statistics,
         )
@@ -552,6 +656,7 @@ def calculate_confint(
         int(np.percentile(peak_markers, q=pctile_lo)),
         int(np.percentile(peak_markers, q=pctile_hi)),
     )
+
 
 def find_central_mut(kmer: str, cpg: bool = True) -> str:
     orig, new = kmer.split('>')

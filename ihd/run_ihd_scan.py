@@ -11,25 +11,16 @@ from utils import (
     compute_genotype_similarity,
     compute_manual_chisquare,
     compute_manual_cosine_distance,
+    calculate_confint,
+    get_covariate_matrix,
+    calculate_covariate_by_marker
 )
 from schema import IHDResultSchema, MutationSchema
 import numba
+from scipy.stats import bayes_mvs
 
-
-def main(args):
-
-    # read in JSON file with file paths
-    config_dict = None
-    with open(args.config, "rb") as config:
-        config_dict = json.load(config)
-
-    # read in genotype info
-    geno = pd.read_csv(config_dict['geno'])
-
-    # read in singleton data and validate with pandera
-    mutations = pd.read_csv(args.mutations)
-    MutationSchema.validate(mutations)
-
+def filter_mutation_data(mutations: pd.DataFrame, geno: pd.DataFrame) -> pd.DataFrame:
+    # get unique samples in mutation dataframe
     samples = mutations['sample'].unique()
     # get the overlap between those and the sample names in the genotype data
     samples_overlap = list(set(samples).intersection(set(geno.columns)))
@@ -45,15 +36,36 @@ def main(args):
     geno = geno[cols2use]
 
     mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
+    return mutations_filtered
+
+
+def main(args):
+
+    # read in JSON file with file paths
+    config_dict = None
+    with open(args.config, "rb") as config:
+        config_dict = json.load(config)
+
+    # read in genotype info
+    geno = pd.read_csv(config_dict['geno'])
+    markers = pd.read_csv(config_dict['markers'])
+
+    markers2use = markers[markers["chromosome"] != "X"]["marker"].unique()
+    geno = geno[geno["marker"].isin(markers2use)]
+
+    # read in singleton data and validate with pandera
+    mutations = pd.read_csv(args.mutations, dtype={"sample": str})
+    MutationSchema.validate(mutations)
+
+    mutations_filtered = filter_mutation_data(mutations, geno)
 
     # get a list of samples and their corresponding mutation spectra
     samples, mutation_types, spectra = compute_spectra(
         mutations_filtered,
         k=args.k,
-        cpg=True,
+        cpg=False,
     )
-    print(f"""Using {len(samples)} samples and {int(np.sum(spectra))} 
-    total mutations.""")
+    print(f"Using {len(samples)} samples and {int(np.sum(spectra))} total mutations.")
 
     strata = np.ones(len(samples))
     if args.stratify_column is not None:
@@ -85,23 +97,45 @@ def main(args):
     afs = ac / an
 
     # only consider sites where allele frequency is between thresholds
-    idxs2keep = np.where((afs > 0.1) & (afs < 0.9))[0]
+    idxs2keep = np.where((afs > 0) & (afs < 1))[0]
     print("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
-    geno_filtered = geno_asint.iloc[idxs2keep][samples].values
-    markers_filtered = geno_asint.iloc[idxs2keep]['marker'].values
+    
+    # filter the genotype dataframe to include specified sites
+    geno_asint_filtered = geno_asint.iloc[idxs2keep]
+    # convert genotype values to a matrix
+    geno_asint_filtered_matrix = geno_asint_filtered[samples].values
+    # get an array of marker names at the filtered genotyped loci
+    markers_filtered = geno_asint_filtered['marker'].values
 
     # compute similarity between allele frequencies at each marker
-    genotype_similarity = compute_genotype_similarity(geno_filtered)
+    genotype_similarity = compute_genotype_similarity(geno_asint_filtered_matrix)
     distance_method = compute_manual_cosine_distance
     if args.distance_method == "chisquare":
         distance_method = compute_manual_chisquare
+
+    covariate_ratios = np.ones(genotype_similarity.shape[0]).reshape(-1, 1)
+
+    #if args.covariate_cols is not None:
+    covariate_cols = ["n_generations"]
+
+    covariate_matrix = get_covariate_matrix(
+        mutations_filtered,
+        samples,
+        covariate_cols=covariate_cols,
+    )
+
+    covariate_ratios = calculate_covariate_by_marker(
+        covariate_matrix,
+        geno_asint_filtered_matrix,
+    )
 
     # compute the maximum cosine distance between groups of
     # haplotypes at each site in the genotype matrix
     focal_dists = perform_ihd_scan(
         spectra,
-        geno_filtered,
+        geno_asint_filtered_matrix,
         genotype_similarity,
+        covariate_ratios,
         distance_method=distance_method,
         adjust_statistics=True,
     )
@@ -118,21 +152,50 @@ def main(args):
     # then do permutations
     null_distances = perform_permutation_test(
         spectra,
-        geno_filtered,
+        geno_asint_filtered_matrix,
         genotype_similarity,
+        covariate_ratios,
         strata,
         distance_method=distance_method,
         n_permutations=args.permutations,
-        comparison_wide=args.comparison_wide,
         progress=args.progress,
+        adjust_statistics=True,
     )
 
     # compute the Nth percentile of the maximum distance
     # distribution to figure out the distance thresholds
     for pctile in (20, 5, 1):
         score_pctile = np.percentile(null_distances, 100 - pctile, axis=0)
-        if not args.comparison_wide: score_pctile = score_pctile[0]
         res_df[f'{100 - pctile}th_percentile'] = score_pctile
+
+    # for each chromosome, compute the specified confidence interval around
+    # the peak observed distance
+    geno_asint_filtered_merged = geno_asint_filtered.merge(markers, on="marker")
+
+    combined_conf_int_df = []
+
+    # for chrom, chrom_df in geno_asint_filtered_merged.groupby("chromosome"):
+    #     if chrom not in ("4", "6"): continue
+    #     # get the indices of each marker on the chromosome
+    #     chrom_idxs = chrom_df.index.values
+    #     chrom_genotype_matrix = geno_asint_filtered_matrix[chrom_idxs, :]
+
+    #     # compute confidence intervals on the chromosome
+    #     conf_int_lo, conf_int_hi = calculate_confint(
+    #         spectra,
+    #         chrom_genotype_matrix,
+    #         covariate_matrix,
+    #         distance_method=distance_method,
+    #         adjust_statistics=True,
+    #         conf_int=80.,
+    #     )
+
+    #     conf_int_df = chrom_df.iloc[np.array([conf_int_lo, conf_int_hi])]
+    #     combined_conf_int_df.append(conf_int_df[["chromosome", "marker", "Mb"]])
+
+    # combined_conf_int_df = pd.concat(combined_conf_int_df)
+
+    # combined_conf_int_df.to_csv(f"{args.out}.outie.csv", index=False)
 
     res_df.to_csv(args.out, index=False)
 
@@ -166,11 +229,6 @@ if __name__ == "__main__":
         "Number of permutations to perform when calculating significance thresholds. Default is 1,000.",
     )
     p.add_argument(
-        "-comparison_wide",
-        action="store_true",
-        help="Use per-marker instead of genome-wide distance thresholds.",
-    )
-    p.add_argument(
         "-distance_method",
         default="cosine",
         type=str,
@@ -199,6 +257,13 @@ if __name__ == "__main__":
         default=None,
         type=str,
         help="""If specified, use this column to perform a stratified permutation test by only permuting BXDs within groups defined by the column to account for population structure."""
+    )
+    p.add_argument(
+        "-covariate_cols",
+        type=str,
+        default=None,
+        help=
+        "Names of columns to use as covariates during IHD scan.",
     )
     args = p.parse_args()
 
