@@ -100,6 +100,14 @@ def genotype_array_nans() -> np.ndarray:
 
 
 @pytest.fixture
+def covariate_matrix() -> np.ndarray:
+    """covariate matrix of shape (C, N) where C
+    is the number of covariates and N is the number of samples"""
+    return np.array([
+        [12, 45, 23, 39]
+    ])
+
+@pytest.fixture
 def bad_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
 
     rng = np.random.default_rng(seed = seed)
