@@ -1,7 +1,7 @@
 rule download_cc_geno:
     input:
     output:
-        temp(PROJDIR +"/data/genotypes/cc.{chrom}.geno")
+        temp("data/genotypes/cc.{chrom}.geno")
     shell:
         """
         wget -O {output} https://raw.githubusercontent.com/rqtl/qtl2data/main/CC/cc_geno{wildcards.chrom}.csv
@@ -9,9 +9,9 @@ rule download_cc_geno:
 
 rule combine_cc_geno:
     input:
-        genotypes = expand(PROJDIR +"/data/genotypes/cc.{chrom}.geno", chrom=chroms_)
+        genotypes = expand("data/genotypes/cc.{chrom}.geno", chrom=chroms_)
     output:
-        out_geno = PROJDIR + "/data/genotypes/cc.geno"
+        out_geno = "data/genotypes/cc.geno"
     run:
         import pandas as pd 
 
@@ -27,14 +27,16 @@ rule combine_cc_geno:
 
 rule format_cc_mutations:
     input:
-        unformatted = PROJDIR + "/data/mutations/cc/cc.csv"
+        unformatted = "data/mutations/cc/Private_Variants.csv"
     output:
-        formatted = PROJDIR + "/data/mutations/cc/annotated_filtered_singletons.csv"
+        formatted = "data/mutations/cc/annotated_filtered_singletons.condition_on_N.csv"
     run:
         import pandas as pd 
 
         df = pd.read_csv(input.unformatted, dtype={"INDEL": int})
         df = df[df["INDEL"] != 1]
+
+        print (df)
 
         revcomp = {"T": "A", "A": "T", "C": "G", "G": "C"}
         base_nucs = ["A", "C"]
@@ -56,9 +58,9 @@ rule format_cc_mutations:
 
 rule fix_cc_markers:
     input:
-        orig = PROJDIR + "/data/genotypes/cc.markers.tmp"
+        orig = "data/genotypes/cc.markers.tmp"
     output:
-        new = PROJDIR + "/data/genotypes/cc.markers"
+        new = "data/genotypes/cc.markers"
     run:
         import pandas as pd 
         df = pd.read_csv(input.orig)

@@ -46,11 +46,11 @@ rule plot_bxd_spectra_vs_age:
     input:
         spectra = "csv/bxd_spectra_1mer.csv",
         py_script = "scripts/plot_bxd_spectra_vs_age.py"
-    output: "figs/bxd_spectra_vs_age.{ext}"
+    output: "figs/bxd_spectra_vs_age.{mutation_type}.{ext}"
     shell:
         """
         python {input.py_script} --spectra {input.spectra} \
                                  --out {output} \
-                                 --mutation_type C_A \
+                                 --mutation_type {wildcards.mutation_type} \
                                  -phenotype Count
         """

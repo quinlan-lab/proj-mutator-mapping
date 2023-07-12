@@ -13,9 +13,8 @@ rule run_ihd:
                                  -k {wildcards.k} \
                                  -distance_method cosine \
                                  -permutations 10000 \
-                                 -progress \
+                                 -stratify_column true_epoch \
                                  -threads 4 \
-                                 -stratify_column true_epoch 
         """
 
 rule plot_ihd:
