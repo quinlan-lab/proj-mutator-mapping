@@ -2,7 +2,8 @@
     "genotypes": {
       "B": 0,
       "D": 2,
-      "H": 1
+      "H": 1,
+      "U": 1
     },
     "geno": "data/genotypes/bxd.geno",
     "markers": "data/genotypes/bxd.markers"
