@@ -31,7 +31,7 @@ rule all:
 
         # FIGURE 3
         "figs/bxd_spectra_1mer.C_A.png", # panel A
-        "figs/bxd_spectra_vs_age.png", # panel B
+        "figs/bxd_spectra_vs_age.C_A.png", # panel B
         "figs/signature_activity.eps", # panel C
 
         "figs/bxd_spectra_1mer_all.eps", # supplement 1
