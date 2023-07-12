@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Callable, Tuple, Union, List
+from typing import Callable, Tuple, List
 import numba
 
 @numba.njit
@@ -138,7 +138,10 @@ def compute_haplotype_distance(
     a_hap_sums = np.sum(a_haps, axis=0)
     b_hap_sums = np.sum(b_haps, axis=0)
 
-    dist = distance_method(a_hap_sums, b_hap_sums)
+    if np.sum(a_hap_sums) == 0 or np.sum(b_hap_sums) == 0:
+        dist = 0
+    else:
+        dist = distance_method(a_hap_sums, b_hap_sums)
     return dist
 
 
@@ -389,7 +392,6 @@ def get_covariate_matrix(
     # subset pheno information to relevant samples
     pheno_sub = pheno[pheno["sample"].isin(samples)].drop_duplicates(cols).set_index("sample")
     covariate_matrix = pheno_sub.loc[samples][covariate_cols].values.T
-    print (covariate_matrix.shape)
     return covariate_matrix
 
 
@@ -625,8 +627,7 @@ def calculate_confint(
         resampled_spectra = spectra[resampled_idxs, :]
         # resample the corresponding genotype data using the indices
         resampled_genotype_matrix = genotype_matrix[:, resampled_idxs]
-        # recalculate genotype similarities using the resampled genotype
-        # matrix. NOTE: this is slow!
+        # recalculate genotype similarities using the resampled genotype matrix. NOTE: this is slow!
         resampled_genotype_similarity = compute_genotype_similarity(resampled_genotype_matrix)
         # resample the covariate matrix to include the bootstrap resampled samples
         resampled_covariate_matrix = covariate_matrix[:, resampled_idxs]
