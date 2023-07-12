@@ -1,6 +1,4 @@
 import numpy as np
-import tqdm
-import itertools
 import pandas as pd
 import numba
 from typing import List, Tuple, Callable
@@ -167,12 +165,15 @@ def run_simulation_trials(
         mutation_spectra_in_trials[trial_n] = mutation_spectra
 
         genotype_similarity = compute_genotype_similarity(genotype_matrix)
+        covariate_ratios = np.ones(genotype_similarity.shape[0]).reshape(-1, 1)
+
         
         # run an IHD scan
         focal_dists = perform_ihd_scan(
             mutation_spectra,
             genotype_matrix,
             genotype_similarity,
+            covariate_ratios,
             adjust_statistics=False,
             distance_method=distance_method,
 
@@ -183,13 +184,15 @@ def run_simulation_trials(
             mutation_spectra,
             genotype_matrix,
             genotype_similarity,
+            covariate_ratios,
+            strata=np.ones(mutation_spectra.shape[0]),
             n_permutations=n_permutations,
             distance_method=distance_method,
             adjust_statistics=False,
         )
 
-        pval = np.sum(null_distances >= focal_dists[focal_marker]) / n_permutations
-        pvals[trial_n] = pval
+        thresh = np.percentile(null_distances, q=95)
+        pvals[trial_n] = 1 - (focal_dists[focal_marker] > thresh)
 
     return pvals, mutation_spectra_in_trials, focal_markers
 
