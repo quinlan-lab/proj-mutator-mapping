@@ -130,7 +130,7 @@ def test_perform_ihd_scan(spectra_array, genotype_array, genotype_similarity):
         spectra_array,
         genotype_array,
         genotype_similarity,
-        np.ones(shape=(3, 1)),
+        np.ones(shape=(3, 1)), # placeholder for the covariate matrix
     )
 
     exp_dists = np.array([
@@ -153,8 +153,8 @@ def test_perform_ihd_permutation_test(
         spectra_array,
         genotype_array,
         genotype_similarity,
-        np.ones(shape=(3, 1)),
-        np.ones(4),
+        np.ones(shape=(3, 1)), # placeholder for the covariate matrix
+        np.ones(4), # placeholder for the strata
         n_permutations=n_permutations,
     )
 
@@ -206,8 +206,8 @@ def test_get_covariate_matrix(good_mutation_dataframe, sample_list):
     assert np.array_equal(exp_arr, covar_mat)
 
 
-def test_calculate_covariate_by_marker(covariate_matrix, genotype_array):
-    cov_by_marker = calculate_covariate_by_marker(covariate_matrix, genotype_array)
+def test_calculate_covariate_by_marker(one_covariate_matrix, genotype_array):
+    cov_by_marker = calculate_covariate_by_marker(one_covariate_matrix, genotype_array)
 
     exp_arr = np.array([[
         (12 + 39) / (45 + 23),

@@ -11,5 +11,6 @@ from tests.fixtures import (
     callable_kmer_arr_wt,
     haplotype_groups_ident,
     haplotype_groups_strat,
-    covariate_matrix,
+    one_covariate_matrix,
+    multi_covariate_matrix,
 )

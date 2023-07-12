@@ -8,9 +8,11 @@ rng = np.random.default_rng(seed = 42)
 def haplotype_groups_ident() -> np.ndarray:
     return np.array([1, 1, 1, 1, 1, 1])
 
+
 @pytest.fixture 
 def haplotype_groups_strat() -> np.ndarray:
     return np.array([1, 1, 2, 2, 3, 4])
+
 
 @pytest.fixture
 def wt_haplotype_array() -> np.ndarray:
@@ -82,9 +84,11 @@ def genotype_array() -> np.ndarray:
         [0, 0, 2, 0],
     ]).astype(np.float64)
 
+
 @pytest.fixture
 def genotype_similarity() -> np.ndarray:
     return np.array([0.5, 0.5, 0.5]).astype(np.float64)
+
 
 @pytest.fixture
 def genotype_array_nans() -> np.ndarray:
@@ -100,12 +104,23 @@ def genotype_array_nans() -> np.ndarray:
 
 
 @pytest.fixture
-def covariate_matrix() -> np.ndarray:
+def one_covariate_matrix() -> np.ndarray:
     """covariate matrix of shape (C, N) where C
     is the number of covariates and N is the number of samples"""
     return np.array([
         [12, 45, 23, 39]
     ])
+
+
+@pytest.fixture
+def multi_covariate_matrix() -> np.ndarray:
+    """covariate matrix of shape (C, N) where C
+    is the number of covariates and N is the number of samples"""
+    return np.array([
+        [12, 45, 23, 39],
+        [0.1, -1.6, 5.5, -0.4],
+    ])
+
 
 @pytest.fixture
 def bad_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
@@ -119,6 +134,7 @@ def bad_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
         'kmer': rng.choice(mutations, size=24, replace=True),
         'count': [1] * 24,
     })
+
 
 @pytest.fixture
 def good_mutation_dataframe(seed: int = 42) -> pd.DataFrame:
