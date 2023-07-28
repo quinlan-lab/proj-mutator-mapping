@@ -20,10 +20,11 @@ def main(args):
 
     combined_power = pd.concat([qtl_power, ihd_power]).reset_index()
 
+
     # ensure that we're comparing the same groups of simulations
     # between IHD and QTL mapping
     combined_power = combined_power[
-        (combined_power["mutation_type"].isin(["C_A", "C_T"])) &
+        (combined_power["mutation_type"].isin(["C_T", "C_A"])) &
         (combined_power["n_haplotypes"] == 50) &
         (combined_power["tag_strength"] == 100) &
         (combined_power["exp_af"] == 50) &
@@ -43,6 +44,10 @@ def main(args):
         "exp_af": "Allele frequency",
     }
     combined_power.rename(columns=replace_dict, inplace=True)
+
+    print (combined_power[(combined_power["Method"] == "QTL")])
+
+
     g = sns.FacetGrid(data=combined_power, row="# mutations", col="Mutation type", aspect=1.5)
     g.map(sns.lineplot, "Mutator effect size", "Power", "Method", palette="colorblind")
     g.add_legend(title = "Method")
