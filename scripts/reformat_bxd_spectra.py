@@ -22,7 +22,7 @@ def main(args):
     mutations = pd.read_csv(args.mutations)
 
     # compute mutation spectra in each sample using the specified k-mer context
-    samples, mutation_types, spectra = compute_spectra(mutations, k=args.k)
+    samples, mutation_types, spectra = compute_spectra(mutations, k=args.k, cpg=True)
 
     # map samples and mutation types to their indices in the mutation spectrum array
     smp2idx = dict(zip(samples, range(len(samples))))
