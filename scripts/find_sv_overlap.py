@@ -8,7 +8,7 @@ def main(args):
     refseq = pd.read_csv(args.refseq, sep="\t")
 
     start = 111_270_000
-    buff = 5e6
+    buff = 10_000_000
 
     chrom, start, end = "chr6", start - buff, start + buff
 
@@ -20,12 +20,16 @@ def main(args):
     exons, full_tx = IntervalTree(), IntervalTree()
 
     for i, row in refseq.iterrows():
+        # limit to curated refseq 
+        #if not row["name"].startswith("NM"): continue
         exon_starts, exon_ends = row["exonStarts"].split(','), row["exonEnds"].split(',')
-        tx_start, tx_end = row["txStart"], row["txEnd"]
+        tx_start, tx_end = int(row["txStart"]), int(row["txEnd"])
+        tx_start -= 10_000
+        tx_end += 10_000
         gene_name = row["name2"]
-        for s, e in zip(exon_starts, exon_ends):
-            if s == "" and e == "": continue
-            exons.insert(int(s), int(e), {"gene": gene_name, "exon_start": tx_start, "exon_end": tx_end})
+        for exon_start, exon_end in zip(exon_starts, exon_ends):
+            if exon_start == "" and exon_end == "": continue
+            exons.insert(int(exon_start), int(exon_end), {"gene": gene_name, "exon_start": exon_start, "exon_end": exon_end})
         full_tx.insert(tx_start, tx_end, {"gene": gene_name, "tx_start": tx_start, "tx_end": tx_end})
 
     smp2idx = dict(zip(vcf.samples, range(len(vcf.samples))))
@@ -41,6 +45,8 @@ def main(args):
             v_end -= v.INFO.get("SVLEN")
         exon_overlaps = exons.find(v_start, v_end)
         tx_overlaps = full_tx.find(v_start, v_end)
+        overlapping_genes = list(set([o["gene"] for o in tx_overlaps]))
+        
         if len(tx_overlaps) == 0 and len(exon_overlaps) == 0: continue
         is_in_exon = False
         if len(exon_overlaps) > 0: is_in_exon = True
@@ -50,7 +56,7 @@ def main(args):
             "sv_type": v.INFO.get("SVTYPE"),
             "sv_len": v.INFO.get("SVLEN"),
             "in_exon": int(is_in_exon),
-            "genes": "-".join(list(set([o["gene"] for o in tx_overlaps]))),
+            "genes": "-".join(overlapping_genes),
             "c57_gt": gts[C57],
             "dba_gt": gts[DBA],
         }
