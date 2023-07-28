@@ -3,6 +3,7 @@ import numpy as np
 from typing import Callable, Tuple, List
 import numba
 
+
 @numba.njit
 def compute_manual_chisquare(a: np.ndarray, b: np.ndarray) -> np.float64:
     """Compute a chi-square test of independence between two
@@ -215,6 +216,8 @@ def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
         )
         # compute Pearson correlation between allele frequencies
         af_corr = np.corrcoef(a_afs, b_afs)[0][1]
+        # NOTE: not sure how good of an idea this is, even if it's rare
+        if np.isnan(af_corr): af_corr = 0
         genotype_sims[ni] = af_corr
 
     return genotype_sims
@@ -567,8 +570,8 @@ def calculate_confint(
     genotype_matrix: np.ndarray,
     covariate_matrix: np.ndarray,
     distance_method: Callable = compute_manual_chisquare,
-    n_permutations: int = 1_000,
-    progress: bool = False,
+    n_permutations: int = 10_000,
+    progress: bool = True,
     adjust_statistics: bool = True,
     conf_int: float = 80.0,
 ) -> Tuple[int, int]:
@@ -591,6 +594,9 @@ def calculate_confint(
         genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every \
             genotyped marker, of size (G, N), where G is the number of genotyped \
             sites and N is the number of samples.
+
+        covariate_matrix (np.ndarray): A 2D numpy array of size (C, N), where C is \
+            the number of covariates and N is the number of samples.
         
         distance_method (Callable, optional): Callable method to compute the \
             distance between aggregate mutation spectra. Must accept two 1D numpy \
@@ -637,7 +643,7 @@ def calculate_confint(
         )
 
         # perform the IHD scan
-        perm_distances = perform_ihd_scan(
+        focal_dists = perform_ihd_scan(
             resampled_spectra,
             resampled_genotype_matrix,
             resampled_genotype_similarity,
@@ -645,9 +651,8 @@ def calculate_confint(
             distance_method=distance_method,
             adjust_statistics=adjust_statistics,
         )
-        # figure out the marker at which the max distance
-        # was obserbed
-        peak_marker_i = np.argmax(perm_distances)
+        
+        peak_marker_i = np.argmax(focal_dists) 
         peak_markers[pi] = peak_marker_i
 
     pctile_lo = (100 - conf_int) / 2.
@@ -656,6 +661,7 @@ def calculate_confint(
     return (
         int(np.percentile(peak_markers, q=pctile_lo)),
         int(np.percentile(peak_markers, q=pctile_hi)),
+        peak_markers
     )
 
 
