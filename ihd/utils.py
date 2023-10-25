@@ -573,7 +573,7 @@ def calculate_confint(
     n_permutations: int = 10_000,
     progress: bool = True,
     adjust_statistics: bool = True,
-    conf_int: float = 80.0,
+    conf_int: float = 90.0,
 ) -> Tuple[int, int]:
     """Calculate a confidence interval around the maximum observed 
     distance peak by performing bootstrap resampling.  In each of the 
@@ -627,9 +627,14 @@ def calculate_confint(
     peak_markers: np.ndarray = np.zeros(n_permutations)
 
     for pi in numba.prange(n_permutations):
-        if pi > 0 and pi % 100 == 0 and progress: print(pi)
+        if pi > 0 and pi % 1000 == 0 and progress: print(pi)
         # resample the mutation spectra by bootstrapping
-        resampled_idxs = np.random.randint(0, spectra.shape[0], size=spectra.shape[0])
+        resampled_idxs = np.random.randint(
+            0,
+            high=spectra.shape[0],
+            size=spectra.shape[0],
+        )
+
         resampled_spectra = spectra[resampled_idxs, :]
         # resample the corresponding genotype data using the indices
         resampled_genotype_matrix = genotype_matrix[:, resampled_idxs]
@@ -651,8 +656,8 @@ def calculate_confint(
             distance_method=distance_method,
             adjust_statistics=adjust_statistics,
         )
-        
-        peak_marker_i = np.argmax(focal_dists) 
+
+        peak_marker_i = np.argmax(focal_dists)
         peak_markers[pi] = peak_marker_i
 
     pctile_lo = (100 - conf_int) / 2.
