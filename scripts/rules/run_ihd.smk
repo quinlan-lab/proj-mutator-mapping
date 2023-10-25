@@ -1,3 +1,6 @@
+condition2markers = {"N": None, "D": "rs27509845", "B": "rs27509845"}
+
+
 rule run_ihd:
     input:
         singletons = "data/mutations/{cross}/annotated_filtered_singletons.condition_on_{condition}.csv",
@@ -5,6 +8,7 @@ rule run_ihd:
         config = "data/json/{cross}.json",
         py_script = "ihd/run_ihd_scan.py"
     output: "csv/{cross}.k{k}.genome.condition_on_{condition}.results.csv"
+    params: adj_marker = lambda wc: condition2markers[wc.condition]
     shell:
         """
         python {input.py_script} --mutations {input.singletons} \
@@ -14,7 +18,8 @@ rule run_ihd:
                                  -distance_method cosine \
                                  -permutations 10000 \
                                  -stratify_column true_epoch \
-                                 -threads 1 \
+                                 -threads 4 \
+                                 -adj_marker {params.adj_marker}
         """
 
 rule plot_ihd:

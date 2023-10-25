@@ -108,10 +108,10 @@ def main(args):
     ld = squareform(r ** 2)
     np.fill_diagonal(ld, 1.)
 
-    # if specified, remove all markers with r2 > 0.5 with selected markers
+    # if specified, remove all markers with r2 > X with selected markers
     if args.adj_marker is not None:
         marker_idxs = geno_asint[geno_asint["marker"] == args.adj_marker].index.values
-        _, ld_markers = np.where(ld[marker_idxs] >= 0.5)
+        _, ld_markers = np.where(ld[marker_idxs] >= 0.1)
         geno_asint = geno_asint.iloc[geno_asint.index.difference(ld_markers)]
 
     print("Using {} genotypes that meet filtering criteria.".format(geno_asint.shape[0]))
@@ -190,6 +190,7 @@ def main(args):
         if chrom not in conf_int_chroms: continue
 
         chrom_genotype_matrix = chrom_df[samples].values
+        print (chrom_genotype_matrix.shape)
         # compute confidence intervals on the chromosome
         conf_int_lo, conf_int_hi, peak_markers = calculate_confint(
             spectra,
