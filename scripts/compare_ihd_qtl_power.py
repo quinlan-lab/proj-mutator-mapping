@@ -11,7 +11,7 @@ def main(args):
 
     ihd_power = pd.read_csv(args.ihd_power)
     ihd_power['Power'] = ihd_power['pval'].apply(lambda p: p <= 0.05)
-    ihd_power["Method"] = "IHD"
+    ihd_power["Method"] = "AMSD"
     # use the cosine distance method in IHD to compare against QTL
     ihd_power = ihd_power[ihd_power["distance_method"] == "cosine"]
 
@@ -24,10 +24,8 @@ def main(args):
     # ensure that we're comparing the same groups of simulations
     # between IHD and QTL mapping
     combined_power = combined_power[
-        (combined_power["mutation_type"].isin(["C_T", "C_A"])) &
-        (combined_power["n_haplotypes"] == 50) &
-        (combined_power["tag_strength"] == 100) &
-        (combined_power["exp_af"] == 50) &
+        (combined_power["mutation_type"].isin(["C_A", "C_T"])) &
+        (combined_power["n_haplotypes"] == 100) &
         (combined_power["bonferroni_corr"] == correction)]
 
 
@@ -40,15 +38,13 @@ def main(args):
         "effect_size": "Mutator effect size",
         "n_mutations": "# mutations",
         "n_markers": "# markers",
-        "tag_strength": "Tag strength",
-        "exp_af": "Allele frequency",
+        "exp_af": "Mutator allele freq.",
     }
     combined_power.rename(columns=replace_dict, inplace=True)
 
-    print (combined_power[(combined_power["Method"] == "QTL")])
+    row_name, col_name = "Mutation type", "# mutations"
 
-
-    g = sns.FacetGrid(data=combined_power, row="# mutations", col="Mutation type", aspect=1.5)
+    g = sns.FacetGrid(data=combined_power, row=row_name, col=col_name, aspect=1.5)
     g.map(sns.lineplot, "Mutator effect size", "Power", "Method", palette="colorblind")
     g.add_legend(title = "Method")
     g.tight_layout()

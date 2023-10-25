@@ -27,7 +27,7 @@ def main(args):
     df.rename(columns=replace_dict, inplace=True)
 
     g = sns.FacetGrid(data=df, row="Mutation type", col="# haplotypes", aspect=1.5)
-    g.map(sns.lineplot, "Mutator effect size", "Power", "# mutations", palette="colorblind")
+    g.map(sns.lineplot, "Mutator effect size", "Power", "# mutations", palette="colorblind", ci=95, n_boot=1_000)
     g.add_legend(title = "# of mutations\nper haplotype")
     g.tight_layout()
 
