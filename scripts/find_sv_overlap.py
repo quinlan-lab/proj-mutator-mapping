@@ -7,10 +7,10 @@ def main(args):
 
     refseq = pd.read_csv(args.refseq, sep="\t")
 
-    start = 111_270_000
-    buff = 10_000_000
+    start = 95_000_000
+    end = 116_100_000
 
-    chrom, start, end = "chr6", start - buff, start + buff
+    chrom = "chr6"
 
     refseq = refseq[(refseq["chrom"] == chrom) & (refseq["txStart"] > start)
                     & (refseq["txStart"] < end)]
@@ -21,7 +21,7 @@ def main(args):
 
     for i, row in refseq.iterrows():
         # limit to curated refseq 
-        #if not row["name"].startswith("NM"): continue
+        if not (row["name"].startswith("NM") or row["name"].startswith("NR")): continue
         exon_starts, exon_ends = row["exonStarts"].split(','), row["exonEnds"].split(',')
         tx_start, tx_end = int(row["txStart"]), int(row["txEnd"])
         tx_start -= 10_000
@@ -43,11 +43,11 @@ def main(args):
         v_start, v_end = v.start, v.end
         if v.INFO.get("SVTYPE") == "DEL":
             v_end -= v.INFO.get("SVLEN")
+        if abs(v_end - v_start) < 100: continue
         exon_overlaps = exons.find(v_start, v_end)
         tx_overlaps = full_tx.find(v_start, v_end)
         overlapping_genes = list(set([o["gene"] for o in tx_overlaps]))
         
-        if len(tx_overlaps) == 0 and len(exon_overlaps) == 0: continue
         is_in_exon = False
         if len(exon_overlaps) > 0: is_in_exon = True
         vals = {

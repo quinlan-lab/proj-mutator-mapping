@@ -20,18 +20,15 @@ def main(args):
 
     f, ax = plt.subplots(figsize=(8, 6))
 
-    # subset to desired mutation type
     spectra_df = spectra_df[spectra_df["Mutation type"] == args.mutation_type.replace("_", ">")]
-
     # reformat mutation type
     spectra_df["Mutation type"] = spectra_df["Mutation type"].apply(lambda m: m.replace(">", r"$\to$"))
 
     for hap, hap_df in spectra_df.groupby("Haplotypes"):
         hap_df = hap_df.sort_values("Generations", ascending=True)
         X = hap_df["Generations"].values
-        y = hap_df["Count"].values
-        # if args.phenotype == "Count":
-        #     y /= hap_df["callable_nucleotides"]
+        y = hap_df[args.phenotype].values
+       
         sm.add_constant(X)
         link_func = statsmodels.genmod.families.links.identity()
         model = sm.GLM(y, X, family=sm.families.Poisson(link=link_func))
@@ -71,7 +68,6 @@ def main(args):
             s=50,
         )
 
-
     sns.despine(ax=ax, top=True, right=True)
     for axis in ['top','bottom','left','right']:
         ax.spines[axis].set_linewidth(1.5)
@@ -92,13 +88,14 @@ if __name__ == "__main__":
         help="""Path to tidy dataframe of mutation spectra in BXDs""",
     )
     p.add_argument(
-        "--mutation_type",
-        help="""Mutation type to plot. Default is C_A.""",
-        type=str,
-    )
-    p.add_argument(
         "--out",
         help="""name of output file with tidy mutation spectra""",
+    )
+    p.add_argument(
+        "-mutation_type",
+        help="""Mutation type to plot. Default is C_A.""",
+        type=str,
+        default="C_A",
     )
     p.add_argument(
         "-phenotype",

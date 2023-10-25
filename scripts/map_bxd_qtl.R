@@ -75,9 +75,9 @@ peaks <- find_peaks(out, bxd$pmap, threshold = lod_cutoff)
 # plot LOD scores genome-wide
 png(opt$output_file, width = 7, height = 3.5, units = "in", res = 300)
 par(mar = c(4.1, 4.1, 1.6, 1.1))
-color <- c("cornflowerblue")
-plot(out, pmap, lodcolumn = 1, col = color[1], ylim = c(0, 6), main = mutation_type)
-legend("topright", lwd = 1, col = "cornflowerblue", "LOD scores", bg = "gray90", lty = c(1, 1, 2))
-abline(h = lod_cutoff, col = "black", lwd = 2, lty = 2)
+color <- c("black")
+plot(out, pmap, lodcolumn = 1, col = color[1], bgcolor = "white", altbgcolor = "white", ylim = c(0, 6), main = mutation_type)
+legend("topright", lwd = 1, col = "black", "LOD scores", bg = "white", lty = c(1, 1, 2))
+abline(h = lod_cutoff, col = "darkgrey", lwd = 2, lty = 2)
 
 dev.off()

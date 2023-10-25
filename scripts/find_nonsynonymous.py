@@ -13,13 +13,13 @@ outfh = open(f"{PROJDIR}/data/vcf/ns.vcf", "w")
 print (vcf.raw_header.rstrip(), file=outfh)
 
 for v in vcf:
-    if v.POS < 111_270_000 - 5e6: continue
-    if v.POS > 111_270_000 + 5e6: break
+    if v.POS < 95_000_000: continue
+    if v.POS > 114_100_000: break
     if len(v.ALT) > 1: continue
     annotations = v.INFO.get("ANN").split(';')
     rel_ann = [a for a in annotations if a.split('|')[7] == "protein_coding"]
-    #if not any([a.split('|')[2] in ("MODERATE", "HIGH") for a in rel_ann]):
-    #    continue
+    if not any([a.split('|')[2] in ("MODERATE", "HIGH") for a in rel_ann]):
+      continue
 
     gts = v.gt_types
     gqs = v.gt_quals
@@ -60,7 +60,7 @@ for v in vcf:
                     v.start,
                     v.end,
                     v.REF,
-                    v.ALT,
+                    v.ALT[0],
                     gts[smp2idx[C57]],
                     gts[smp2idx[DBA]],
                     ac,

@@ -7,7 +7,6 @@ from bx.intervals.intersection import IntervalTree
 from pyfaidx import Fasta
 import numpy as np
 import pandas as pd
-import tqdm
 
 def make_interval_tree(
     path: str,
@@ -52,7 +51,7 @@ def main(args):
 
     with open(args.coverage, "r") as f:
         csvf = csv.reader(f, delimiter='\t')
-        for l in tqdm.tqdm(csvf):
+        for l in csvf:
             # skip header line
             if l[0] == "#chrom": continue
             # make sure we only look at autosomes
