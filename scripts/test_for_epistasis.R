@@ -54,14 +54,15 @@ gfit2 <- lmekin(Fraction ~ Genotype_A * Genotype_B + (1 | sample),
 
 # use a poisson model to test for interaction effects between genotypes
 # on C>A mutation counts, modeled as rates
-m1 <- glm(Count ~ offset(log(ADJ_AGE)) + Genotype_A + Genotype_B,
+m1 <- glm(Count ~ Genotype_A + Genotype_B + offset(log(ADJ_AGE)),
     data = phen_df,
     family = poisson()
 )
-m2 <- glm(Count ~ offset(log(ADJ_AGE)) + Genotype_A * Genotype_B,
+m2 <- glm(Count ~ Genotype_A * Genotype_B + offset(log(ADJ_AGE)),
     data = phen_df,
     family = poisson()
 )
+
 print(anova(m2, m1, test = "Chisq"))
 
 # use the MGP data from dumont to test for interaction effects between

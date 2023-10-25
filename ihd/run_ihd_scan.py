@@ -12,11 +12,20 @@ from utils import (
     compute_manual_cosine_distance,
     calculate_confint,
     get_covariate_matrix,
-    calculate_covariate_by_marker
+    calculate_covariate_by_marker,
 )
 from schema import IHDResultSchema, MutationSchema
 import numba
 from typing import List
+import tqdm
+import matplotlib.pyplot as plt
+import seaborn as sns
+import statsmodels.api as sm
+import scipy.stats as ss
+import statsmodels.stats.multitest as mt
+import scipy
+import allel
+from scipy.spatial.distance import squareform
 
 def filter_mutation_data(mutations: pd.DataFrame, geno: pd.DataFrame) -> pd.DataFrame:
     # get unique samples in mutation dataframe
@@ -36,26 +45,6 @@ def filter_mutation_data(mutations: pd.DataFrame, geno: pd.DataFrame) -> pd.Data
 
     mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
     return mutations_filtered
-
-
-def filter_by_af(
-    geno: pd.DataFrame,
-    samples: List[str],
-    af_thresh: float = 0.1,
-) -> pd.DataFrame:
-    
-    # calculate allele frequencies at each site
-    ac = np.nansum(geno[samples], axis=1)
-    an = np.sum(~np.isnan(geno[samples]), axis=1) * 2
-    afs = ac / an
-
-    # only consider sites where allele frequency is between thresholds
-    idxs2keep = np.where((afs > af_thresh) & (afs < 1 - af_thresh))[0]
-    print("Using {} genotypes that meet filtering criteria.".format(idxs2keep.shape[0]))
-
-    # filter the genotype dataframe to include specified sites
-    geno_filtered = geno.iloc[idxs2keep]
-    return geno_filtered
 
 
 def main(args):
@@ -82,7 +71,7 @@ def main(args):
     samples, mutation_types, spectra = compute_spectra(
         mutations_filtered,
         k=args.k,
-        cpg=False,
+        cpg=True,
     )
     print(f"Using {len(samples)} samples and {int(np.sum(spectra))} total mutations.")
 
@@ -106,17 +95,30 @@ def main(args):
                     print (s, m)
                 callable_kmer_arr[si, mi] = callable_k["count"].values[0]
 
+
     # convert string genotypes to integers based on config definition
     replace_dict = config_dict['genotypes']
     geno_asint = geno.replace(replace_dict).replace({1: np.nan})
 
-    # filter genotypes by allele frequency
-    geno_asint_filtered = filter_by_af(geno_asint, samples, af_thresh=0.1)
+    # measure LD between all pairs of markers
+    cols = [c for c in geno_asint.columns if c != "marker"]
+    gn = geno_asint[cols].values
+    gn[np.isnan(gn)] = -1
+    r = allel.rogers_huff_r(gn)
+    ld = squareform(r ** 2)
+    np.fill_diagonal(ld, 1.)
 
+    # if specified, remove all markers with r2 > 0.5 with selected markers
+    if args.adj_marker is not None:
+        marker_idxs = geno_asint[geno_asint["marker"] == args.adj_marker].index.values
+        _, ld_markers = np.where(ld[marker_idxs] >= 0.5)
+        geno_asint = geno_asint.iloc[geno_asint.index.difference(ld_markers)]
+
+    print("Using {} genotypes that meet filtering criteria.".format(geno_asint.shape[0]))
     # convert genotype values to a matrix
-    geno_asint_filtered_matrix = geno_asint_filtered[samples].values
+    geno_asint_filtered_matrix = geno_asint[samples].values
     # get an array of marker names at the filtered genotyped loci
-    markers_filtered = geno_asint_filtered['marker'].values
+    markers_filtered = geno_asint['marker'].values
 
     # compute similarity between allele frequencies at each marker
     genotype_similarity = compute_genotype_similarity(geno_asint_filtered_matrix)
@@ -126,7 +128,7 @@ def main(args):
 
     covariate_ratios = np.ones(genotype_similarity.shape[0]).reshape(-1, 1)
 
-    covariate_cols = ["n_generations"]
+    covariate_cols = []
     covariate_matrix = get_covariate_matrix(
         mutations_filtered,
         samples,
@@ -179,25 +181,24 @@ def main(args):
 
     # for each chromosome, compute the specified confidence interval around
     # the peak observed distance
-    geno_asint_filtered_merged = geno_asint_filtered.merge(markers, on="marker")
+    geno_asint_filtered_merged = geno_asint.merge(markers, on="marker")
 
     combined_conf_int_df = []
 
     conf_int_chroms = ["4", "6"]
-    for chrom, chrom_df in geno_asint_filtered_merged.groupby("chromosome"):
+    for chrom, chrom_df in tqdm.tqdm(geno_asint_filtered_merged.groupby("chromosome")):
         if chrom not in conf_int_chroms: continue
-        # get the indices of each marker on the chromosome
-        chrom_idxs = chrom_df.index.values
-        chrom_genotype_matrix = geno_asint_filtered_matrix[chrom_idxs, :]
 
+        chrom_genotype_matrix = chrom_df[samples].values
         # compute confidence intervals on the chromosome
-        conf_int_lo, conf_int_hi = calculate_confint(
+        conf_int_lo, conf_int_hi, peak_markers = calculate_confint(
             spectra,
             chrom_genotype_matrix,
             covariate_matrix,
             distance_method=distance_method,
             adjust_statistics=True,
-            conf_int=80.,
+            conf_int=90., 
+            n_permutations=10_000,
         )
 
         conf_int_df = chrom_df.iloc[np.array([conf_int_lo, conf_int_hi])]
@@ -205,7 +206,7 @@ def main(args):
 
     combined_conf_int_df = pd.concat(combined_conf_int_df)
 
-    combined_conf_int_df.to_csv(f"{args.out}.outie.csv", index=False)
+    combined_conf_int_df.to_csv(f"{args.out}.ci.csv", index=False)
 
     res_df.to_csv(args.out, index=False)
 
@@ -267,6 +268,12 @@ if __name__ == "__main__":
         default=None,
         type=str,
         help="""If specified, use this column to perform a stratified permutation test by only permuting BXDs within groups defined by the column to account for population structure."""
+    )
+    p.add_argument(
+        "-adj_marker",
+        default=None,
+        type=str,
+        help="""Comma-separated list of markers that we should adjust for when performing scan."""
     )
     args = p.parse_args()
 

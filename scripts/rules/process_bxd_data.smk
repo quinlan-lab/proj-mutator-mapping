@@ -51,6 +51,6 @@ rule plot_bxd_spectra_vs_age:
         """
         python {input.py_script} --spectra {input.spectra} \
                                  --out {output} \
-                                 --mutation_type {wildcards.mutation_type} \
+                                 -mutation_type {wildcards.mutation_type} \
                                  -phenotype Count
         """

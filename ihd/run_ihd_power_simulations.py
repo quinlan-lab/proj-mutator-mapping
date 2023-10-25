@@ -94,7 +94,7 @@ def run_simulation_trials(
     n_haplotypes: int = 100,
     n_markers: int = 1000,
     number_of_trials: int = 100,
-    f_with_mutator: float = 1.,
+    exp_af: float = 0.5,
     distance_method: Callable = compute_manual_chisquare,
     vary_mutation_counts: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -103,9 +103,6 @@ def run_simulation_trials(
     Args:
         base_lambdas (np.ndarray): 1D numpy array of lambda values corresponding to the \
             expected number of each k-mer mutation type we observe on a haplotype.
-
-        genotype_matrix (np.ndarray): 2D numpy array of size (g, n), where g is the number \
-            of genotyped sites and n is the number of simulated haplotypes.
 
         mutation_type_idx (int, optional): Index of the mutation type to augment by the specified \
             effect size. Defaults to 0.
@@ -124,10 +121,14 @@ def run_simulation_trials(
         number_of_trials (int, optional): Number of trials to run for every combination of \
             simulation parameters. Defaults to 100.
 
-        f_with_mutator (float, optional): The fraction of haplotypes with the ALT allele at the \
+        exp_af (float, optional): The fraction of haplotypes at the \
             simulated mutator locus that actually possess the mutator allele and augmented mutation \
-            spectra. I.e., the degree to which the ALT allele at the mutator locus truly tags \
-            the mutator allele. Defaults to 1..
+            spectra. Defaults to 0.5.
+
+        distance_method (Callable, optional): Distance metric to use in AMSD scan. Defaults to cosine.
+
+        vary_mutation_counts (bool, optional): Whether to allow mutation counts on haplotypes to vary by \
+            a factor of 20. Defaults to False.
 
     Returns:
         pvals (np.ndarray): 1D numpy array of p-values from `number_of_trials` trials.
@@ -135,6 +136,10 @@ def run_simulation_trials(
         mutation_spectra_in_trials (np.ndarray): 3D numpy array of size (T, H, M), where T \
             is the number of trials, H is the number of haplotypes, and M is the number of \
             k-mer mutation types. Contains simulated mutation spectra for every haplotype.
+
+        genotype_matrices_in_trials (np.ndarray): 3D numpy array of size (T, H, G), where T \
+            is the number of trials, H is the number of haplotypes, and G is the number of \
+            genotyped sites. Contains simulated genotypes at each marker in each trial.
         
         focal_markers (np.ndarray): 1D numpy array containing the marker at which we simulate \
             the mutator allele in every trial.
@@ -154,7 +159,6 @@ def run_simulation_trials(
 
         genotype_matrix = simulate_genotypes(n_markers, n_haplotypes, exp_af = 0.5)
 
-
         # create a matrix of lambda values
         lambdas = np.broadcast_to(
             base_lambdas * mutation_counts,
@@ -172,12 +176,10 @@ def run_simulation_trials(
         alt_haplotypes = np.where(genotype_matrix[focal_marker] == 2)[0]
 
         # figure out how many of the haplotypes at the "mutator locus"
-        # actually carry the mutator allele. in other words, what if all of
-        # the markers have AF = 0.5, but the "focal" marker *imperfectly tags* the mutator
-        # locus? such that 1/2 of haplotypes carry the marker, but only a fraction of those
-        # actually carry the true mutator allele.
-        n_true_alt_haplotypes = int(alt_haplotypes.shape[0] * f_with_mutator)
-        alt_haplotypes = np.random.choice(alt_haplotypes, n_true_alt_haplotypes, replace=False)
+        # actually carry the mutator allele. we may want the allele frequency
+        # of the mutator allele to be less than 0.5
+        n_true_alt_haplotypes = int(n_haplotypes * exp_af)
+        alt_haplotypes = np.random.choice(np.arange(n_haplotypes), n_true_alt_haplotypes, replace=False)
 
         # TEST: if the mutator is present at lower frequency, bump
         # the genotypes to reflect it
@@ -188,7 +190,7 @@ def run_simulation_trials(
         # ensure that at least one haplotype at this site has the
         # alternate allele. otherwise, return a p-value of 1.
         if alt_haplotypes.shape[0] < 1:
-            print ("NO ALT HAPLOTYPES", n_true_alt_haplotypes, f_with_mutator, alt_haplotypes, genotype_matrix[focal_marker], np.sum(genotype_matrix, axis=1))
+            #print ("NO ALT HAPLOTYPES", n_true_alt_haplotypes, f_with_mutator, alt_haplotypes, genotype_matrix[focal_marker], np.sum(genotype_matrix, axis=1))
             pvals[trial_n] = 1.
             continue
         # augment the lambda on the alt haplotypes by an effect size
@@ -209,7 +211,6 @@ def run_simulation_trials(
             covariate_ratios,
             adjust_statistics=False,
             distance_method=distance_method,
-
         )
 
         # and get null
@@ -223,7 +224,6 @@ def run_simulation_trials(
             distance_method=distance_method,
             adjust_statistics=False,
         )
-
         thresh = np.percentile(null_distances, q=95)
         pvals[trial_n] = 1 - (focal_dists[focal_marker] > thresh)
 
@@ -231,8 +231,6 @@ def run_simulation_trials(
 
 
 def main(args):
-
-    number_of_trials = 100
 
     base_mutations = ["C>T", "CpG>TpG", "C>A", "C>G", "A>T", "A>C", "A>G"]
     base_lambdas = np.array([0.29, 0.17, 0.12, 0.075, 0.1, 0.075, 0.17])
@@ -271,15 +269,7 @@ def main(args):
     res_df = []
 
     mutation_type_idx = mut2idx[args.mutation_type.replace("_", ">")]
-
-    # NOTE: simulate genotypes separately in each trial? or just
-    # simulate the mutation spectra independently?
-    # genotype_matrix = simulate_genotypes(
-    #     args.n_markers,
-    #     args.n_haplotypes,
-    #     exp_af=args.exp_af / 100.,
-    # )
-
+    
     trial_pvals, trial_mutation_spectra, trial_genotype_matrices, focal_markers = run_simulation_trials(
         lambdas,
         mutation_type_idx=mutation_type_idx,
@@ -288,16 +278,16 @@ def main(args):
         n_mutations=args.n_mutations,
         n_haplotypes=args.n_haplotypes,
         n_markers=args.n_markers,
-        number_of_trials=number_of_trials,
-        f_with_mutator=args.tag_strength / 100.,
+        number_of_trials=args.n_trials,
+        exp_af=args.exp_af / 100.,
         distance_method=distance_method,
-        vary_mutation_counts=True,
+        vary_mutation_counts=False,
     )
 
     # if desired, output the genotype matrix to a CSV
     if args.raw_geno is not None:
         genotype_matrix_dfs = []
-        for trial_n in range(number_of_trials):
+        for trial_n in range(args.n_trials):
             columns = [f"S{i}" for i in range(args.n_haplotypes)]
             genotype_matrix_df = pd.DataFrame(trial_genotype_matrices[trial_n], columns = columns)
             genotype_matrix_df.replace({0: "B", 2: "D"}, inplace=True)
@@ -312,7 +302,7 @@ def main(args):
     # if desired, output the simulated mutation spectra
     if args.raw_spectra is not None:
         raw_spectra_df = []
-        for trial_n in range(number_of_trials):
+        for trial_n in range(args.n_trials):
             trial_spectra_df = pd.DataFrame(
                 trial_mutation_spectra[trial_n, :, :],
                 columns=mutations,
@@ -333,7 +323,6 @@ def main(args):
             "effect_size": args.effect_size,
             "mutation_type": args.mutation_type,
             "exp_af": args.exp_af,
-            "tag_strength": args.tag_strength,
             "distance_method": args.distance_method,
             "trial": i,
             "pval": pval,
@@ -396,14 +385,7 @@ if __name__ == "__main__":
         type=float,
         default=50,
         help=
-        """Expected allele frequency at each simulated marker, expressed as a percentage. Default is 50.""",
-    )
-    p.add_argument(
-        "-tag_strength",
-        type=float,
-        default=100,
-        help=
-        """Percentage of haplotypes with "A" alleles at the simulated mutator locus that actually carry the effects of the mutator on their mutation spectra. Default is 100.""",
+        """Expected allele frequency at the mutator locus, expressed as a percentage. Default is 50.""",
     )
     p.add_argument(
         "-distance_method",
@@ -420,6 +402,12 @@ if __name__ == "__main__":
         default=None,
         help=
         """Path to file containing the raw mutation spectrum data from each simulation.""",
+    )
+    p.add_argument(
+        "-n_trials",
+        type=int,
+        default=1,
+        help="""Number of times to simulate data.""",
     )
     args = p.parse_args()
     main(args)
