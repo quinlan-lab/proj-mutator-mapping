@@ -20,14 +20,13 @@ rule all:
     input:
         # FIGURE 1
         "figs/power_simulations.png", # supplement 1
-        "figs/power_comparison.png", # supplement 2 
         
         # FIGURE 2
         "figs/bxd.k1.genome.condition_on_N.eps", # panel A
         "figs/bxd.k1.genome.condition_on_D.eps", # panel B        
         "figs/bxd.k1.genome.condition_on_B.eps", # panel C
         expand("figs/qtl_scans/{mutation_type}.png", 
-                    mutation_type = mutations),  # supplement 1
+                   mutation_type = mutations),  # supplement 1
 
         # FIGURE 3
         "figs/bxd_spectra_1mer.C_A.png", # panel A
