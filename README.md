@@ -1,4 +1,4 @@
-# Epistasis between mutator alleles contributes to germline mutation rate variability in laboratory mice
+# Epistasis between mutator alleles contributes to germline mutation spectrum variability in laboratory mice
 
 [![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://quinlan-lab.github.io/proj-mutator-mapping/reference/) 
 ![pytest](https://github.com/quinlan-lab/proj-mutator-mapping/actions/workflows/tests.yaml/badge.svg)
@@ -8,15 +8,15 @@
 
 This repository includes:
 
-1. Python code underlying the inter-haplotype distance (IHD) method described in our [latest manuscript](https://www.biorxiv.org/content/10.1101/2023.04.25.537217v1).
+1. Python code underlying the aggregate mutation spectrum distance (AMSD) method described in our [latest manuscript](https://elifesciences.org/reviewed-preprints/89096).
 
 2. A [`snakemake`](https://snakemake.readthedocs.io/en/stable/index.html) pipeline that can be used to reproduce all figures and analyses from the manuscript in a single command.
 
-### Overview of inter-haplotype distance (IHD) method
+### Overview of aggregate mutation spectrum distance (AMSD) method
 
 ![](img/fig-distance-method.png)
 
-> **Overview of inter-haplotype distance method.**
+> **Overview of aggregate mutation spectrum distance method.**
 > **a)** A population of four haplotypes has been genotyped at three informative markers ($g_1$ through $g_3$); each haplotype also harbors unique *de novo* germline mutations.
 In practice, *de novo* mutations are partitioned by $k$-mer context; for simplicity in this toy example, *de novo* mutations are simply classified into two possible mutation types (grey squares represent C>(A/T/G) mutations, while grey triangles represent A>(C/T/G) mutations). **b)** At each informative marker $g_n$, we calculate the total number of each mutation type observed on haplotypes that carry either parental allele (i.e., the aggregate mutation spectrum) using all genome-wide *de novo* mutations. For example, haplotypes with *A* (orange) genotypes at $g_1$ carry a total of three "triangle" mutations and five "square" mutations, and haplotypes with *B* (green) genotypes carry a total of six triangle and two square mutations. We then calculate the cosine distance between the two aggregate mutation spectra, which we call the "inter-haplotype distance." Cosine distance can be defined as $1 - \cos(\theta)$, where $\theta$ is the angle between two vectors; in this case, the two vectors are the two aggregate spectra. We repeat this process for every informative marker $g_n$. **c)** To assess the significance of any distance peaks in b), we perform permutation tests. In each of $N$ permutations, we shuffle the haplotype labels associated with the *de novo* mutation data, run a genome-wide distance scan, and record the maximum cosine distance encountered at any locus in the scan. Finally, we calculate the $1 - p$ percentile of the distribution of those maximum distances to obtain a genome-wide cosine distance threshold at the specified value of $p$.
 
@@ -54,13 +54,13 @@ If desired, the  `-j` parameter can be used to set the number of jobs that shoul
 
 > IMPORTANT: you'll need to have `tabix`, `bcftools`, and `bedtools` in your system path to reproduce the figures. You can get the former two tools [here](http://www.htslib.org/download/), and the latter [here](https://github.com/arq5x/bedtools2/releases).
 
-## Running IHD
+## Running AMSD
 
-If you want to use the inter-haplotype distance (IHD) method on your own data, you can follow the instructions below.
+If you want to use the aggregate mutation spectrum distance (AMSD) method on your own data, you can follow the instructions below.
 
 ### Description of input files 
 
-Before running an IHD scan, you'll need to prepare a
+Before running an AMSD scan, you'll need to prepare a
 small number of input files.
 
 1. ***De novo* germline mutation data**
@@ -96,7 +96,7 @@ small number of input files.
 3. **Marker information (optional)**
 
     If you wish to generate Manhattan-esque plots that summarize the results
-    of an IHD scan, you'll need to provide a final CSV that links marker IDs with
+    of an AMSD scan, you'll need to provide a final CSV that links marker IDs with
     either physical or genetic map positions (or both). This file should contain a column called `marker`, a column called `chromosome`, and a column specifying one or both of `cM` or `Mb`.
 
     | marker | chromosome | cM | Mb |
@@ -124,13 +124,13 @@ small number of input files.
 
     **Notes:**
 
-    > The `genotypes` dictionary should map the observed genotypes in file #2 to integer values that will be used during the IHD scan.
+    > The `genotypes` dictionary should map the observed genotypes in file #2 to integer values that will be used during the AMSD scan.
 
     > The two parental alleles *must* be mapped to values of 0 and 2, respectively. Heterozygous and unknown genotypes *must* be mapped to values of 1.
 
-### Running an inter-haplotype distance scan
+### Running an aggregate mutation spectrum distance scan
 
-A single IHD scan can be performed as follows:
+A single AMSD scan can be performed as follows:
 
 ```
 python scripts/run_ihd_scan.py \
@@ -143,13 +143,13 @@ There are a small number of optional arguments:
 
 * `-k` sets the kmer size to use for the mutation types (k = 1 will compute distances between aggregate 1-mer mutation spectra, k = 3 will compute distances between aggregate 3-mer mutation spectra). Default value is 1. 
 
-* `-permutations` sets the number of permutations to use when calculating significance thresholds for the IHD scan. Default value is 1,000.
+* `-permutations` sets the number of permutations to use when calculating significance thresholds for the AMSD scan. Default value is 1,000.
 
 * `-distance_method` specifies the distance method to use when comparing aggregate mutation spectra. By default, the method is cosine distance (`-distance_method cosine`), but can also be a chi-square statistic (`distance_method chisquare`).
 
-* `-threads` specifies the number of threads to use during the permutation testing step. IHD used `numba` for multi-threading. Default value is 1.
+* `-threads` specifies the number of threads to use during the permutation testing step. AMSD used `numba` for multi-threading. Default value is 1.
 
-### Plotting the results of an IHD scan
+### Plotting the results of an AMSD scan
 
 ```
 python scripts/plot_ihd_results.py \
@@ -176,9 +176,9 @@ These tests are run automatically via GitHub actions (for Python versions 3.8, 3
 
 ## Project layout
 
-    ihd/                                # code for running the IHD method
+    ihd/                                # code for running the AMSD method
         utils.py                        # bulk of utility functions
-        run_ihd_scan.py                 # wrapper that calls utilities for computing IHD
+        run_ihd_scan.py                 # wrapper that calls utilities for computing AMSD
         plot_ihd_results.py             # script for plotting Manhattan-esque results
         schema.py                       # pandera schema used to validate input/output dataframes
         run_ihd_power_simulations.py    # code for running power simulations
@@ -191,7 +191,7 @@ These tests are run automatically via GitHub actions (for Python versions 3.8, 3
 
     data/
         genotypes/                      # contains formatted `.geno` files for the BXDs that contain sample genotypes at every tested marker
-        json/                           # contains JSON configuration files for IHD scans using the BXDs
+        json/                           # contains JSON configuration files for AMSD scans using the BXDs
         mutations/                      # contains per-sample *de novo* mutation data in the BXDs
         exclude/                        # contains an mm10 file containing problematic regions of the genome to avoid
         Rqtl_data/                      # contains Rqtl data for QTL scans using BXD data
