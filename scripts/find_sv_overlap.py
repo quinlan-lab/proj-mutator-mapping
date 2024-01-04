@@ -21,7 +21,7 @@ def main(args):
 
     for i, row in refseq.iterrows():
         # limit to curated refseq 
-        if not (row["name"].startswith("NM") or row["name"].startswith("NR")): continue
+        if not (row["name"].startswith("N")): continue
         exon_starts, exon_ends = row["exonStarts"].split(','), row["exonEnds"].split(',')
         tx_start, tx_end = int(row["txStart"]), int(row["txEnd"])
         tx_start -= 10_000

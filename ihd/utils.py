@@ -57,6 +57,7 @@ def compute_nansum(a: np.ndarray, row: bool = True) -> np.ndarray:
         empty_a[i] = np.nansum(a[i]) if row else np.nansum(a[:, i])
     return empty_a
 
+
 @numba.njit
 def compute_allele_frequency(genotype_matrix: np.ndarray) -> np.ndarray:
     """Given a genotype matrix of size (G, N) where G is the number of 
@@ -147,7 +148,10 @@ def compute_haplotype_distance(
 
 
 @numba.njit
-def shuffle_spectra(spectra: np.ndarray, groups: np.ndarray = None) -> np.ndarray:
+def shuffle_spectra(
+    spectra: np.ndarray,
+    groups: np.ndarray = None,
+) -> np.ndarray:
     """Randomly shuffle the rows of a 2D numpy array of 
     mutation spectrum data of size (N, M), where N is the number
     of samples and M is the number of mutation types. Shuffled array
@@ -217,12 +221,13 @@ def compute_genotype_similarity(genotype_matrix: np.ndarray) -> np.ndarray:
         # compute Pearson correlation between allele frequencies
         af_corr = np.corrcoef(a_afs, b_afs)[0][1]
         # NOTE: not sure how good of an idea this is, even if it's rare
-        if np.isnan(af_corr): af_corr = 0
+        if np.isnan(af_corr):
+            af_corr = 0
         genotype_sims[ni] = af_corr
 
     return genotype_sims
 
-@numba.njit
+
 def adjust_spectra_for_nuccomp(
     a_spectra: np.ndarray,
     b_spectra: np.ndarray,
@@ -362,9 +367,15 @@ def perform_ihd_scan(
         focal_dist[ni] = cur_dist
 
     if adjust_statistics:
-        covariate_matrix_full = np.hstack((genotype_similarity.reshape(-1, 1), covariate_ratios))
+        covariate_matrix_full = np.hstack(
+            (
+                genotype_similarity.reshape(-1, 1),
+                covariate_ratios,
+            )
+        )
         return compute_residuals(covariate_matrix_full, focal_dist)
-    else: return focal_dist
+    else:
+        return focal_dist
 
 
 def get_covariate_matrix(
@@ -393,7 +404,9 @@ def get_covariate_matrix(
 
     cols = ["sample"] + covariate_cols
     # subset pheno information to relevant samples
-    pheno_sub = pheno[pheno["sample"].isin(samples)].drop_duplicates(cols).set_index("sample")
+    pheno_sub = (
+        pheno[pheno["sample"].isin(samples)].drop_duplicates(cols).set_index("sample")
+    )
     covariate_matrix = pheno_sub.loc[samples][covariate_cols].values.T
     return covariate_matrix
 
@@ -545,7 +558,8 @@ def perform_permutation_test(
     null_distances: np.ndarray = np.zeros(n_permutations)
 
     for pi in numba.prange(n_permutations):
-        if pi > 0 and pi % 100 == 0 and progress: print(pi)
+        if pi > 0 and pi % 100 == 0 and progress:
+            print(pi)
         # shuffle the mutation spectra by row
         shuffled_spectra = shuffle_spectra(spectra, strata)
 
@@ -627,7 +641,8 @@ def calculate_confint(
     peak_markers: np.ndarray = np.zeros(n_permutations)
 
     for pi in numba.prange(n_permutations):
-        if pi > 0 and pi % 1000 == 0 and progress: print(pi)
+        if pi > 0 and pi % 1000 == 0 and progress:
+            print(pi)
         # resample the mutation spectra by bootstrapping
         resampled_idxs = np.random.randint(
             0,
@@ -639,7 +654,9 @@ def calculate_confint(
         # resample the corresponding genotype data using the indices
         resampled_genotype_matrix = genotype_matrix[:, resampled_idxs]
         # recalculate genotype similarities using the resampled genotype matrix. NOTE: this is slow!
-        resampled_genotype_similarity = compute_genotype_similarity(resampled_genotype_matrix)
+        resampled_genotype_similarity = compute_genotype_similarity(
+            resampled_genotype_matrix
+        )
         # resample the covariate matrix to include the bootstrap resampled samples
         resampled_covariate_matrix = covariate_matrix[:, resampled_idxs]
         resampled_covariate_ratios = calculate_covariate_by_marker(
@@ -660,25 +677,26 @@ def calculate_confint(
         peak_marker_i = np.argmax(focal_dists)
         peak_markers[pi] = peak_marker_i
 
-    pctile_lo = (100 - conf_int) / 2.
+    pctile_lo = (100 - conf_int) / 2.0
     pctile_hi = conf_int + pctile_lo
 
     return (
         int(np.percentile(peak_markers, q=pctile_lo)),
         int(np.percentile(peak_markers, q=pctile_hi)),
-        peak_markers
+        peak_markers,
     )
 
 
 def find_central_mut(kmer: str, cpg: bool = True) -> str:
-    orig, new = kmer.split('>')
+    orig, new = kmer.split(">")
     fp, tp = orig[0], orig[2]
     central_orig = orig[1]
     central_new = new[1]
     if central_orig == "C" and tp == "G" and central_new == "T":
         if cpg:
             return f"{central_orig}p{tp}>{central_new}p{tp}"
-        else: return f"{central_orig}>{central_new}"
+        else:
+            return f"{central_orig}>{central_new}"
     else:
         return ">".join([central_orig, central_new])
 
@@ -722,24 +740,31 @@ def compute_spectra(
     """
 
     # compute 3-mer spectra
-    hap_spectra_agg = mutations.groupby(['sample', 'kmer']).agg({
-        'count': sum
-    }).reset_index()
+    hap_spectra_agg = (
+        mutations.groupby(["sample", "kmer"]).agg({"count": sum}).reset_index()
+    )
     # if 1-mer spectra are desired, compute that
     if k == 1:
         # add base mutation type
-        hap_spectra_agg['base_mut'] = hap_spectra_agg['kmer'].apply(
-            lambda k: find_central_mut(k, cpg=cpg))
-        hap_spectra_agg = hap_spectra_agg.groupby(['sample', 'base_mut']).agg({
-            'count':
-            sum
-        }).reset_index()
+        hap_spectra_agg["base_mut"] = hap_spectra_agg["kmer"].apply(
+            lambda k: find_central_mut(k, cpg=cpg)
+        )
+        hap_spectra_agg = (
+            hap_spectra_agg.groupby(["sample", "base_mut"])
+            .agg({"count": sum})
+            .reset_index()
+        )
     # get spectra as per-haplotype vectors of mutation counts
     mut_col = "base_mut" if k == 1 else "kmer"
-    spectra = hap_spectra_agg.pivot(
-        index="sample", columns=mut_col).reset_index().fillna(value=0)
-    samples, mutations, spectra = spectra['sample'].to_list(), [
-        el[1] for el in spectra.columns[1:]
-    ], spectra.values[:, 1:]
+    spectra = (
+        hap_spectra_agg.pivot(index="sample", columns=mut_col)
+        .reset_index()
+        .fillna(value=0)
+    )
+    samples, mutations, spectra = (
+        spectra["sample"].to_list(),
+        [el[1] for el in spectra.columns[1:]],
+        spectra.values[:, 1:],
+    )
 
     return samples, mutations, spectra.astype(np.float64)

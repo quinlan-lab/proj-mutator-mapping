@@ -16,26 +16,26 @@ from utils import (
 )
 from schema import IHDResultSchema, MutationSchema
 import numba
-from typing import List
+import allel
 import tqdm
 import matplotlib.pyplot as plt
-import seaborn as sns
-import statsmodels.api as sm
-import scipy.stats as ss
-import statsmodels.stats.multitest as mt
-import scipy
-import allel
 from scipy.spatial.distance import squareform
 
-def filter_mutation_data(mutations: pd.DataFrame, geno: pd.DataFrame) -> pd.DataFrame:
+
+def filter_mutation_data(
+    mutations: pd.DataFrame,
+    geno: pd.DataFrame,
+) -> pd.DataFrame:
     # get unique samples in mutation dataframe
-    samples = mutations['sample'].unique()
+    samples = mutations["sample"].unique()
     # get the overlap between those and the sample names in the genotype data
     samples_overlap = list(set(samples).intersection(set(geno.columns)))
 
     if len(samples_overlap) == 0:
-        print("""Sorry, no samples in common between mutation data 
-        and genotype matrix. Please ensure sample names are identical.""")
+        print(
+            """Sorry, no samples in common between mutation data 
+        and genotype matrix. Please ensure sample names are identical."""
+        )
         sys.exit()
 
     # then subset the genotype and mutation data to include only those samples
@@ -43,20 +43,19 @@ def filter_mutation_data(mutations: pd.DataFrame, geno: pd.DataFrame) -> pd.Data
     cols2use.extend(samples_overlap)
     geno = geno[cols2use]
 
-    mutations_filtered = mutations[mutations['sample'].isin(samples_overlap)]
+    mutations_filtered = mutations[mutations["sample"].isin(samples_overlap)]
     return mutations_filtered
 
 
 def main(args):
-
     # read in JSON file with file paths
     config_dict = None
     with open(args.config, "rb") as config:
         config_dict = json.load(config)
 
     # read in genotype info
-    geno = pd.read_csv(config_dict['geno'])
-    markers = pd.read_csv(config_dict['markers'])
+    geno = pd.read_csv(config_dict["geno"])
+    markers = pd.read_csv(config_dict["markers"])
 
     markers2use = markers[markers["chromosome"] != "X"]["marker"].unique()
     geno = geno[geno["marker"].isin(markers2use)]
@@ -73,60 +72,64 @@ def main(args):
         k=args.k,
         cpg=True,
     )
-    print(f"Using {len(samples)} samples and {int(np.sum(spectra))} total mutations.")
+    print(
+        f"""Using {len(samples)} samples
+          and {int(np.sum(spectra))} total mutations."""
+    )
 
     strata = np.ones(len(samples))
     if args.stratify_column is not None:
-        sample2strata = dict(zip(mutations_filtered["sample"], mutations_filtered[args.stratify_column]))
+        sample2strata = dict(
+            zip(
+                mutations_filtered["sample"],
+                mutations_filtered[args.stratify_column],
+            )
+        )
         strata = np.array([sample2strata[s] for s in samples])
 
-    callable_kmer_arr = np.ones(spectra.shape)
-
+    callable_kmer_arr = None
     if args.callable_kmers and args.k == 1:
+        callable_kmer_arr = np.zeros(
+            (len(samples), len(mutation_types)), dtype=np.int64
+        )
         callable_kmers = pd.read_csv(args.callable_kmers)
         # NOTE: need to check schema of df
         for si, s in enumerate(samples):
             for mi, m in enumerate(mutation_types):
                 base_nuc = m.split(">")[0] if m != "CpG>TpG" else "C"
                 callable_k = callable_kmers[
-                    (callable_kmers["GeneNetwork name"] == s)
-                    & (callable_kmers["nucleotide"] == base_nuc)]
-                if callable_k["count"].values.shape[0] == 0:
-                    print (s, m)
+                    (callable_kmers["sample"] == s)
+                    & (callable_kmers["nucleotide"] == base_nuc)
+                ]
                 callable_kmer_arr[si, mi] = callable_k["count"].values[0]
 
-
     # convert string genotypes to integers based on config definition
-    replace_dict = config_dict['genotypes']
+    replace_dict = config_dict["genotypes"]
     geno_asint = geno.replace(replace_dict).replace({1: np.nan})
-
-    # measure LD between all pairs of markers
-    cols = [c for c in geno_asint.columns if c != "marker"]
-    gn = geno_asint[cols].values
-    gn[np.isnan(gn)] = -1
-    r = allel.rogers_huff_r(gn)
-    ld = squareform(r ** 2)
-    np.fill_diagonal(ld, 1.)
 
     # if specified, remove all markers with r2 > X with selected markers
     if args.adj_marker is not None:
+        # measure LD between all pairs of markers
+        cols = [c for c in geno_asint.columns if c != "marker"]
+        gn = geno_asint[cols].values
+        gn[np.isnan(gn)] = -1
+        r = allel.rogers_huff_r(gn)
+        ld = squareform(r**2)
+        np.fill_diagonal(ld, 1.0)
         marker_idxs = geno_asint[geno_asint["marker"] == args.adj_marker].index.values
         _, ld_markers = np.where(ld[marker_idxs] >= 0.1)
         geno_asint = geno_asint.iloc[geno_asint.index.difference(ld_markers)]
 
-    print("Using {} genotypes that meet filtering criteria.".format(geno_asint.shape[0]))
     # convert genotype values to a matrix
     geno_asint_filtered_matrix = geno_asint[samples].values
     # get an array of marker names at the filtered genotyped loci
-    markers_filtered = geno_asint['marker'].values
+    markers_filtered = geno_asint["marker"].values
 
     # compute similarity between allele frequencies at each marker
     genotype_similarity = compute_genotype_similarity(geno_asint_filtered_matrix)
     distance_method = compute_manual_cosine_distance
     if args.distance_method == "chisquare":
         distance_method = compute_manual_chisquare
-
-    covariate_ratios = np.ones(genotype_similarity.shape[0]).reshape(-1, 1)
 
     covariate_cols = []
     covariate_matrix = get_covariate_matrix(
@@ -151,11 +154,13 @@ def main(args):
         adjust_statistics=True,
     )
 
-    res_df = pd.DataFrame({
-        'marker': markers_filtered,
-        'Distance': focal_dists,
-        'k': args.k,
-    })
+    res_df = pd.DataFrame(
+        {
+            "marker": markers_filtered,
+            "Distance": focal_dists,
+            "k": args.k,
+        }
+    )
     IHDResultSchema.validate(res_df)
 
     numba.set_num_threads(args.threads)
@@ -177,7 +182,7 @@ def main(args):
     # distribution to figure out the distance thresholds
     for pctile in (20, 5, 1):
         score_pctile = np.percentile(null_distances, 100 - pctile, axis=0)
-        res_df[f'{100 - pctile}th_percentile'] = score_pctile
+        res_df[f"{100 - pctile}th_percentile"] = score_pctile
 
     # for each chromosome, compute the specified confidence interval around
     # the peak observed distance
@@ -187,10 +192,10 @@ def main(args):
 
     conf_int_chroms = ["4", "6"]
     for chrom, chrom_df in tqdm.tqdm(geno_asint_filtered_merged.groupby("chromosome")):
-        if chrom not in conf_int_chroms: continue
+        if chrom not in conf_int_chroms:
+            continue
 
         chrom_genotype_matrix = chrom_df[samples].values
-        print (chrom_genotype_matrix.shape)
         # compute confidence intervals on the chromosome
         conf_int_lo, conf_int_hi, peak_markers = calculate_confint(
             spectra,
@@ -198,8 +203,8 @@ def main(args):
             covariate_matrix,
             distance_method=distance_method,
             adjust_statistics=True,
-            conf_int=90., 
-            n_permutations=10_000,
+            conf_int=90.,
+            n_permutations=1_000,
         )
 
         conf_int_df = chrom_df.iloc[np.array([conf_int_lo, conf_int_hi])]
@@ -210,6 +215,7 @@ def main(args):
     combined_conf_int_df.to_csv(f"{args.out}.ci.csv", index=False)
 
     res_df.to_csv(args.out, index=False)
+
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
@@ -237,44 +243,42 @@ if __name__ == "__main__":
         "-permutations",
         type=int,
         default=1_000,
-        help=
-        "Number of permutations to perform when calculating significance thresholds. Default is 1,000.",
+        help="Number of permutations to perform when calculating significance thresholds. Default is 1,000.",
     )
     p.add_argument(
         "-distance_method",
         default="cosine",
         type=str,
-        help=
-        """Method to use for calculating distance between aggregate spectra. Options are 'cosine' and 'chisquare', default is 'chisquare'.""",
+        help="""Method to use for calculating distance between aggregate spectra. Options are 'cosine' and 'chisquare', default is 'chisquare'.""",
     )
     p.add_argument(
         "-threads",
         default=1,
         type=int,
-        help=
-        """Number of threads to use during permutation testing step. Default is 1.""",
+        help="""Number of threads to use during permutation testing step. Default is 1.""",
     )
     p.add_argument(
         "-progress",
         action="store_true",
-        help=
-        """Whether to output the progress of the permutation testing step (i.e., the number of completed permutations).""",
+        help="""Whether to output the progress of the permutation testing step (i.e., the number of completed permutations).""",
     )
     p.add_argument(
         "-callable_kmers",
-        help="""Path to CSV file containing numbers of callable base pairs in each sample, stratified by nucleotide."""
+        default=None,
+        type=str,
+        help="""Path to CSV file containing numbers of callable base pairs in each sample, stratified by nucleotide.""",
     )
     p.add_argument(
         "-stratify_column",
         default=None,
         type=str,
-        help="""If specified, use this column to perform a stratified permutation test by only permuting BXDs within groups defined by the column to account for population structure."""
+        help="""If specified, use this column to perform a stratified permutation test by only permuting BXDs within groups defined by the column to account for population structure.""",
     )
     p.add_argument(
         "-adj_marker",
         default=None,
         type=str,
-        help="""Comma-separated list of markers that we should adjust for when performing scan."""
+        help="""Comma-separated list of markers that we should adjust for when performing scan.""",
     )
     args = p.parse_args()
 

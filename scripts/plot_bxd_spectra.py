@@ -104,7 +104,7 @@ def main(args):
                     data=spectra_df,
                     x=xval,
                     y=args.phenotype,
-                    hue=hue,
+                    hue=None,
                 )
             annotator.configure(
                 test="Mann-Whitney",

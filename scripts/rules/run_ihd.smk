@@ -19,7 +19,8 @@ rule run_ihd:
                                  -permutations 10000 \
                                  -stratify_column true_epoch \
                                  -threads 4 \
-                                 -adj_marker {params.adj_marker}
+                                 -adj_marker {params.adj_marker} \
+                                 -progress
         """
 
 rule plot_ihd:

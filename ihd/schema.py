@@ -7,7 +7,7 @@ IHDResultSchema = DataFrameSchema({
     # since we adjust cosine distances and potentially even use chisquare
     # statistics, we won't apply a strict check to the range of possible
     # distance values.
-    "Distance": Column(float), 
+    "Distance": Column(float),
     "k": Column(int, Check.isin([1, 3])),
 })
 
