@@ -728,6 +728,9 @@ def compute_spectra(
             will treat mutations as NXN NYN, where Ns represent the nucleotide \
             contexts on either side of the mutation, whereas k=1 means we will \
             treat them as X Y). Defaults to 1.
+        
+        cpg (bool, optional): whether to separate CpG>TpG mutations into their \
+            own mutation type, distinct from C>T. Defaults to True.
 
     Returns:
         samples (List[str]): A list of samples in the dataframe (which are \
