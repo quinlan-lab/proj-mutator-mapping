@@ -26,7 +26,8 @@ In practice, *de novo* mutations are partitioned by $k$-mer context; for simplic
 
 All methods were written in Python 3.9.6, and the full list of dependencies is provided in `requirements.txt`.
 
-Dependencies can be installed with `pip install -r requirements.txt`.
+The `scikit-allel` package requires `numpy`, so I recommend installing dependencies with `xargs -L 1 pip install < requirements.txt`, rather than the standard `pip install -r requirements.txt`.
+This way, `numpy` will be installed prior to `scikit-allel`.
 
 > I recommend using [`pyenv`](https://github.com/pyenv/pyenv) and [`pyenv-virtualenv`](https://github.com/pyenv/pyenv-virtualenv) to manage Python environments.
 
