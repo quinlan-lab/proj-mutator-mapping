@@ -2,7 +2,7 @@ include: "rules/combine_singleton_data.smk"
 include: "rules/run_ihd.smk"
 include: "rules/process_mgp_data.smk"
 include: "rules/process_bxd_data.smk"
-include: "rules/calculate_callable_kmer.smk"
+# include: "rules/calculate_callable_kmer.smk" # removed to avoid re-computing callable kmer data
 include: "rules/run_simulations.smk"
 include: "rules/run_qtl_scans.smk"
 include: "rules/run_sigprofiler.smk"
@@ -18,9 +18,6 @@ mutations = ["C_T", "C_A", "C_G", "CpG_TpG", "A_T", "A_G", "A_C"]
 
 rule all:
     input:
-        # FIGURE 1
-        "figs/power_simulations.png", # supplement 1
-        
         # FIGURE 2
         "figs/bxd.k1.genome.condition_on_N.eps", # panel A
         "figs/bxd.k1.genome.condition_on_D.eps", # panel B        
