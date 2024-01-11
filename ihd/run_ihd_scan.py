@@ -17,8 +17,6 @@ from utils import (
 from schema import IHDResultSchema, MutationSchema
 import numba
 import allel
-import tqdm
-import matplotlib.pyplot as plt
 from scipy.spatial.distance import squareform
 
 
@@ -191,7 +189,7 @@ def main(args):
     combined_conf_int_df = []
 
     conf_int_chroms = ["4", "6"]
-    for chrom, chrom_df in tqdm.tqdm(geno_asint_filtered_merged.groupby("chromosome")):
+    for chrom, chrom_df in geno_asint_filtered_merged.groupby("chromosome"):
         if chrom not in conf_int_chroms:
             continue
 
