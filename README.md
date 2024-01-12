@@ -94,7 +94,7 @@ small number of input files.
     | rs003 | B | B | B |
 
 
-3. **Marker information (optional)**
+3. **Marker information**
 
     If you wish to generate Manhattan-esque plots that summarize the results
     of an AMSD scan, you'll need to provide a final CSV that links marker IDs with
@@ -135,9 +135,20 @@ A single AMSD scan can be performed as follows:
 
 ```
 python scripts/run_ihd_scan.py \
-        --singletons /path/to/mutation/csv \
+        --mutations /path/to/mutation/csv \
         --config /path/to/config/json \
         --out /name/of/output/csv
+
+        python {input.py_script} --mutations {input.singletons} \
+                                 --config {input.config} \
+                                 --out {output} \
+                                 -k {wildcards.k} \
+                                 -distance_method cosine \
+                                 -permutations 10000 \
+                                 -stratify_column true_epoch \
+                                 -threads 4 \
+                                 -adj_marker {params.adj_marker} \
+                                 -progress
 ```
 
 There are a small number of optional arguments:
@@ -150,13 +161,15 @@ There are a small number of optional arguments:
 
 * `-threads` specifies the number of threads to use during the permutation testing step. AMSD used `numba` for multi-threading. Default value is 1.
 
+* `-progress` can be specified in order to log the number of elapsed permutation trials completed during that step.
+
 ### Plotting the results of an AMSD scan
 
 ```
 python scripts/plot_ihd_results.py \
         --results /path/to/output/csv \
         --markers /path/to/marker/metadata/csv \
-        --outpref output_prefix
+        --out /path/to/output/img
 ```
 
 There are a small number of optional arguments:
