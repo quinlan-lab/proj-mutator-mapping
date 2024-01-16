@@ -31,7 +31,7 @@ def filter_mutation_data(
 
     if len(samples_overlap) == 0:
         print(
-            """Sorry, no samples in common between mutation data 
+            """Sorry, no samples in common between mutation data
         and genotype matrix. Please ensure sample names are identical."""
         )
         sys.exit()
