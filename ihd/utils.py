@@ -150,7 +150,7 @@ def compute_haplotype_distance(
 @numba.njit
 def shuffle_spectra(
     spectra: np.ndarray,
-    groups: np.ndarray = None,
+    groups: np.ndarray,
 ) -> np.ndarray:
     """Randomly shuffle the rows of a 2D numpy array of 
     mutation spectrum data of size (N, M), where N is the number

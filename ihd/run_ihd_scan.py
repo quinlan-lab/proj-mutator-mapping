@@ -7,17 +7,13 @@ from utils import (
     compute_spectra,
     perform_permutation_test,
     perform_ihd_scan,
-    compute_genotype_similarity,
     compute_manual_chisquare,
     compute_manual_cosine_distance,
-    calculate_confint,
     get_covariate_matrix,
     calculate_covariate_by_marker,
 )
 from schema import IHDResultSchema, MutationSchema
 import numba
-import allel
-from scipy.spatial.distance import squareform
 
 
 def filter_mutation_data(
@@ -105,18 +101,19 @@ def main(args):
     replace_dict = config_dict["genotypes"]
     geno_asint = geno.replace(replace_dict).replace({1: np.nan})
 
-    # if specified, remove all markers with r2 > X with selected markers
-    if args.adj_marker is not None:
-        # measure LD between all pairs of markers
-        cols = [c for c in geno_asint.columns if c != "marker"]
-        gn = geno_asint[cols].values
-        gn[np.isnan(gn)] = -1
-        r = allel.rogers_huff_r(gn)
-        ld = squareform(r**2)
-        np.fill_diagonal(ld, 1.0)
-        marker_idxs = geno_asint[geno_asint["marker"] == args.adj_marker].index.values
-        _, ld_markers = np.where(ld[marker_idxs] >= 0.1)
-        geno_asint = geno_asint.iloc[geno_asint.index.difference(ld_markers)]
+    if args.adj_region != "None":
+        chrom = args.adj_region.split(":")[0]
+        start, end = list(map(float, args.adj_region.split(":")[1].split("-")))
+        # find markers within this region
+        markers_to_filter = markers[
+            (markers["chromosome"] == chrom)
+            & (markers["Mb"] >= start)
+            & (markers["Mb"] <= end)
+        ]["marker"].unique()
+        marker_idxs = geno_asint[
+            geno_asint["marker"].isin(markers_to_filter)
+        ].index.values
+        geno_asint = geno_asint.iloc[geno_asint.index.difference(marker_idxs)]
 
     # convert genotype values to a matrix
     geno_asint_filtered_matrix = geno_asint[samples].values
@@ -124,7 +121,8 @@ def main(args):
     markers_filtered = geno_asint["marker"].values
 
     # compute similarity between allele frequencies at each marker
-    genotype_similarity = compute_genotype_similarity(geno_asint_filtered_matrix)
+    # genotype_similarity = compute_genotype_similarity(geno_asint_filtered_matrix)
+    genotype_similarity = np.ones(geno_asint_filtered_matrix.shape[0])
     distance_method = compute_manual_cosine_distance
     if args.distance_method == "chisquare":
         distance_method = compute_manual_chisquare
@@ -149,7 +147,7 @@ def main(args):
         genotype_similarity,
         covariate_ratios,
         distance_method=distance_method,
-        adjust_statistics=True,
+        adjust_statistics=False,
     )
 
     res_df = pd.DataFrame(
@@ -173,7 +171,7 @@ def main(args):
         distance_method=distance_method,
         n_permutations=args.permutations,
         progress=args.progress,
-        adjust_statistics=True,
+        adjust_statistics=False,
     )
 
     # compute the Nth percentile of the maximum distance
@@ -186,31 +184,31 @@ def main(args):
     # the peak observed distance
     geno_asint_filtered_merged = geno_asint.merge(markers, on="marker")
 
-    combined_conf_int_df = []
+    # combined_conf_int_df = []
 
-    conf_int_chroms = ["4", "6"]
-    for chrom, chrom_df in geno_asint_filtered_merged.groupby("chromosome"):
-        if chrom not in conf_int_chroms:
-            continue
+    # conf_int_chroms = ["4", "6"]
+    # for chrom, chrom_df in geno_asint_filtered_merged.groupby("chromosome"):
+    #     if chrom not in conf_int_chroms:
+    #         continue
 
-        chrom_genotype_matrix = chrom_df[samples].values
-        # compute confidence intervals on the chromosome
-        conf_int_lo, conf_int_hi, peak_markers = calculate_confint(
-            spectra,
-            chrom_genotype_matrix,
-            covariate_matrix,
-            distance_method=distance_method,
-            adjust_statistics=True,
-            conf_int=90.,
-            n_permutations=1_000,
-        )
+    #     chrom_genotype_matrix = chrom_df[samples].values
+    #     # compute confidence intervals on the chromosome
+    #     conf_int_lo, conf_int_hi, peak_markers = calculate_confint(
+    #         spectra,
+    #         chrom_genotype_matrix,
+    #         covariate_matrix,
+    #         distance_method=distance_method,
+    #         adjust_statistics=True,
+    #         conf_int=90.,
+    #         n_permutations=1_000,
+    #     )
 
-        conf_int_df = chrom_df.iloc[np.array([conf_int_lo, conf_int_hi])]
-        combined_conf_int_df.append(conf_int_df[["chromosome", "marker", "Mb"]])
+    #     conf_int_df = chrom_df.iloc[np.array([conf_int_lo, conf_int_hi])]
+    #     combined_conf_int_df.append(conf_int_df[["chromosome", "marker", "Mb"]])
 
-    combined_conf_int_df = pd.concat(combined_conf_int_df)
+    # combined_conf_int_df = pd.concat(combined_conf_int_df)
 
-    combined_conf_int_df.to_csv(f"{args.out}.ci.csv", index=False)
+    # combined_conf_int_df.to_csv(f"{args.out}.ci.csv", index=False)
 
     res_df.to_csv(args.out, index=False)
 
@@ -273,10 +271,10 @@ if __name__ == "__main__":
         help="""If specified, use this column to perform a stratified permutation test by only permuting BXDs within groups defined by the column to account for population structure.""",
     )
     p.add_argument(
-        "-adj_marker",
+        "-adj_region",
         default=None,
         type=str,
-        help="""Comma-separated list of markers that we should adjust for when performing scan.""",
+        help="""If specified, a chromosomal region (chr:start-end) that we should adjust for in our AMSD scans. Start and end coordinates should be specified in Mb. Default is None""",
     )
     args = p.parse_args()
 

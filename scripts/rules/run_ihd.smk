@@ -1,4 +1,5 @@
-condition2markers = {"N": None, "D": "rs27509845", "B": "rs27509845"}
+# region containing significant markers in unconditioned scan
+condition2region = {"N": None, "D": "4:103.634906-125.068158", "B": "4:103.634906-125.068158"}
 
 
 rule run_ihd:
@@ -8,7 +9,7 @@ rule run_ihd:
         config = "data/json/{cross}.json",
         py_script = "ihd/run_ihd_scan.py"
     output: "csv/{cross}.k{k}.genome.condition_on_{condition}.results.csv"
-    params: adj_marker = lambda wc: condition2markers[wc.condition]
+    params: adj_region = lambda wc: condition2region[wc.condition]
     shell:
         """
         python {input.py_script} --mutations {input.singletons} \
@@ -16,10 +17,10 @@ rule run_ihd:
                                  --out {output} \
                                  -k {wildcards.k} \
                                  -distance_method cosine \
-                                 -permutations 10000 \
+                                 -permutations 1000 \
                                  -stratify_column true_epoch \
+                                 -adj_region {params.adj_region} \
                                  -threads 4 \
-                                 -adj_marker {params.adj_marker} \
                                  -progress
         """
 
