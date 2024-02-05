@@ -1,4 +1,4 @@
-# Epistasis between mutator alleles contributes to germline mutation spectrum variability in laboratory mice
+# Epistasis between mutator alleles contributes to germline mutation spectra variability in laboratory mice
 
 [![docs](https://img.shields.io/badge/docs-latest-blue.svg)](https://quinlan-lab.github.io/proj-mutator-mapping/reference/) 
 ![pytest](https://github.com/quinlan-lab/proj-mutator-mapping/actions/workflows/tests.yaml/badge.svg)
@@ -214,3 +214,10 @@ These tests are run automatically via GitHub actions (for Python versions 3.8, 3
         combined.callable_kmer_content.csv # number of A or C nucleotides accessible to singleton calling and covered by >= 10 reads in the BXDs
 
 
+## Citation
+
+The AMSD method is described in greater detail (and applied to a population of recombinant inbred mice) in our *eLife* manuscript, available at the following [link](https://elifesciences.org/reviewed-preprints/89096).
+
+The reviewed preprint can be cited as follows:
+
+> Sasani TA, Quinlan AR, Harris K. *Epistasis between mutator alleles contributes to germline mutation spectra variability in laboratory mice* (2024). *eLife*. DOI: `10.7554/eLife.89096.2`
