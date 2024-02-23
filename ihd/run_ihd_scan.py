@@ -101,7 +101,7 @@ def main(args):
     replace_dict = config_dict["genotypes"]
     geno_asint = geno.replace(replace_dict).replace({1: np.nan})
 
-    if args.adj_region != "None":
+    if args.adj_region is not None:
         chrom = args.adj_region.split(":")[0]
         start, end = list(map(float, args.adj_region.split(":")[1].split("-")))
         # find markers within this region
