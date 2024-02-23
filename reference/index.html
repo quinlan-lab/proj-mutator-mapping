@@ -1,0 +1,3826 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="..">
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.10">
+    
+    
+      
+        <title>Reference - Mapping mutators with inter-haplotype distance</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ihd.utils" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Mapping mutators with inter-haplotype distance" class="md-header__button md-logo" aria-label="Mapping mutators with inter-haplotype distance" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Mapping mutators with inter-haplotype distance
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Mapping mutators with inter-haplotype distance" class="md-nav__button md-logo" aria-label="Mapping mutators with inter-haplotype distance" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Mapping mutators with inter-haplotype distance
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Mapping mutator alleles with inter-haplotype distance
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Reference
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      utils
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.adjust_spectra_for_nuccomp" class="md-nav__link">
+    <span class="md-ellipsis">
+      adjust_spectra_for_nuccomp
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.calculate_confint" class="md-nav__link">
+    <span class="md-ellipsis">
+      calculate_confint
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.calculate_covariate_by_marker" class="md-nav__link">
+    <span class="md-ellipsis">
+      calculate_covariate_by_marker
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_allele_frequency" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_allele_frequency
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_genotype_similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_genotype_similarity
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_haplotype_distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_haplotype_distance
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_manual_chisquare" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_manual_chisquare
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_manual_cosine_distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_manual_cosine_distance
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_nansum" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_nansum
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_residuals" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_residuals
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_spectra
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.get_covariate_matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_covariate_matrix
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.perform_ihd_scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      perform_ihd_scan
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.perform_permutation_test" class="md-nav__link">
+    <span class="md-ellipsis">
+      perform_permutation_test
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.shuffle_spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      shuffle_spectra
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      utils
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.adjust_spectra_for_nuccomp" class="md-nav__link">
+    <span class="md-ellipsis">
+      adjust_spectra_for_nuccomp
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.calculate_confint" class="md-nav__link">
+    <span class="md-ellipsis">
+      calculate_confint
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.calculate_covariate_by_marker" class="md-nav__link">
+    <span class="md-ellipsis">
+      calculate_covariate_by_marker
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_allele_frequency" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_allele_frequency
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_genotype_similarity" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_genotype_similarity
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_haplotype_distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_haplotype_distance
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_manual_chisquare" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_manual_chisquare
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_manual_cosine_distance" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_manual_cosine_distance
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_nansum" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_nansum
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_residuals" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_residuals
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.compute_spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      compute_spectra
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.get_covariate_matrix" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_covariate_matrix
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.perform_ihd_scan" class="md-nav__link">
+    <span class="md-ellipsis">
+      perform_ihd_scan
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.perform_permutation_test" class="md-nav__link">
+    <span class="md-ellipsis">
+      perform_permutation_test
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihd.utils.shuffle_spectra" class="md-nav__link">
+    <span class="md-ellipsis">
+      shuffle_spectra
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>Reference</h1>
+
+<p>See below for descriptions of relevant methods for computing IHD.</p>
+
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="ihd.utils"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.adjust_spectra_for_nuccomp" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">adjust_spectra_for_nuccomp</span><span class="p">(</span><span class="n">a_spectra</span><span class="p">,</span> <span class="n">b_spectra</span><span class="p">,</span> <span class="n">a_denom</span><span class="p">,</span> <span class="n">b_denom</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Scale the counts in the input mutation spectra
+such that they are adjusted in terms of nucleotide context.
+For a given mutation type (e.g., C&gt;T), if the <code>a_spectra</code> 
+contains more C&gt;[A/T/G] mutations, it may simply be because
+the samples represented in <code>a_spectra</code> had more cytosines 
+that were accessible to variant calling. If <code>a_denom</code> contains
+more C nucleotides than <code>b_denom</code>, we adjust the counts of the 
+C&gt;[A/T/G] mutations in <code>a_spectra</code> by a scaling factor 
+(<code>b_denom</code> / <code>a_denom</code>). And vice versa.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>a_spectra</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array containing the aggregate mutation             spectrum in group "A."</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>b_spectra</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array containing the aggregate mutation             spectrum in group "B."</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>a_denom</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array containing the aggregate number of             callable base pairs in group "A." At each index i in this array, the             total count of accessible nucleotides should correspond to the "reference"             nucleotide of the corresponding mutation type in <code>a_spectra</code> at the same index.             For example, if the first two entries of <code>a_spectra</code> corresponds to the aggregate count             of C&gt;T and C&gt;A mutations, the first two entries of <code>a_denom</code> should both contain             the aggregate counts of accessible C nucleotides in the group.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>b_denom</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array containing the aggregate number of             callable base pairs in group "B." At each index i in this array, the             total count of accessible nucleotides should correspond to the "reference"             nucleotide of the corresponding mutation type in <code>b_spectra</code> at the same index.
+For example, if the first two entries of <code>b_spectra</code> corresponds to the aggregate count             of C&gt;T and C&gt;A mutations, the first two entries of <code>b_denom</code> should both contain             the aggregate counts of accessible C nucleotides in the group.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>adj_a_spectra</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The first of the input mutation spectra, adjusted for nucleotide context.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+<td><code>adj_b_spectra</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The second of the input mutation spectra, adjusted for nucleotide context.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">adjust_spectra_for_nuccomp</span><span class="p">(</span>
+    <span class="n">a_spectra</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">b_spectra</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">a_denom</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">b_denom</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scale the counts in the input mutation spectra</span>
+<span class="sd">    such that they are adjusted in terms of nucleotide context.</span>
+<span class="sd">    For a given mutation type (e.g., C&gt;T), if the `a_spectra` </span>
+<span class="sd">    contains more C&gt;[A/T/G] mutations, it may simply be because</span>
+<span class="sd">    the samples represented in `a_spectra` had more cytosines </span>
+<span class="sd">    that were accessible to variant calling. If `a_denom` contains</span>
+<span class="sd">    more C nucleotides than `b_denom`, we adjust the counts of the </span>
+<span class="sd">    C&gt;[A/T/G] mutations in `a_spectra` by a scaling factor </span>
+<span class="sd">    (`b_denom` / `a_denom`). And vice versa.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a_spectra (np.ndarray): 1D numpy array containing the aggregate mutation \</span>
+<span class="sd">            spectrum in group &quot;A.&quot;</span>
+
+<span class="sd">        b_spectra (np.ndarray): 1D numpy array containing the aggregate mutation \</span>
+<span class="sd">            spectrum in group &quot;B.&quot;</span>
+
+<span class="sd">        a_denom (np.ndarray): 1D numpy array containing the aggregate number of \</span>
+<span class="sd">            callable base pairs in group &quot;A.&quot; At each index i in this array, the \</span>
+<span class="sd">            total count of accessible nucleotides should correspond to the &quot;reference&quot; \</span>
+<span class="sd">            nucleotide of the corresponding mutation type in `a_spectra` at the same index. \</span>
+<span class="sd">            For example, if the first two entries of `a_spectra` corresponds to the aggregate count \</span>
+<span class="sd">            of C&gt;T and C&gt;A mutations, the first two entries of `a_denom` should both contain \</span>
+<span class="sd">            the aggregate counts of accessible C nucleotides in the group.</span>
+
+<span class="sd">        b_denom (np.ndarray): 1D numpy array containing the aggregate number of \</span>
+<span class="sd">            callable base pairs in group &quot;B.&quot; At each index i in this array, the \</span>
+<span class="sd">            total count of accessible nucleotides should correspond to the &quot;reference&quot; \</span>
+<span class="sd">            nucleotide of the corresponding mutation type in `b_spectra` at the same index.</span>
+<span class="sd">            For example, if the first two entries of `b_spectra` corresponds to the aggregate count \</span>
+<span class="sd">            of C&gt;T and C&gt;A mutations, the first two entries of `b_denom` should both contain \</span>
+<span class="sd">            the aggregate counts of accessible C nucleotides in the group.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        adj_a_spectra (np.ndarray): The first of the input mutation spectra, adjusted for nucleotide context.</span>
+<span class="sd">        adj_b_spectra (np.ndarray): The second of the input mutation spectra, adjusted for nucleotide context.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># store the adjusted mutation spectra in two new arrays</span>
+    <span class="n">new_a_spectra</span><span class="p">,</span> <span class="n">new_b_spectra</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">a_spectra</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">b_spectra</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="c1"># loop over the indices of the input mutation spectra</span>
+    <span class="k">for</span> <span class="n">nuc_i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">a_spectra</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># get the aggregate count of the mutation type in either group</span>
+        <span class="n">a_mut_count</span><span class="p">,</span> <span class="n">b_mut_count</span> <span class="o">=</span> <span class="n">a_spectra</span><span class="p">[</span><span class="n">nuc_i</span><span class="p">],</span> <span class="n">b_spectra</span><span class="p">[</span><span class="n">nuc_i</span><span class="p">]</span>
+        <span class="c1"># get the aggregate count of accessible nucleotides in either group</span>
+        <span class="n">a_nuc_count</span><span class="p">,</span> <span class="n">b_nuc_count</span> <span class="o">=</span> <span class="n">a_denom</span><span class="p">[</span><span class="n">nuc_i</span><span class="p">],</span> <span class="n">b_denom</span><span class="p">[</span><span class="n">nuc_i</span><span class="p">]</span>
+
+        <span class="c1"># if the count of nucleotides in group A is larger than in group B,</span>
+        <span class="c1"># adjust group A down by the scaling factor</span>
+        <span class="k">if</span> <span class="n">a_nuc_count</span> <span class="o">&gt;</span> <span class="n">b_nuc_count</span><span class="p">:</span>
+            <span class="n">adj_factor</span> <span class="o">=</span> <span class="n">b_nuc_count</span> <span class="o">/</span> <span class="n">a_nuc_count</span>
+            <span class="n">a_mut_count</span> <span class="o">*=</span> <span class="n">adj_factor</span>
+        <span class="c1"># and vice versa if group B &gt; group A</span>
+        <span class="k">elif</span> <span class="n">b_nuc_count</span> <span class="o">&gt;</span> <span class="n">a_nuc_count</span><span class="p">:</span>
+            <span class="n">adj_factor</span> <span class="o">=</span> <span class="n">a_nuc_count</span> <span class="o">/</span> <span class="n">b_nuc_count</span>
+            <span class="n">b_mut_count</span> <span class="o">*=</span> <span class="n">adj_factor</span>
+
+        <span class="n">new_a_spectra</span><span class="p">[</span><span class="n">nuc_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">a_mut_count</span>
+        <span class="n">new_b_spectra</span><span class="p">[</span><span class="n">nuc_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">b_mut_count</span>
+
+    <span class="k">return</span> <span class="n">new_a_spectra</span><span class="p">,</span> <span class="n">new_b_spectra</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.calculate_confint" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">calculate_confint</span><span class="p">(</span><span class="n">spectra</span><span class="p">,</span> <span class="n">genotype_matrix</span><span class="p">,</span> <span class="n">covariate_matrix</span><span class="p">,</span> <span class="n">distance_method</span><span class="o">=</span><span class="n">compute_manual_chisquare</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">adjust_statistics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">conf_int</span><span class="o">=</span><span class="mf">90.0</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Calculate a confidence interval around the maximum observed 
+distance peak by performing bootstrap resampling.  In each of the 
+<code>n_permutations</code> trials do the following: 1. resample the input mutation <code>spectra</code>
+with replacement. 2. run an IHD scan by computing the distance between
+the aggregate mutation spectrum of samples with either genotype
+at every marker in the <code>genotype_matrix</code>. 3. record the maximum distance encountered 
+at any marker, as well as the marker index at which that distance was observed.
+We'll consider that marker to be the likely "peak."
+Then, we return the bounds of the markers that contain 95% of all observed 
+peaks.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>spectra</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of mutation spectra in all             genotyped samples, of size (N, M) where N is the number of samples             and M is the number of mutation types.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>genotype_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of genotypes at every             genotyped marker, of size (G, N), where G is the number of genotyped             sites and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>covariate_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of size (C, N), where C is             the number of covariates and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>distance_method</code></td>
+          <td>
+                <code><span title="typing.Callable">Callable</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Callable method to compute the             distance between aggregate mutation spectra. Must accept two 1D numpy             arrays and return a single floating point value. Defaults to             <code>compute_manual_chisquare</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="ihd.utils.compute_manual_chisquare" href="#ihd.utils.compute_manual_chisquare">compute_manual_chisquare</a></code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>n_permutations</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of permutations to perform             (i.e., number of times to resample the spectra with replacement.             Defaults to 1_000.</p>
+            </div>
+          </td>
+          <td>
+                <code>10000</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>progress</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to output a count of how many permutations             have completed. Defaults to False.</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>adjust_statistics</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to compute adjusted statistics             at each marker by regressing genotype similarity against statistics.             Defaults to True.</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>conf_int</code></td>
+          <td>
+                <code>float</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The confidence interval to compute around the marker             with the highest distance value. Defaults to 95.</p>
+            </div>
+          </td>
+          <td>
+                <code>90.0</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>conf_ints</code></td>          <td>
+                <code><span title="typing.Tuple">Tuple</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Tuple of two integers, corresponding to the lower             and upper bound markers defining the specified confidence interval.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span>
+<span class="normal">640</span>
+<span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span>
+<span class="normal">669</span>
+<span class="normal">670</span>
+<span class="normal">671</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span>
+<span class="normal">675</span>
+<span class="normal">676</span>
+<span class="normal">677</span>
+<span class="normal">678</span>
+<span class="normal">679</span>
+<span class="normal">680</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span>
+<span class="normal">684</span>
+<span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">calculate_confint</span><span class="p">(</span>
+    <span class="n">spectra</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">genotype_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">covariate_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">distance_method</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">compute_manual_chisquare</span><span class="p">,</span>
+    <span class="n">n_permutations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10_000</span><span class="p">,</span>
+    <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">adjust_statistics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">conf_int</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">90.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate a confidence interval around the maximum observed </span>
+<span class="sd">    distance peak by performing bootstrap resampling.  In each of the </span>
+<span class="sd">    `n_permutations` trials do the following: 1. resample the input mutation `spectra`</span>
+<span class="sd">    with replacement. 2. run an IHD scan by computing the distance between</span>
+<span class="sd">    the aggregate mutation spectrum of samples with either genotype</span>
+<span class="sd">    at every marker in the `genotype_matrix`. 3. record the maximum distance encountered </span>
+<span class="sd">    at any marker, as well as the marker index at which that distance was observed.</span>
+<span class="sd">    We&#39;ll consider that marker to be the likely &quot;peak.&quot;</span>
+<span class="sd">    Then, we return the bounds of the markers that contain 95% of all observed </span>
+<span class="sd">    peaks.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spectra (np.ndarray): A 2D numpy array of mutation spectra in all \</span>
+<span class="sd">            genotyped samples, of size (N, M) where N is the number of samples \</span>
+<span class="sd">            and M is the number of mutation types.</span>
+
+<span class="sd">        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every \</span>
+<span class="sd">            genotyped marker, of size (G, N), where G is the number of genotyped \</span>
+<span class="sd">            sites and N is the number of samples.</span>
+
+<span class="sd">        covariate_matrix (np.ndarray): A 2D numpy array of size (C, N), where C is \</span>
+<span class="sd">            the number of covariates and N is the number of samples.</span>
+
+<span class="sd">        distance_method (Callable, optional): Callable method to compute the \</span>
+<span class="sd">            distance between aggregate mutation spectra. Must accept two 1D numpy \</span>
+<span class="sd">            arrays and return a single floating point value. Defaults to \</span>
+<span class="sd">            `compute_manual_chisquare`.</span>
+
+<span class="sd">        n_permutations (int, optional): Number of permutations to perform \</span>
+<span class="sd">            (i.e., number of times to resample the spectra with replacement. \</span>
+<span class="sd">            Defaults to 1_000.</span>
+
+<span class="sd">        progress (bool, optional): Whether to output a count of how many permutations \</span>
+<span class="sd">            have completed. Defaults to False.</span>
+
+<span class="sd">        adjust_statistics (bool, optional): Whether to compute adjusted statistics \</span>
+<span class="sd">            at each marker by regressing genotype similarity against statistics. \</span>
+<span class="sd">            Defaults to True.</span>
+
+<span class="sd">        conf_int (float, optional): The confidence interval to compute around the marker \</span>
+<span class="sd">            with the highest distance value. Defaults to 95.</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        conf_ints (Tuple): Tuple of two integers, corresponding to the lower \</span>
+<span class="sd">            and upper bound markers defining the specified confidence interval.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># store index of marker at max peak encountered in each permutation</span>
+    <span class="n">peak_markers</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_permutations</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">pi</span> <span class="ow">in</span> <span class="n">numba</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="n">n_permutations</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pi</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pi</span> <span class="o">%</span> <span class="mi">1000</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+        <span class="c1"># resample the mutation spectra by bootstrapping</span>
+        <span class="n">resampled_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="n">high</span><span class="o">=</span><span class="n">spectra</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">spectra</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="n">resampled_spectra</span> <span class="o">=</span> <span class="n">spectra</span><span class="p">[</span><span class="n">resampled_idxs</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="c1"># resample the corresponding genotype data using the indices</span>
+        <span class="n">resampled_genotype_matrix</span> <span class="o">=</span> <span class="n">genotype_matrix</span><span class="p">[:,</span> <span class="n">resampled_idxs</span><span class="p">]</span>
+        <span class="c1"># recalculate genotype similarities using the resampled genotype matrix. NOTE: this is slow!</span>
+        <span class="n">resampled_genotype_similarity</span> <span class="o">=</span> <span class="n">compute_genotype_similarity</span><span class="p">(</span>
+            <span class="n">resampled_genotype_matrix</span>
+        <span class="p">)</span>
+        <span class="c1"># resample the covariate matrix to include the bootstrap resampled samples</span>
+        <span class="n">resampled_covariate_matrix</span> <span class="o">=</span> <span class="n">covariate_matrix</span><span class="p">[:,</span> <span class="n">resampled_idxs</span><span class="p">]</span>
+        <span class="n">resampled_covariate_ratios</span> <span class="o">=</span> <span class="n">calculate_covariate_by_marker</span><span class="p">(</span>
+            <span class="n">resampled_covariate_matrix</span><span class="p">,</span>
+            <span class="n">resampled_genotype_matrix</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># perform the IHD scan</span>
+        <span class="n">focal_dists</span> <span class="o">=</span> <span class="n">perform_ihd_scan</span><span class="p">(</span>
+            <span class="n">resampled_spectra</span><span class="p">,</span>
+            <span class="n">resampled_genotype_matrix</span><span class="p">,</span>
+            <span class="n">resampled_genotype_similarity</span><span class="p">,</span>
+            <span class="n">resampled_covariate_ratios</span><span class="p">,</span>
+            <span class="n">distance_method</span><span class="o">=</span><span class="n">distance_method</span><span class="p">,</span>
+            <span class="n">adjust_statistics</span><span class="o">=</span><span class="n">adjust_statistics</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">peak_marker_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">focal_dists</span><span class="p">)</span>
+        <span class="n">peak_markers</span><span class="p">[</span><span class="n">pi</span><span class="p">]</span> <span class="o">=</span> <span class="n">peak_marker_i</span>
+
+    <span class="n">pctile_lo</span> <span class="o">=</span> <span class="p">(</span><span class="mi">100</span> <span class="o">-</span> <span class="n">conf_int</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+    <span class="n">pctile_hi</span> <span class="o">=</span> <span class="n">conf_int</span> <span class="o">+</span> <span class="n">pctile_lo</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">peak_markers</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">pctile_lo</span><span class="p">)),</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">peak_markers</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">pctile_hi</span><span class="p">)),</span>
+        <span class="n">peak_markers</span><span class="p">,</span>
+    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.calculate_covariate_by_marker" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">calculate_covariate_by_marker</span><span class="p">(</span><span class="n">covariate_matrix</span><span class="p">,</span> <span class="n">genotype_matrix</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>For each covariate in the <code>covariate_matrix</code>, compute the ratio of
+    covariate values in samples with A or B genotypes at each marker in the
+    <code>genotype_matrix</code>.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>covariate_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of size (C, N), where C is             the number of covariates and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>genotype_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of genotypes at             every genotyped marker, of size (G, N), where G is the number             of genotyped sites and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>np.ndarray: A 2D numpy array of size (G, C), where G is the number of             genotyped sites and C is the number of covariates.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">calculate_covariate_by_marker</span><span class="p">(</span>
+    <span class="n">covariate_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">genotype_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;For each covariate in the `covariate_matrix`, compute the ratio of</span>
+<span class="sd">        covariate values in samples with A or B genotypes at each marker in the</span>
+<span class="sd">        `genotype_matrix`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        covariate_matrix (np.ndarray): A 2D numpy array of size (C, N), where C is \</span>
+<span class="sd">            the number of covariates and N is the number of samples.</span>
+
+<span class="sd">        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \</span>
+<span class="sd">            every genotyped marker, of size (G, N), where G is the number \</span>
+<span class="sd">            of genotyped sites and N is the number of samples.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: A 2D numpy array of size (G, C), where G is the number of \</span>
+<span class="sd">            genotyped sites and C is the number of covariates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># store the ratio of covariate values between D and B haplotypes</span>
+    <span class="c1"># at every marker along the genome for each covariate</span>
+    <span class="n">covariate_ratios</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">genotype_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">covariate_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># loop over every site in the genotype matrix</span>
+    <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">a_hap_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b_hap_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># loop over every covariate in the covariate matrix</span>
+        <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">covariate_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="c1"># subset covariate matrix to the covariate of interest</span>
+            <span class="n">covariate_matrix_sub</span> <span class="o">=</span> <span class="n">covariate_matrix</span><span class="p">[</span><span class="n">ci</span><span class="p">]</span>
+            <span class="c1"># compute ratio of covariate values between the two groups</span>
+            <span class="n">a_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">covariate_matrix_sub</span><span class="p">[</span><span class="n">a_hap_idxs</span><span class="p">])</span>
+            <span class="n">b_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">covariate_matrix_sub</span><span class="p">[</span><span class="n">b_hap_idxs</span><span class="p">])</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">a_sum</span> <span class="o">/</span> <span class="n">b_sum</span>
+        <span class="n">covariate_ratios</span><span class="p">[</span><span class="n">ni</span><span class="p">,</span> <span class="n">ci</span><span class="p">]</span> <span class="o">=</span> <span class="n">ratio</span>
+
+    <span class="k">return</span> <span class="n">covariate_ratios</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_allele_frequency" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_allele_frequency</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Given a genotype matrix of size (G, N) where G is the number of 
+genotyped sites and N is the number of samples, compute the allele 
+frequency at every marker.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>genotype_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of genotypes at             every genotyped marker, of size (G, N), where G is the number             of genotyped sites and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>allele_frequencies</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (G, ) containing allele frequencies         at every genotyped site in the collection of N samples.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">compute_allele_frequency</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Given a genotype matrix of size (G, N) where G is the number of </span>
+<span class="sd">    genotyped sites and N is the number of samples, compute the allele </span>
+<span class="sd">    frequency at every marker.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \</span>
+<span class="sd">            every genotyped marker, of size (G, N), where G is the number \</span>
+<span class="sd">            of genotyped sites and N is the number of samples.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        allele_frequencies (np.ndarray): A 1D numpy array of size (G, ) containing allele frequencies \</span>
+<span class="sd">        at every genotyped site in the collection of N samples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># figure out the allele number</span>
+    <span class="n">allele_number</span> <span class="o">=</span> <span class="n">genotype_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="c1"># sum the genotypes at each locus</span>
+    <span class="n">allele_counts</span> <span class="o">=</span> <span class="n">compute_nansum</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># get allele frequencies</span>
+    <span class="k">return</span> <span class="n">allele_counts</span> <span class="o">/</span> <span class="n">allele_number</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_genotype_similarity" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_genotype_similarity</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Compute the genetic similarity between groups of haplotypes
+at every genotyped marker. At each marker, divide the haplotypes into
+two groups based on the parental allele each haplotype inherited. In 
+each group, calculate allele frequencies at every marker along the genome.
+Then, calculate the Pearson correlation coefficient between the two groups'
+allele frequency vectors.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>genotype_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of genotypes at             every genotyped marker, of size (G, N), where G is the number             of genotyped sites and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>genotype_similarity</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (G, ), where G is the number         of genotyped sites.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">compute_genotype_similarity</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the genetic similarity between groups of haplotypes</span>
+<span class="sd">    at every genotyped marker. At each marker, divide the haplotypes into</span>
+<span class="sd">    two groups based on the parental allele each haplotype inherited. In </span>
+<span class="sd">    each group, calculate allele frequencies at every marker along the genome.</span>
+<span class="sd">    Then, calculate the Pearson correlation coefficient between the two groups&#39;</span>
+<span class="sd">    allele frequency vectors.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \</span>
+<span class="sd">            every genotyped marker, of size (G, N), where G is the number \</span>
+<span class="sd">            of genotyped sites and N is the number of samples.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        genotype_similarity (np.ndarray): A 1D numpy array of size (G, ), where G is the number \</span>
+<span class="sd">        of genotyped sites.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># store genotype similarities at every marker</span>
+    <span class="n">genotype_sims</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># loop over every site in the genotype matrix</span>
+    <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">a_hap_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b_hap_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># compute allele frequencies in each haplotype group</span>
+        <span class="n">a_afs</span><span class="p">,</span> <span class="n">b_afs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">compute_allele_frequency</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[:,</span> <span class="n">a_hap_idxs</span><span class="p">]),</span>
+            <span class="n">compute_allele_frequency</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[:,</span> <span class="n">b_hap_idxs</span><span class="p">]),</span>
+        <span class="p">)</span>
+        <span class="c1"># compute Pearson correlation between allele frequencies</span>
+        <span class="n">af_corr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">a_afs</span><span class="p">,</span> <span class="n">b_afs</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># NOTE: not sure how good of an idea this is, even if it&#39;s rare</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">af_corr</span><span class="p">):</span>
+            <span class="n">af_corr</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">genotype_sims</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">=</span> <span class="n">af_corr</span>
+
+    <span class="k">return</span> <span class="n">genotype_sims</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_haplotype_distance" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_haplotype_distance</span><span class="p">(</span><span class="n">a_haps</span><span class="p">,</span> <span class="n">b_haps</span><span class="p">,</span> <span class="n">distance_method</span><span class="o">=</span><span class="n">compute_manual_chisquare</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Compute the distance between the aggregate
+mutation spectrum of two collections of haplotype mutation data.
+The input arrays should both be 2D numpy arrays of size (N, M), 
+with rows and columns corresponding to samples and mutation types, 
+respectively. This method will first aggregate the mutation spectra across 
+samples to create two new 1D arrays, each of size (M, ). Then, it 
+will compute the distance between those two 1D arrays using the provided 
+distance method.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>a_haps</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>2D array of size (N, M) containing the mutation             spectrum of each sample, where N is the number of samples and M is             the number of mutation types.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>b_haps</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>2D array of size (N, M) containing the mutation             spectrum of each sample, where N is the number of samples and M             is the number of mutation types.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>distance_method</code></td>
+          <td>
+                <code><span title="typing.Callable">Callable</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Callable method to compute the             distance between aggregate mutation spectra. Must accept two 1D numpy             arrays and return a single floating point value. Defaults to             <code>compute_manual_chisquare</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="ihd.utils.compute_manual_chisquare" href="#ihd.utils.compute_manual_chisquare">compute_manual_chisquare</a></code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>distance</code></td>          <td>
+                <code><span title="numpy.float64">float64</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Distance between the aggregate             mutation spectra of the two haplotypes.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">compute_haplotype_distance</span><span class="p">(</span>
+    <span class="n">a_haps</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">b_haps</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">distance_method</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">compute_manual_chisquare</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the distance between the aggregate</span>
+<span class="sd">    mutation spectrum of two collections of haplotype mutation data.</span>
+<span class="sd">    The input arrays should both be 2D numpy arrays of size (N, M), </span>
+<span class="sd">    with rows and columns corresponding to samples and mutation types, </span>
+<span class="sd">    respectively. This method will first aggregate the mutation spectra across </span>
+<span class="sd">    samples to create two new 1D arrays, each of size (M, ). Then, it </span>
+<span class="sd">    will compute the distance between those two 1D arrays using the provided </span>
+<span class="sd">    distance method.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a_haps (np.ndarray): 2D array of size (N, M) containing the mutation \</span>
+<span class="sd">            spectrum of each sample, where N is the number of samples and M is \</span>
+<span class="sd">            the number of mutation types.</span>
+
+<span class="sd">        b_haps (np.ndarray): 2D array of size (N, M) containing the mutation \</span>
+<span class="sd">            spectrum of each sample, where N is the number of samples and M \</span>
+<span class="sd">            is the number of mutation types.</span>
+
+<span class="sd">        distance_method (Callable, optional): Callable method to compute the \</span>
+<span class="sd">            distance between aggregate mutation spectra. Must accept two 1D numpy \</span>
+<span class="sd">            arrays and return a single floating point value. Defaults to \</span>
+<span class="sd">            `compute_manual_chisquare`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        distance (np.float64): Distance between the aggregate \</span>
+<span class="sd">            mutation spectra of the two haplotypes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># first, sum the spectrum arrays such that we add up the</span>
+    <span class="c1"># total number of C&gt;T, C&gt;A, etc. across all samples.</span>
+    <span class="n">a_hap_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">a_haps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">b_hap_sums</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">b_haps</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">a_hap_sums</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">b_hap_sums</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">distance_method</span><span class="p">(</span><span class="n">a_hap_sums</span><span class="p">,</span> <span class="n">b_hap_sums</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dist</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_manual_chisquare" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_manual_chisquare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Compute a chi-square test of independence between two
+groups of observations. Since numba doesn't cooperate with the
+<code>scipy.stats</code> implementation, I've written a "manual" version
+of the calculation so that it's jit-able.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>a</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array of (N, ) observations.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>b</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array of (N, ) obseravtions.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>chisquare_stat</code></td>          <td>
+                <code><span title="numpy.float64">float64</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The Chi-square statistic comparing             observed vs. expected values of each observation.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">compute_manual_chisquare</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute a chi-square test of independence between two</span>
+<span class="sd">    groups of observations. Since numba doesn&#39;t cooperate with the</span>
+<span class="sd">    `scipy.stats` implementation, I&#39;ve written a &quot;manual&quot; version</span>
+<span class="sd">    of the calculation so that it&#39;s jit-able.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a (np.ndarray): 1D numpy array of (N, ) observations.</span>
+<span class="sd">        b (np.ndarray): 1D numpy array of (N, ) obseravtions.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        chisquare_stat (np.float64): The Chi-square statistic comparing \</span>
+<span class="sd">            observed vs. expected values of each observation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">observed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+    <span class="n">row_sums</span> <span class="o">=</span> <span class="n">compute_nansum</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">col_sums</span> <span class="o">=</span> <span class="n">compute_nansum</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">observed</span><span class="p">)</span>
+
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">observed</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row_i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">row_sums</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">col_i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">col_sums</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">exp</span> <span class="o">=</span> <span class="p">(</span><span class="n">row_sums</span><span class="p">[</span><span class="n">row_i</span><span class="p">]</span> <span class="o">*</span> <span class="n">col_sums</span><span class="p">[</span><span class="n">col_i</span><span class="p">])</span> <span class="o">/</span> <span class="n">total</span>
+            <span class="n">expected</span><span class="p">[</span><span class="n">row_i</span><span class="p">,</span> <span class="n">col_i</span><span class="p">]</span> <span class="o">=</span> <span class="n">exp</span>
+    <span class="n">chi_stat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">observed</span> <span class="o">-</span> <span class="n">expected</span><span class="p">)</span> <span class="o">/</span> <span class="n">expected</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chi_stat</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_manual_cosine_distance" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_manual_cosine_distance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Compute the cosine distance between
+two 1D numpy arrays. Although methods to compute
+cosine similarity and distance exist in <code>scipy</code> and
+<code>sklearn</code>, they are not <code>numba.njit</code>'able.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>a</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (N, ).</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>b</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (N, ).</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>cosine_distance</code></td>          <td>
+                <code><span title="numpy.float64">float64</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Cosine distance between a and b.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">compute_manual_cosine_distance</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the cosine distance between</span>
+<span class="sd">    two 1D numpy arrays. Although methods to compute</span>
+<span class="sd">    cosine similarity and distance exist in `scipy` and</span>
+<span class="sd">    `sklearn`, they are not `numba.njit`&#39;able.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a (np.ndarray): A 1D numpy array of size (N, ).</span>
+<span class="sd">        b (np.ndarray): A 1D numpy array of size (N, ).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        cosine_distance (np.float64): Cosine distance between a and b.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dot</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">a_sumsq</span><span class="p">,</span> <span class="n">b_sumsq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">a</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">a_norm</span><span class="p">,</span> <span class="n">b_norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a_sumsq</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">b_sumsq</span><span class="p">)</span>
+    <span class="n">cossim</span> <span class="o">=</span> <span class="n">dot</span> <span class="o">/</span> <span class="p">(</span><span class="n">a_norm</span> <span class="o">*</span> <span class="n">b_norm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">cossim</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_nansum" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_nansum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Compute the sum of a 2D numpy array
+on a per-row basis, ignoring nans. Since <code>numba</code> does not
+support kwargs in the <code>np.nansum</code> function, it's
+necessary to piece this out into its own function
+so that it can be decorated with <code>numba.njit</code>.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>a</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of size (N, M).</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>row</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to calculate means by row or column. Defaults to True.</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>rowsums</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (N, ) containing             sums of every row in the input.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">compute_nansum</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the sum of a 2D numpy array</span>
+<span class="sd">    on a per-row basis, ignoring nans. Since `numba` does not</span>
+<span class="sd">    support kwargs in the `np.nansum` function, it&#39;s</span>
+<span class="sd">    necessary to piece this out into its own function</span>
+<span class="sd">    so that it can be decorated with `numba.njit`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        a (np.ndarray): A 2D numpy array of size (N, M).</span>
+
+<span class="sd">        row (bool, optional): Whether to calculate means by row or column. Defaults to True.</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        rowsums (np.ndarray): A 1D numpy array of size (N, ) containing \</span>
+<span class="sd">            sums of every row in the input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">row</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="n">empty_a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]):</span>
+        <span class="n">empty_a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">if</span> <span class="n">row</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">a</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">empty_a</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_residuals" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_residuals</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Use ordinary least-squares (OLS) to fit a linear model
+predicting <code>y</code> as a function of <code>X</code>. Then, compute the residuals
+between the predicted y-values and the true y-values.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>X</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>2D numpy array of size (M, N), where M is the number of             observations and N is the number of independent variables.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>y</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array of size (M, ), containing the dependent variables             for all M observations.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>resids</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array of size (M, ) containing residuals.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">compute_residuals</span><span class="p">(</span>
+    <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use ordinary least-squares (OLS) to fit a linear model</span>
+<span class="sd">    predicting `y` as a function of `X`. Then, compute the residuals</span>
+<span class="sd">    between the predicted y-values and the true y-values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        X (np.ndarray): 2D numpy array of size (M, N), where M is the number of \</span>
+<span class="sd">            observations and N is the number of independent variables.</span>
+
+<span class="sd">        y (np.ndarray): 1D numpy array of size (M, ), containing the dependent variables \</span>
+<span class="sd">            for all M observations.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        resids (np.ndarray): 1D numpy array of size (M, ) containing residuals.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">X</span><span class="p">,</span> <span class="n">ones</span><span class="p">))</span>
+    <span class="n">coefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">y_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">coefs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">coefs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">resids</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">y_</span>
+    <span class="k">return</span> <span class="n">resids</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.compute_spectra" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">compute_spectra</span><span class="p">(</span><span class="n">mutations</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cpg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Compute the mutation spectrum of every sample in 
+the input pd.DataFrame of mutation data. The input
+dataframe should either contain a single entry for every mutation observed
+in every sample, or the aggregate count of each mutation type
+observed in each sample. The input dataframe must have at least three columns:
+'Strain' (denoting the sample), 'kmer' (denoting the 3-mer context of the 
+mutation -- e.g, CCT&gt;CAT), and 'count' (denoting the number of times
+a mutation of type 'kmer' was observed in 'sample'). If the dataframe contains
+a single entry for every mutation observed in every sample, then the 'count'
+column should contain a value of 1 in every row.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>mutations</code></td>
+          <td>
+                <code><span title="pandas.DataFrame">DataFrame</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Pandas dataframe containing information             about the mutations observed in each sample. The dataframe must have             at least three columns: 'sample' (denoting the sample), 'kmer' (denoting             the 3-mer context of the mutation), and 'count' (denoting the number             of times a mutation of type 'kmer' was observed in 'sample').</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>k</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>k-mer size of mutations (e.g., k=3 means that we             will treat mutations as NXN NYN, where Ns represent the nucleotide             contexts on either side of the mutation, whereas k=1 means we will             treat them as X Y). Defaults to 1.</p>
+            </div>
+          </td>
+          <td>
+                <code>1</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>cpg</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>whether to separate CpG&gt;TpG mutations into their             own mutation type, distinct from C&gt;T. Defaults to True.</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>samples</code></td>          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A list of samples in the dataframe (which are             indexed in the same order as the rows of the 2D <code>spectra</code> array).</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+<td><code>mutation_types</code></td>          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A list of the unique mutation types             observed in the dataframe.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+<td><code>spectra</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of mutation spectra in             all genotyped samples, of size (N, M) where N is the number             of samples and M is the number of mutation types.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">704</span>
+<span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span>
+<span class="normal">709</span>
+<span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span>
+<span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span>
+<span class="normal">721</span>
+<span class="normal">722</span>
+<span class="normal">723</span>
+<span class="normal">724</span>
+<span class="normal">725</span>
+<span class="normal">726</span>
+<span class="normal">727</span>
+<span class="normal">728</span>
+<span class="normal">729</span>
+<span class="normal">730</span>
+<span class="normal">731</span>
+<span class="normal">732</span>
+<span class="normal">733</span>
+<span class="normal">734</span>
+<span class="normal">735</span>
+<span class="normal">736</span>
+<span class="normal">737</span>
+<span class="normal">738</span>
+<span class="normal">739</span>
+<span class="normal">740</span>
+<span class="normal">741</span>
+<span class="normal">742</span>
+<span class="normal">743</span>
+<span class="normal">744</span>
+<span class="normal">745</span>
+<span class="normal">746</span>
+<span class="normal">747</span>
+<span class="normal">748</span>
+<span class="normal">749</span>
+<span class="normal">750</span>
+<span class="normal">751</span>
+<span class="normal">752</span>
+<span class="normal">753</span>
+<span class="normal">754</span>
+<span class="normal">755</span>
+<span class="normal">756</span>
+<span class="normal">757</span>
+<span class="normal">758</span>
+<span class="normal">759</span>
+<span class="normal">760</span>
+<span class="normal">761</span>
+<span class="normal">762</span>
+<span class="normal">763</span>
+<span class="normal">764</span>
+<span class="normal">765</span>
+<span class="normal">766</span>
+<span class="normal">767</span>
+<span class="normal">768</span>
+<span class="normal">769</span>
+<span class="normal">770</span>
+<span class="normal">771</span>
+<span class="normal">772</span>
+<span class="normal">773</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">compute_spectra</span><span class="p">(</span>
+    <span class="n">mutations</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">cpg</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the mutation spectrum of every sample in </span>
+<span class="sd">    the input pd.DataFrame of mutation data. The input</span>
+<span class="sd">    dataframe should either contain a single entry for every mutation observed</span>
+<span class="sd">    in every sample, or the aggregate count of each mutation type</span>
+<span class="sd">    observed in each sample. The input dataframe must have at least three columns:</span>
+<span class="sd">    &#39;Strain&#39; (denoting the sample), &#39;kmer&#39; (denoting the 3-mer context of the </span>
+<span class="sd">    mutation -- e.g, CCT&gt;CAT), and &#39;count&#39; (denoting the number of times</span>
+<span class="sd">    a mutation of type &#39;kmer&#39; was observed in &#39;sample&#39;). If the dataframe contains</span>
+<span class="sd">    a single entry for every mutation observed in every sample, then the &#39;count&#39;</span>
+<span class="sd">    column should contain a value of 1 in every row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mutations (pd.DataFrame): Pandas dataframe containing information \</span>
+<span class="sd">            about the mutations observed in each sample. The dataframe must have \</span>
+<span class="sd">            at least three columns: &#39;sample&#39; (denoting the sample), &#39;kmer&#39; (denoting \</span>
+<span class="sd">            the 3-mer context of the mutation), and &#39;count&#39; (denoting the number \</span>
+<span class="sd">            of times a mutation of type &#39;kmer&#39; was observed in &#39;sample&#39;).</span>
+
+<span class="sd">        k (int, optional): k-mer size of mutations (e.g., k=3 means that we \</span>
+<span class="sd">            will treat mutations as NXN NYN, where Ns represent the nucleotide \</span>
+<span class="sd">            contexts on either side of the mutation, whereas k=1 means we will \</span>
+<span class="sd">            treat them as X Y). Defaults to 1.</span>
+
+<span class="sd">        cpg (bool, optional): whether to separate CpG&gt;TpG mutations into their \</span>
+<span class="sd">            own mutation type, distinct from C&gt;T. Defaults to True.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        samples (List[str]): A list of samples in the dataframe (which are \</span>
+<span class="sd">            indexed in the same order as the rows of the 2D `spectra` array).</span>
+<span class="sd">        mutation_types (List[str]): A list of the unique mutation types \</span>
+<span class="sd">            observed in the dataframe.</span>
+<span class="sd">        spectra (np.ndarray): A 2D numpy array of mutation spectra in \</span>
+<span class="sd">            all genotyped samples, of size (N, M) where N is the number \</span>
+<span class="sd">            of samples and M is the number of mutation types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># compute 3-mer spectra</span>
+    <span class="n">hap_spectra_agg</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">mutations</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;sample&quot;</span><span class="p">,</span> <span class="s2">&quot;kmer&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">})</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="c1"># if 1-mer spectra are desired, compute that</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># add base mutation type</span>
+        <span class="n">hap_spectra_agg</span><span class="p">[</span><span class="s2">&quot;base_mut&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hap_spectra_agg</span><span class="p">[</span><span class="s2">&quot;kmer&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">find_central_mut</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">cpg</span><span class="o">=</span><span class="n">cpg</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">hap_spectra_agg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">hap_spectra_agg</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;sample&quot;</span><span class="p">,</span> <span class="s2">&quot;base_mut&quot;</span><span class="p">])</span>
+            <span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="nb">sum</span><span class="p">})</span>
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="c1"># get spectra as per-haplotype vectors of mutation counts</span>
+    <span class="n">mut_col</span> <span class="o">=</span> <span class="s2">&quot;base_mut&quot;</span> <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">&quot;kmer&quot;</span>
+    <span class="n">spectra</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">hap_spectra_agg</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s2">&quot;sample&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">mut_col</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">samples</span><span class="p">,</span> <span class="n">mutations</span><span class="p">,</span> <span class="n">spectra</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">spectra</span><span class="p">[</span><span class="s2">&quot;sample&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span>
+        <span class="p">[</span><span class="n">el</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">spectra</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span>
+        <span class="n">spectra</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:],</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">samples</span><span class="p">,</span> <span class="n">mutations</span><span class="p">,</span> <span class="n">spectra</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.get_covariate_matrix" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">get_covariate_matrix</span><span class="p">(</span><span class="n">pheno</span><span class="p">,</span> <span class="n">samples</span><span class="p">,</span> <span class="n">covariate_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;n_generations&#39;</span><span class="p">])</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Generate a matrix of covariate values for each sample. Returns
+a 2D numpy array of size (C, N), where C is the number of covariates
+specified in the <code>covariate_cols</code> argument, and N is the number of samples.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>pheno</code></td>
+          <td>
+                <code><span title="pandas.DataFrame">DataFrame</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Pandas dataframe containing metadata about each sample.             This dataframe should have a "sample" column and should contain each of the columns             specified in <code>covariate_cols</code>.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>samples</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of samples to subset the dataframe.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>covariate_cols</code></td>
+          <td>
+                <code><span title="typing.List">List</span>[str]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of column names in <code>pheno</code> that should             be used as covariates. Defaults to ["n_generations"].</p>
+            </div>
+          </td>
+          <td>
+                <code>[&#39;n_generations&#39;]</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>np.ndarray: A 2D numpy array of size (C, N), where C is the number of covariates             and N is the number of samples.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_covariate_matrix</span><span class="p">(</span>
+    <span class="n">pheno</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">samples</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">covariate_cols</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;n_generations&quot;</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a matrix of covariate values for each sample. Returns</span>
+<span class="sd">    a 2D numpy array of size (C, N), where C is the number of covariates</span>
+<span class="sd">    specified in the `covariate_cols` argument, and N is the number of samples.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pheno (pd.DataFrame): Pandas dataframe containing metadata about each sample. \</span>
+<span class="sd">            This dataframe should have a &quot;sample&quot; column and should contain each of the columns \</span>
+<span class="sd">            specified in `covariate_cols`.</span>
+
+<span class="sd">        samples (List[str]): List of samples to subset the dataframe.</span>
+
+<span class="sd">        covariate_cols (List[str], optional): List of column names in `pheno` that should \</span>
+<span class="sd">            be used as covariates. Defaults to [&quot;n_generations&quot;].</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        np.ndarray: A 2D numpy array of size (C, N), where C is the number of covariates \</span>
+<span class="sd">            and N is the number of samples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sample&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">covariate_cols</span>
+    <span class="c1"># subset pheno information to relevant samples</span>
+    <span class="n">pheno_sub</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pheno</span><span class="p">[</span><span class="n">pheno</span><span class="p">[</span><span class="s2">&quot;sample&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">samples</span><span class="p">)]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;sample&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">covariate_matrix</span> <span class="o">=</span> <span class="n">pheno_sub</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">samples</span><span class="p">][</span><span class="n">covariate_cols</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">return</span> <span class="n">covariate_matrix</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.perform_ihd_scan" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">perform_ihd_scan</span><span class="p">(</span><span class="n">spectra</span><span class="p">,</span> <span class="n">genotype_matrix</span><span class="p">,</span> <span class="n">genotype_similarity</span><span class="p">,</span> <span class="n">covariate_ratios</span><span class="p">,</span> <span class="n">distance_method</span><span class="o">=</span><span class="n">compute_manual_chisquare</span><span class="p">,</span> <span class="n">adjust_statistics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Iterate over every genotyped marker in the <code>genotype_matrix</code>, 
+divide the haplotypes into two groups based on sample genotypes at the 
+marker, and compute the distance between the aggregate mutation spectra
+of each group. Return a list of cosine distances of length (G, ), where
+G is the number of genotyped sites.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>spectra</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of mutation spectra in             all genotyped samples, of size (N, M) where N is the number of             samples and M is the number of mutation types.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>genotype_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of genotypes at             every genotyped marker, of size (G, N), where G is the number             of genotyped sites and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>genotype_similarity</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (G, ), where             G is the number of genotyped sites. Contains the correlation coefficient             between genome-wide allele frequencies of haplotypes with A vs. B genotypes             at every site.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>covariate_ratios</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (G, ), where             G is the number of genotyped sites. Contains the ratio of covariate             values between haplotypes with A vs. B genotypes at every site.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>distance_method</code></td>
+          <td>
+                <code><span title="typing.Callable">Callable</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Callable method to compute the             distance between aggregate mutation spectra. Must accept two 1D numpy             arrays and return a single floating point value. Defaults to             <code>compute_manual_chisquare</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="ihd.utils.compute_manual_chisquare" href="#ihd.utils.compute_manual_chisquare">compute_manual_chisquare</a></code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>adjust_statistics</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to compute adjusted statistics             at each marker by regressing genotype similarity against statistics.             Defaults to True.</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>distances</code></td>          <td>
+                <code><span title="typing.List">List</span>[<span title="numpy.float64">float64</span>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of inter-haplotype         distances at every marker.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">perform_ihd_scan</span><span class="p">(</span>
+    <span class="n">spectra</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">genotype_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">genotype_similarity</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">covariate_ratios</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">distance_method</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">compute_manual_chisquare</span><span class="p">,</span>
+    <span class="n">adjust_statistics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Iterate over every genotyped marker in the `genotype_matrix`, </span>
+<span class="sd">    divide the haplotypes into two groups based on sample genotypes at the </span>
+<span class="sd">    marker, and compute the distance between the aggregate mutation spectra</span>
+<span class="sd">    of each group. Return a list of cosine distances of length (G, ), where</span>
+<span class="sd">    G is the number of genotyped sites.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spectra (np.ndarray): A 2D numpy array of mutation spectra in \</span>
+<span class="sd">            all genotyped samples, of size (N, M) where N is the number of \</span>
+<span class="sd">            samples and M is the number of mutation types.</span>
+
+<span class="sd">        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at \</span>
+<span class="sd">            every genotyped marker, of size (G, N), where G is the number \</span>
+<span class="sd">            of genotyped sites and N is the number of samples.</span>
+
+<span class="sd">        genotype_similarity (np.ndarray): A 1D numpy array of size (G, ), where \</span>
+<span class="sd">            G is the number of genotyped sites. Contains the correlation coefficient \</span>
+<span class="sd">            between genome-wide allele frequencies of haplotypes with A vs. B genotypes \</span>
+<span class="sd">            at every site.</span>
+
+<span class="sd">        covariate_ratios (np.ndarray): A 1D numpy array of size (G, ), where \</span>
+<span class="sd">            G is the number of genotyped sites. Contains the ratio of covariate \</span>
+<span class="sd">            values between haplotypes with A vs. B genotypes at every site.</span>
+
+<span class="sd">        distance_method (Callable, optional): Callable method to compute the \</span>
+<span class="sd">            distance between aggregate mutation spectra. Must accept two 1D numpy \</span>
+<span class="sd">            arrays and return a single floating point value. Defaults to \</span>
+<span class="sd">            `compute_manual_chisquare`.</span>
+
+<span class="sd">        adjust_statistics (bool, optional): Whether to compute adjusted statistics \</span>
+<span class="sd">            at each marker by regressing genotype similarity against statistics. \</span>
+<span class="sd">            Defaults to True.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        distances (List[np.float64]): List of inter-haplotype \</span>
+<span class="sd">        distances at every marker.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># store distances at each marker</span>
+    <span class="n">focal_dist</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># loop over every site in the genotype matrix</span>
+    <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">a_hap_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b_hap_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">genotype_matrix</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">a_spectra</span><span class="p">,</span> <span class="n">b_spectra</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">spectra</span><span class="p">[</span><span class="n">a_hap_idxs</span><span class="p">],</span>
+            <span class="n">spectra</span><span class="p">[</span><span class="n">b_hap_idxs</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="n">cur_dist</span> <span class="o">=</span> <span class="n">compute_haplotype_distance</span><span class="p">(</span>
+            <span class="n">a_spectra</span><span class="p">,</span>
+            <span class="n">b_spectra</span><span class="p">,</span>
+            <span class="n">distance_method</span><span class="o">=</span><span class="n">distance_method</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">focal_dist</span><span class="p">[</span><span class="n">ni</span><span class="p">]</span> <span class="o">=</span> <span class="n">cur_dist</span>
+
+    <span class="k">if</span> <span class="n">adjust_statistics</span><span class="p">:</span>
+        <span class="n">covariate_matrix_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">genotype_similarity</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">covariate_ratios</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">compute_residuals</span><span class="p">(</span><span class="n">covariate_matrix_full</span><span class="p">,</span> <span class="n">focal_dist</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">focal_dist</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.perform_permutation_test" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">perform_permutation_test</span><span class="p">(</span><span class="n">spectra</span><span class="p">,</span> <span class="n">genotype_matrix</span><span class="p">,</span> <span class="n">genotype_similarity</span><span class="p">,</span> <span class="n">covariate_ratios</span><span class="p">,</span> <span class="n">strata</span><span class="p">,</span> <span class="n">distance_method</span><span class="o">=</span><span class="n">compute_manual_chisquare</span><span class="p">,</span> <span class="n">n_permutations</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">adjust_statistics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Conduct a permutation test to assess the significance of 
+any observed IHD peaks. In each of the <code>n_permutations</code> trials, 
+do the following: 1. create a shuffled version of the input mutation <code>spectra</code>, so that
+sample names/indices no longer correspond to the appropriate mutation
+spectrum. 2. run an IHD scan by computing the distance between
+the aggregate mutation spectrum of samples with either genotype
+at every marker in the <code>genotype_matrix</code>. 3. store the maximum distance encountered at any marker.
+Then, return a list of the maximum distances encountered in each of
+the trials. Alternatively, if <code>comparison_wide</code> is True, return a matrix of
+size (P, G), where P is the number of permutations and G is the number of
+genotyped markers, in which we store the distance value encountered at
+every marker in every permutation trial.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>spectra</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of mutation spectra in all             genotyped samples, of size (N, M) where N is the number of samples             and M is the number of mutation types.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>genotype_matrix</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 2D numpy array of genotypes at every             genotyped marker, of size (G, N), where G is the number of genotyped             sites and N is the number of samples.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>genotype_similarity</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of correlation coefficients             of size (G, ), where G is the number of genotyped sites. At each element of             the array, we store the correlation coefficient between genome-wide D allele             frequencies calculated in samples with either allele at the corresponding site G_i.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>covariate_ratios</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of size (G, ), where             G is the number of genotyped sites. Contains the ratio of covariate             values between haplotypes with A vs. B genotypes at every site.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>strata</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A 1D numpy array of "group labels" of size (N, ), where             N is the number of samples. If samples are assigned different group labels, their             spectra will be permuted <em>within</em> those groups during the permutation testing step.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>distance_method</code></td>
+          <td>
+                <code><span title="typing.Callable">Callable</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Callable method to compute the             distance between aggregate mutation spectra. Must accept two 1D numpy             arrays and return a single floating point value. Defaults to             <code>compute_manual_chisquare</code>.</p>
+            </div>
+          </td>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="ihd.utils.compute_manual_chisquare" href="#ihd.utils.compute_manual_chisquare">compute_manual_chisquare</a></code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>n_permutations</code></td>
+          <td>
+                <code>int</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Number of permutations to perform             (i.e., number of times to shuffle the spectra and compute IHDs at             each marker). Defaults to 1_000.</p>
+            </div>
+          </td>
+          <td>
+                <code>1000</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>progress</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to output a count of how many permutations             have completed. Defaults to False.</p>
+            </div>
+          </td>
+          <td>
+                <code>False</code>
+          </td>
+        </tr>
+        <tr>
+          <td><code>adjust_statistics</code></td>
+          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Whether to compute adjusted statistics             at each marker by regressing genotype similarity against statistics.             Defaults to True.</p>
+            </div>
+          </td>
+          <td>
+                <code>True</code>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>null_distances</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>2D numpy array of size (P, G)             where P is the number of permutations and G is either 1             (if we're computing a genome-wide distance threshold) or             the number of genotyped markers (if we're computing thresholds             at each individual marker).</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span><span class="p">(</span><span class="n">parallel</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">perform_permutation_test</span><span class="p">(</span>
+    <span class="n">spectra</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">genotype_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">genotype_similarity</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">covariate_ratios</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">strata</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">distance_method</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">compute_manual_chisquare</span><span class="p">,</span>
+    <span class="n">n_permutations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1_000</span><span class="p">,</span>
+    <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">adjust_statistics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Conduct a permutation test to assess the significance of </span>
+<span class="sd">    any observed IHD peaks. In each of the `n_permutations` trials, </span>
+<span class="sd">    do the following: 1. create a shuffled version of the input mutation `spectra`, so that</span>
+<span class="sd">    sample names/indices no longer correspond to the appropriate mutation</span>
+<span class="sd">    spectrum. 2. run an IHD scan by computing the distance between</span>
+<span class="sd">    the aggregate mutation spectrum of samples with either genotype</span>
+<span class="sd">    at every marker in the `genotype_matrix`. 3. store the maximum distance encountered at any marker.</span>
+<span class="sd">    Then, return a list of the maximum distances encountered in each of</span>
+<span class="sd">    the trials. Alternatively, if `comparison_wide` is True, return a matrix of</span>
+<span class="sd">    size (P, G), where P is the number of permutations and G is the number of</span>
+<span class="sd">    genotyped markers, in which we store the distance value encountered at</span>
+<span class="sd">    every marker in every permutation trial.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spectra (np.ndarray): A 2D numpy array of mutation spectra in all \</span>
+<span class="sd">            genotyped samples, of size (N, M) where N is the number of samples \</span>
+<span class="sd">            and M is the number of mutation types.</span>
+
+<span class="sd">        genotype_matrix (np.ndarray): A 2D numpy array of genotypes at every \</span>
+<span class="sd">            genotyped marker, of size (G, N), where G is the number of genotyped \</span>
+<span class="sd">            sites and N is the number of samples.</span>
+
+<span class="sd">        genotype_similarity (np.ndarray): A 1D numpy array of correlation coefficients \</span>
+<span class="sd">            of size (G, ), where G is the number of genotyped sites. At each element of \</span>
+<span class="sd">            the array, we store the correlation coefficient between genome-wide D allele \</span>
+<span class="sd">            frequencies calculated in samples with either allele at the corresponding site G_i.</span>
+
+<span class="sd">        covariate_ratios (np.ndarray): A 1D numpy array of size (G, ), where \</span>
+<span class="sd">            G is the number of genotyped sites. Contains the ratio of covariate \</span>
+<span class="sd">            values between haplotypes with A vs. B genotypes at every site.</span>
+
+<span class="sd">        strata (np.ndarray): A 1D numpy array of &quot;group labels&quot; of size (N, ), where \</span>
+<span class="sd">            N is the number of samples. If samples are assigned different group labels, their \</span>
+<span class="sd">            spectra will be permuted *within* those groups during the permutation testing step.</span>
+
+<span class="sd">        distance_method (Callable, optional): Callable method to compute the \</span>
+<span class="sd">            distance between aggregate mutation spectra. Must accept two 1D numpy \</span>
+<span class="sd">            arrays and return a single floating point value. Defaults to \</span>
+<span class="sd">            `compute_manual_chisquare`.</span>
+
+<span class="sd">        n_permutations (int, optional): Number of permutations to perform \</span>
+<span class="sd">            (i.e., number of times to shuffle the spectra and compute IHDs at \</span>
+<span class="sd">            each marker). Defaults to 1_000.</span>
+
+<span class="sd">        progress (bool, optional): Whether to output a count of how many permutations \</span>
+<span class="sd">            have completed. Defaults to False.</span>
+
+<span class="sd">        adjust_statistics (bool, optional): Whether to compute adjusted statistics \</span>
+<span class="sd">            at each marker by regressing genotype similarity against statistics. \</span>
+<span class="sd">            Defaults to True.</span>
+
+
+<span class="sd">    Returns:</span>
+<span class="sd">        null_distances (np.ndarray): 2D numpy array of size (P, G) \</span>
+<span class="sd">            where P is the number of permutations and G is either 1 \</span>
+<span class="sd">            (if we&#39;re computing a genome-wide distance threshold) or \</span>
+<span class="sd">            the number of genotyped markers (if we&#39;re computing thresholds \</span>
+<span class="sd">            at each individual marker).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># store max distance encountered in each permutation</span>
+    <span class="n">null_distances</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_permutations</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">pi</span> <span class="ow">in</span> <span class="n">numba</span><span class="o">.</span><span class="n">prange</span><span class="p">(</span><span class="n">n_permutations</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">pi</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pi</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">progress</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+        <span class="c1"># shuffle the mutation spectra by row</span>
+        <span class="n">shuffled_spectra</span> <span class="o">=</span> <span class="n">shuffle_spectra</span><span class="p">(</span><span class="n">spectra</span><span class="p">,</span> <span class="n">strata</span><span class="p">)</span>
+
+        <span class="c1"># perform the IHD scan</span>
+        <span class="n">perm_distances</span> <span class="o">=</span> <span class="n">perform_ihd_scan</span><span class="p">(</span>
+            <span class="n">shuffled_spectra</span><span class="p">,</span>
+            <span class="n">genotype_matrix</span><span class="p">,</span>
+            <span class="n">genotype_similarity</span><span class="p">,</span>
+            <span class="n">covariate_ratios</span><span class="p">,</span>
+            <span class="n">distance_method</span><span class="o">=</span><span class="n">distance_method</span><span class="p">,</span>
+            <span class="n">adjust_statistics</span><span class="o">=</span><span class="n">adjust_statistics</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">null_distances</span><span class="p">[</span><span class="n">pi</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">perm_distances</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">null_distances</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="ihd.utils.shuffle_spectra" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">shuffle_spectra</span><span class="p">(</span><span class="n">spectra</span><span class="p">,</span> <span class="n">groups</span><span class="p">)</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Randomly shuffle the rows of a 2D numpy array of 
+mutation spectrum data of size (N, M), where N is the number
+of samples and M is the number of mutation types. Shuffled array
+is returned such that sample mutation spectra no longer correspond to the
+appropriate sample indices into the rows of the array. Samples are also
+shuffled within the specified <code>groups</code>. In other words, we only shuffle
+the indices of samples that correspond to a unique value in the <code>groups</code> 
+array.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>spectra</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>2D numpy array of mutation spectrum data of         shape (N, M), where N is the number of samples and M is the number         of mutation types.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+        <tr>
+          <td><code>groups</code></td>
+          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>1D numpy array of group labels (e.g., epochs)             that each sample belongs to, of shape (N, ) where N is the number             of samples. Mutation spectra will only be shuffled <em>within</em>             their assigned group.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>shuffled_spectra</code></td>          <td>
+                <code><span title="numpy.ndarray">ndarray</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The input array, but with shuffled rows.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+          <details class="quote">
+            <summary>Source code in <code>ihd/utils.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@numba</span><span class="o">.</span><span class="n">njit</span>
+<span class="k">def</span> <span class="nf">shuffle_spectra</span><span class="p">(</span>
+    <span class="n">spectra</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Randomly shuffle the rows of a 2D numpy array of </span>
+<span class="sd">    mutation spectrum data of size (N, M), where N is the number</span>
+<span class="sd">    of samples and M is the number of mutation types. Shuffled array</span>
+<span class="sd">    is returned such that sample mutation spectra no longer correspond to the</span>
+<span class="sd">    appropriate sample indices into the rows of the array. Samples are also</span>
+<span class="sd">    shuffled within the specified `groups`. In other words, we only shuffle</span>
+<span class="sd">    the indices of samples that correspond to a unique value in the `groups` </span>
+<span class="sd">    array.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spectra (np.ndarray): 2D numpy array of mutation spectrum data of \</span>
+<span class="sd">        shape (N, M), where N is the number of samples and M is the number \</span>
+<span class="sd">        of mutation types.</span>
+
+<span class="sd">        groups (np.ndarray): 1D numpy array of group labels (e.g., epochs) \</span>
+<span class="sd">            that each sample belongs to, of shape (N, ) where N is the number \</span>
+<span class="sd">            of samples. Mutation spectra will only be shuffled *within* \</span>
+<span class="sd">            their assigned group.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        shuffled_spectra (np.ndarray): The input array, but with shuffled rows.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shuffled_spectra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">spectra</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">uniq_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">uniq_groups</span><span class="p">:</span>
+        <span class="c1"># get corresponding indices of samples in the current group</span>
+        <span class="n">g_i_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">g</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">g_i_shuffled</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">g</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># shuffle just the group indices so that sample labels</span>
+        <span class="c1"># in that group no longer correspond to the correct</span>
+        <span class="c1"># mutation spectra arrays</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">g_i_shuffled</span><span class="p">)</span>
+        <span class="n">shuffled_spectra</span><span class="p">[</span><span class="n">g_i_true</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">spectra</span><span class="p">[</span><span class="n">g_i_shuffled</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">shuffled_spectra</span>
+</code></pre></div></td></tr></table></div>
+          </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.8fd75fb4.min.js"></script>
+      
+    
+  </body>
+</html>
